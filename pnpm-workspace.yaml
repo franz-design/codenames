@@ -1,0 +1,10 @@
+packages:
+  - packages/*
+  - apps/*
+onlyBuiltDependencies:
+  - '@nestjs/core'
+  - '@scarf/scarf'
+  - '@tailwindcss/oxide'
+  - esbuild
+  - nestjs-pino
+  - unrs-resolver

@@ -1,0 +1,15 @@
+{
+  "name": "@boilerstone/openapi-generator",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./index.ts",
+  "scripts": {
+    "dev": "dotenvx run -- wait-on ${API_URL}/docs-json && pnpm generate --watch",
+    "generate": "dotenvx run -- openapi-ts -f ./openapi-ts.config.ts"
+  },
+  "devDependencies": {
+    "@dotenvx/dotenvx": "^1.49.0",
+    "@hey-api/openapi-ts": "^0.81.1",
+    "wait-on": "^8.0.4"
+  }
+}
