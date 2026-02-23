@@ -151,7 +151,7 @@ jobs:
         run: pnpm test
         env:
           DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
-          API_PORT: 3000
+          API_PORT: 3001
           DATABASE_PORT: 5432
           DATABASE_HOST: localhost
           DATABASE_USER: test_user

@@ -199,10 +199,10 @@ importers:
 
   apps/web-spa:
     dependencies:
-      '@boilerstone/openapi-generator':
+      '@codenames/openapi-generator':
         specifier: workspace:*
         version: link:../../packages/openapi-generator
-      '@boilerstone/ui':
+      '@codenames/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       '@fontsource/source-sans-pro':
@@ -272,10 +272,10 @@ importers:
 
   apps/web-ssr:
     dependencies:
-      '@boilerstone/openapi-generator':
+      '@codenames/openapi-generator':
         specifier: workspace:*
         version: link:../../packages/openapi-generator
-      '@boilerstone/ui':
+      '@codenames/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       '@fontsource/source-sans-pro':
@@ -357,7 +357,7 @@ importers:
 
   packages/ui:
     dependencies:
-      '@boilerstone/openapi-generator':
+      '@codenames/openapi-generator':
         specifier: workspace:*
         version: link:../openapi-generator
       '@hookform/resolvers':

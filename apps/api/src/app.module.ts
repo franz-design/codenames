@@ -4,10 +4,11 @@ import { ConfigModule as NestConfigModule } from '@nestjs/config'
 import { LoggerModule } from 'nestjs-pino'
 import { AppController } from './app.controller'
 import { AuthModule } from './modules/auth/auth.module'
-import { CommentsModule } from './modules/comments/comments.module'
 import { DbModule } from './modules/db/db.module'
 import { EmailModule } from './modules/email/email.module'
-import { PostModule } from './modules/posts/posts.module'
+import { GamesModule } from './modules/games/games.module'
+import { RoundsModule } from './modules/rounds/rounds.module'
+import { WordsModule } from './modules/words/words.module'
 
 // Interface étendue pour les requêtes Express
 interface ExpressRequest extends IncomingMessage {
@@ -88,8 +89,9 @@ interface ExpressResponse extends ServerResponse<IncomingMessage> {
     DbModule,
     AuthModule.forRootAsync(),
     EmailModule,
-    PostModule,
-    CommentsModule,
+    GamesModule,
+    RoundsModule,
+    WordsModule,
     NestConfigModule,
   ],
   controllers: [AppController],

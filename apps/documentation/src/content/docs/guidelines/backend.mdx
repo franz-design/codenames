@@ -164,7 +164,7 @@ export const updateUserSchema = userBaseSchema.partial().meta({
 **Response Schemas:**
 ```typescript
 export const userResponseSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   name: z.string(),
   email: z.string().email(),
   createdAt: z.date(),

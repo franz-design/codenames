@@ -1,5 +1,5 @@
 {
-  "name": "@boilerstone/web-spa",
+  "name": "@codenames/web-spa",
   "type": "module",
   "private": true,
   "scripts": {
@@ -8,8 +8,8 @@
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
-    "@boilerstone/openapi-generator": "workspace:*",
-    "@boilerstone/ui": "workspace:*",
+    "@codenames/openapi-generator": "workspace:*",
+    "@codenames/ui": "workspace:*",
     "@fontsource/source-sans-pro": "^5.2.5",
     "@hookform/resolvers": "^5.2.1",
     "@react-router/node": "^7.8.2",
