@@ -1,5 +1,6 @@
 import { createOpenApiDocument, ZodSerializationExceptionFilter, ZodValidationExceptionFilter } from '@lonestone/nzoth/server'
 import { NestFactory } from '@nestjs/core'
+import { IoAdapter } from '@nestjs/platform-socket.io'
 import { DocumentBuilder } from '@nestjs/swagger'
 import { apiReference } from '@scalar/nestjs-api-reference'
 import * as express from 'express'
@@ -50,6 +51,8 @@ async function bootstrap() {
     origin: config.betterAuth.trustedOrigins,
     credentials: true,
   })
+
+  app.useWebSocketAdapter(new IoAdapter(app))
 
   app.setGlobalPrefix(PREFIX)
 

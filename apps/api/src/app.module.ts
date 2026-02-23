@@ -7,7 +7,6 @@ import { AuthModule } from './modules/auth/auth.module'
 import { DbModule } from './modules/db/db.module'
 import { EmailModule } from './modules/email/email.module'
 import { GamesModule } from './modules/games/games.module'
-import { RoundsModule } from './modules/rounds/rounds.module'
 import { WordsModule } from './modules/words/words.module'
 
 // Interface étendue pour les requêtes Express
@@ -90,7 +89,6 @@ interface ExpressResponse extends ServerResponse<IncomingMessage> {
     AuthModule.forRootAsync(),
     EmailModule,
     GamesModule,
-    RoundsModule,
     WordsModule,
     NestConfigModule,
   ],

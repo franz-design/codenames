@@ -6,9 +6,9 @@ import {
   PrimaryKey,
   Property,
 } from '@mikro-orm/core'
-import { Round } from '../../rounds/rounds.entity'
-import { GameEventType } from '../game-event.types.js'
+import { GameEventType } from '../game-event.types'
 import { Game } from '../games.entity'
+import { Round } from './round.entity'
 
 @Entity({ tableName: 'game_event' })
 export class GameEvent {
@@ -24,13 +24,13 @@ export class GameEvent {
   round?: Round
 
   @Enum(() => GameEventType)
-  @Property()
+  @Property({ fieldName: 'event_type' })
   eventType!: GameEventType
 
   @Property({ type: 'json' })
   payload!: Record<string, unknown>
 
-  @Property({ nullable: true })
+  @Property({ fieldName: 'triggered_by', nullable: true })
   triggeredBy?: string | null
 
   @Property({ fieldName: 'createdAt' })

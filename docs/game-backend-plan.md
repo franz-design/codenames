@@ -19,17 +19,17 @@ Ce document décrit le plan de mise en place de la partie backend du jeu Codenam
 
 ### Phase 2 : Entités minimales et module Games
 
-- [ ] **2.1** Simplifier Game et Round (données immuables uniquement)
-- [ ] **2.2** Supprimer le module Rounds autonome
-- [ ] **2.3** Implémenter GamesService : actions = création d'events + recalcul état
-- [ ] **2.4** Implémenter les endpoints REST et contrats Zod
+- [x] **2.1** Simplifier Game et Round (données immuables uniquement)
+- [x] **2.2** Supprimer le module Rounds autonome
+- [x] **2.3** Implémenter GamesService : actions = création d'events + recalcul état
+- [x] **2.4** Implémenter les endpoints REST et contrats Zod
 
 ### Phase 3 : WebSockets et événements temps réel
 
-- [ ] **3.1** Installer et configurer @nestjs/websockets et @nestjs/platform-socket.io
-- [ ] **3.2** Créer GamesGateway avec rooms par partie
-- [ ] **3.3** Émettre `game:state` après chaque event (état recalculé)
-- [ ] **3.4** Implémenter l'authentification WebSocket (Better Auth)
+- [x] **3.1** Installer et configurer @nestjs/websockets et @nestjs/platform-socket.io
+- [x] **3.2** Créer GamesGateway avec rooms par partie
+- [x] **3.3** Émettre `game:state` après chaque event (état recalculé)
+- [x] **3.4** Implémenter l'authentification WebSocket (Better Auth)
 
 ### Phase 4 : Feature highlight et intégration
 
