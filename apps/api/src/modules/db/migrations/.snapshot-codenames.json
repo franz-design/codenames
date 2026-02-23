@@ -240,8 +240,17 @@
           "default": "gen_random_uuid()",
           "mappedType": "uuid"
         },
-        "userId": {
-          "name": "userId",
+        "timer": {
+          "name": "timer",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "integer"
+        },
+        "createdBy": {
+          "name": "createdBy",
           "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
@@ -258,83 +267,23 @@
           "nullable": false,
           "length": 6,
           "mappedType": "datetime"
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "mappedType": "datetime"
-        },
-        "publishedAt": {
-          "name": "publishedAt",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 6,
-          "mappedType": "datetime"
-        },
-        "slug": {
-          "name": "slug",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 255,
-          "mappedType": "string"
         }
       },
-      "name": "post",
+      "name": "game",
       "schema": "public",
       "indexes": [
         {
           "columnNames": [
-            "userId"
+            "createdBy"
           ],
           "composite": false,
-          "keyName": "post_userId_index",
+          "keyName": "game_createdBy_index",
           "constraint": false,
           "primary": false,
           "unique": false
         },
         {
-          "columnNames": [
-            "publishedAt"
-          ],
-          "composite": false,
-          "keyName": "post_publishedAt_index",
-          "constraint": false,
-          "primary": false,
-          "unique": false
-        },
-        {
-          "columnNames": [
-            "slug"
-          ],
-          "composite": false,
-          "keyName": "post_slug_index",
-          "constraint": false,
-          "primary": false,
-          "unique": false
-        },
-        {
-          "columnNames": [
-            "slug"
-          ],
-          "composite": false,
-          "keyName": "post_slug_unique",
-          "constraint": true,
-          "primary": false,
-          "unique": true
-        },
-        {
-          "keyName": "post_pkey",
+          "keyName": "game_pkey",
           "columnNames": [
             "id"
           ],
@@ -346,12 +295,12 @@
       ],
       "checks": [],
       "foreignKeys": {
-        "post_userId_foreign": {
-          "constraintName": "post_userId_foreign",
+        "game_createdBy_foreign": {
+          "constraintName": "game_createdBy_foreign",
           "columnNames": [
-            "userId"
+            "createdBy"
           ],
-          "localTableName": "public.post",
+          "localTableName": "public.game",
           "referencedColumnNames": [
             "id"
           ],
@@ -373,8 +322,8 @@
           "default": "gen_random_uuid()",
           "mappedType": "uuid"
         },
-        "postId": {
-          "name": "postId",
+        "gameId": {
+          "name": "gameId",
           "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
@@ -382,8 +331,244 @@
           "nullable": false,
           "mappedType": "uuid"
         },
-        "title": {
-          "name": "title",
+        "order": {
+          "name": "order",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "integer"
+        },
+        "words": {
+          "name": "words",
+          "type": "text[]",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "array"
+        },
+        "results": {
+          "name": "results",
+          "type": "text[]",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "enumItems": [
+            "neutral",
+            "red",
+            "blue",
+            "black"
+          ],
+          "mappedType": "array"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "mappedType": "datetime"
+        }
+      },
+      "name": "round",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "gameId"
+          ],
+          "composite": false,
+          "keyName": "round_gameId_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "keyName": "round_pkey",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "round_gameId_foreign": {
+          "constraintName": "round_gameId_foreign",
+          "columnNames": [
+            "gameId"
+          ],
+          "localTableName": "public.round",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.game",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {}
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "gen_random_uuid()",
+          "mappedType": "uuid"
+        },
+        "roundId": {
+          "name": "roundId",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "uuid"
+        },
+        "playerId": {
+          "name": "playerId",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "uuid"
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "enumItems": [
+            "spy",
+            "agent"
+          ],
+          "mappedType": "enum"
+        }
+      },
+      "name": "round_player_roles",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "roundId"
+          ],
+          "composite": false,
+          "keyName": "round_player_roles_roundId_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "playerId"
+          ],
+          "composite": false,
+          "keyName": "round_player_roles_playerId_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "keyName": "round_player_roles_pkey",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "round_player_roles_roundId_foreign": {
+          "constraintName": "round_player_roles_roundId_foreign",
+          "columnNames": [
+            "roundId"
+          ],
+          "localTableName": "public.round_player_roles",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.round",
+          "updateRule": "cascade"
+        },
+        "round_player_roles_playerId_foreign": {
+          "constraintName": "round_player_roles_playerId_foreign",
+          "columnNames": [
+            "playerId"
+          ],
+          "localTableName": "public.round_player_roles",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.user",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {}
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "gen_random_uuid()",
+          "mappedType": "uuid"
+        },
+        "roundId": {
+          "name": "roundId",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "uuid"
+        },
+        "playerId": {
+          "name": "playerId",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "uuid"
+        },
+        "event": {
+          "name": "event",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "enumItems": [
+            "card_selected",
+            "card_add_highlight",
+            "card_remove_highlight"
+          ],
+          "mappedType": "enum"
+        },
+        "payload": {
+          "name": "payload",
           "type": "varchar(255)",
           "unsigned": false,
           "autoincrement": false,
@@ -392,109 +577,252 @@
           "length": 255,
           "mappedType": "string"
         },
-        "content": {
-          "name": "content",
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "mappedType": "datetime"
+        }
+      },
+      "name": "round_events",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "roundId"
+          ],
+          "composite": false,
+          "keyName": "round_events_roundId_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "playerId"
+          ],
+          "composite": false,
+          "keyName": "round_events_playerId_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "keyName": "round_events_pkey",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "round_events_roundId_foreign": {
+          "constraintName": "round_events_roundId_foreign",
+          "columnNames": [
+            "roundId"
+          ],
+          "localTableName": "public.round_events",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.round",
+          "updateRule": "cascade"
+        },
+        "round_events_playerId_foreign": {
+          "constraintName": "round_events_playerId_foreign",
+          "columnNames": [
+            "playerId"
+          ],
+          "localTableName": "public.round_events",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.user",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {}
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "gen_random_uuid()",
+          "mappedType": "uuid"
+        },
+        "gameId": {
+          "name": "gameId",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "uuid"
+        },
+        "playerId": {
+          "name": "playerId",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "uuid"
+        },
+        "side": {
+          "name": "side",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "enumItems": [
+            "red",
+            "blue"
+          ],
+          "mappedType": "enum"
+        }
+      },
+      "name": "game_player",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "gameId"
+          ],
+          "composite": false,
+          "keyName": "game_player_gameId_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "playerId"
+          ],
+          "composite": false,
+          "keyName": "game_player_playerId_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "keyName": "game_player_pkey",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "game_player_gameId_foreign": {
+          "constraintName": "game_player_gameId_foreign",
+          "columnNames": [
+            "gameId"
+          ],
+          "localTableName": "public.game_player",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.game",
+          "updateRule": "cascade"
+        },
+        "game_player_playerId_foreign": {
+          "constraintName": "game_player_playerId_foreign",
+          "columnNames": [
+            "playerId"
+          ],
+          "localTableName": "public.game_player",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.user",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {}
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "gen_random_uuid()",
+          "mappedType": "uuid"
+        },
+        "gameId": {
+          "name": "gameId",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "uuid"
+        },
+        "roundId": {
+          "name": "roundId",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "uuid"
+        },
+        "event_type": {
+          "name": "event_type",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "enumItems": [
+            "GAME_CREATED",
+            "PLAYER_JOINED",
+            "PLAYER_LEFT",
+            "PLAYER_CHOSE_SIDE",
+            "PLAYER_DESIGNATED_SPY",
+            "GAME_FINISHED",
+            "GAME_RESTARTED",
+            "ROUND_STARTED",
+            "CLUE_GIVEN",
+            "WORD_SELECTED",
+            "WORD_HIGHLIGHTED",
+            "WORD_UNHIGHLIGHTED",
+            "TURN_PASSED"
+          ],
+          "mappedType": "enum"
+        },
+        "payload": {
+          "name": "payload",
           "type": "jsonb",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": true,
+          "nullable": false,
           "mappedType": "json"
         },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "mappedType": "datetime"
-        }
-      },
-      "name": "postVersion",
-      "schema": "public",
-      "indexes": [
-        {
-          "columnNames": [
-            "title"
-          ],
-          "composite": false,
-          "keyName": "postVersion_title_index",
-          "constraint": false,
-          "primary": false,
-          "unique": false
-        },
-        {
-          "keyName": "postVersion_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "postVersion_postId_foreign": {
-          "constraintName": "postVersion_postId_foreign",
-          "columnNames": [
-            "postId"
-          ],
-          "localTableName": "public.postVersion",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.post",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "gen_random_uuid()",
-          "mappedType": "uuid"
-        },
-        "postId": {
-          "name": "postId",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "userId": {
-          "name": "userId",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
-        },
-        "content": {
-          "name": "content",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "author_name": {
-          "name": "author_name",
+        "triggered_by": {
+          "name": "triggered_by",
           "type": "varchar(255)",
           "unsigned": false,
           "autoincrement": false,
@@ -512,52 +840,33 @@
           "nullable": false,
           "length": 6,
           "mappedType": "datetime"
-        },
-        "parentId": {
-          "name": "parentId",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
         }
       },
-      "name": "comment",
+      "name": "game_event",
       "schema": "public",
       "indexes": [
         {
           "columnNames": [
-            "postId"
+            "gameId"
           ],
           "composite": false,
-          "keyName": "comment_postId_index",
+          "keyName": "game_event_gameId_index",
           "constraint": false,
           "primary": false,
           "unique": false
         },
         {
           "columnNames": [
-            "userId"
+            "roundId"
           ],
           "composite": false,
-          "keyName": "comment_userId_index",
+          "keyName": "game_event_roundId_index",
           "constraint": false,
           "primary": false,
           "unique": false
         },
         {
-          "columnNames": [
-            "parentId"
-          ],
-          "composite": false,
-          "keyName": "comment_parentId_index",
-          "constraint": false,
-          "primary": false,
-          "unique": false
-        },
-        {
-          "keyName": "comment_pkey",
+          "keyName": "game_event_pkey",
           "columnNames": [
             "id"
           ],
@@ -569,41 +878,28 @@
       ],
       "checks": [],
       "foreignKeys": {
-        "comment_postId_foreign": {
-          "constraintName": "comment_postId_foreign",
+        "game_event_gameId_foreign": {
+          "constraintName": "game_event_gameId_foreign",
           "columnNames": [
-            "postId"
+            "gameId"
           ],
-          "localTableName": "public.comment",
+          "localTableName": "public.game_event",
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.post",
+          "referencedTableName": "public.game",
           "updateRule": "cascade"
         },
-        "comment_userId_foreign": {
-          "constraintName": "comment_userId_foreign",
+        "game_event_roundId_foreign": {
+          "constraintName": "game_event_roundId_foreign",
           "columnNames": [
-            "userId"
+            "roundId"
           ],
-          "localTableName": "public.comment",
+          "localTableName": "public.game_event",
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.user",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        },
-        "comment_parentId_foreign": {
-          "constraintName": "comment_parentId_foreign",
-          "columnNames": [
-            "parentId"
-          ],
-          "localTableName": "public.comment",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.comment",
+          "referencedTableName": "public.round",
           "deleteRule": "set null",
           "updateRule": "cascade"
         }
@@ -841,6 +1137,47 @@
       "indexes": [
         {
           "keyName": "verification_pkey",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {}
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "gen_random_uuid()",
+          "mappedType": "uuid"
+        },
+        "label": {
+          "name": "label",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 255,
+          "mappedType": "string"
+        }
+      },
+      "name": "word",
+      "schema": "public",
+      "indexes": [
+        {
+          "keyName": "word_pkey",
           "columnNames": [
             "id"
           ],

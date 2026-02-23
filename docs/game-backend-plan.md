@@ -12,10 +12,10 @@ Ce document décrit le plan de mise en place de la partie backend du jeu Codenam
 
 ### Phase 1 : Event store et logique de calcul d'état
 
-- [ ] **1.1** Créer l'entité GameEvent avec index sur gameId et roundId
-- [ ] **1.2** Définir les types d'événements et leurs payloads JSON dédiés
-- [ ] **1.3** Créer `game-core.logic.ts` : `applyEvent`, `computeGameState(events)`, `generateGridResults`
-- [ ] **1.4** Créer la migration MikroORM pour le schéma events
+- [x] **1.1** Créer l'entité GameEvent avec index sur gameId et roundId
+- [x] **1.2** Définir les types d'événements et leurs payloads JSON dédiés
+- [x] **1.3** Créer `game-core.logic.ts` : `applyEvent`, `computeGameState(events)`, `generateGridResults`
+- [x] **1.4** Créer la migration MikroORM pour le schéma events
 
 ### Phase 2 : Entités minimales et module Games
 
