@@ -33,10 +33,10 @@ Ce document décrit le plan de mise en place de la partie backend du jeu Codenam
 
 ### Phase 4 : Feature highlight et intégration
 
-- [ ] **4.1** Implémenter les events WORD_HIGHLIGHTED et WORD_UNHIGHLIGHTED
-- [ ] **4.2** Intégrer les highlights dans le calcul d'état (Map wordIndex → players)
-- [ ] **4.3** Mettre à jour AppModule et GamesModule
-- [ ] **4.4** Écrire les tests unitaires et e2e
+- [x] **4.1** Implémenter les events WORD_HIGHLIGHTED et WORD_UNHIGHLIGHTED
+- [x] **4.2** Intégrer les highlights dans le calcul d'état (Map wordIndex → players)
+- [x] **4.3** Mettre à jour AppModule et GamesModule
+- [x] **4.4** Écrire les tests unitaires et e2e
 
 ---
 
