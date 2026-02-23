@@ -17,14 +17,20 @@ export enum GameEventType {
   WORD_HIGHLIGHTED = 'WORD_HIGHLIGHTED',
   WORD_UNHIGHLIGHTED = 'WORD_UNHIGHLIGHTED',
   TURN_PASSED = 'TURN_PASSED',
+  PLAYER_KICKED = 'PLAYER_KICKED',
 }
 
 export type Side = 'red' | 'blue'
 
-export type CardType = 'neutral' | 'red' | 'blue' | 'black'
-
+export enum CardType {
+  NEUTRAL = 'neutral',
+  RED = 'red',
+  BLUE = 'blue',
+  BLACK = 'black',
+}
 export interface GameCreatedPayload {
-  createdById: string
+  creatorPseudo: string
+  creatorToken: string
 }
 
 export interface PlayerJoinedPayload {

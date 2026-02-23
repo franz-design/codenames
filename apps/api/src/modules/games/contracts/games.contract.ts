@@ -18,12 +18,32 @@ export const cardTypeSchema = z.enum(['neutral', 'red', 'blue', 'black']).meta({
   description: 'Card type in the grid',
 })
 
-export const createGameSchema = z.object({}).meta({
+export const createGameSchema = z.object({
+  pseudo: z.string().min(1).max(100),
+}).meta({
   title: 'CreateGameSchema',
   description: 'Schema for creating a game',
 })
 
 export type CreateGameInput = z.infer<typeof createGameSchema>
+
+export const joinGameSchema = z.object({
+  pseudo: z.string().min(1).max(100),
+}).meta({
+  title: 'JoinGameSchema',
+  description: 'Schema for joining a game',
+})
+
+export type JoinGameInput = z.infer<typeof joinGameSchema>
+
+export const kickPlayerSchema = z.object({
+  creatorToken: z.string().uuid(),
+}).meta({
+  title: 'KickPlayerSchema',
+  description: 'Schema for kicking a player (creator only)',
+})
+
+export type KickPlayerInput = z.infer<typeof kickPlayerSchema>
 
 export const gameStatePlayerSchema = z.object({
   id: z.string().uuid(),
@@ -82,11 +102,7 @@ export type GameStateResponse = z.infer<typeof gameStateSchema>
 
 export const gameSchema = z.object({
   id: z.uuid(),
-  createdBy: z.object({
-    id: z.string().uuid(),
-    name: z.string(),
-    email: z.string().email(),
-  }),
+  creatorPseudo: z.string(),
   createdAt: z.date(),
 }).meta({
   title: 'GameSchema',
@@ -94,6 +110,28 @@ export const gameSchema = z.object({
 })
 
 export type GameResponse = z.infer<typeof gameSchema>
+
+export const createGameResponseSchema = z.object({
+  game: gameSchema,
+  creatorToken: z.string().uuid(),
+  playerId: z.string().uuid(),
+  gameState: gameStateSchema,
+}).meta({
+  title: 'CreateGameResponseSchema',
+  description: 'Response when creating a game',
+})
+
+export type CreateGameResponse = z.infer<typeof createGameResponseSchema>
+
+export const joinGameResponseSchema = z.object({
+  gameState: gameStateSchema,
+  playerId: z.string().uuid(),
+}).meta({
+  title: 'JoinGameResponseSchema',
+  description: 'Response when joining a game',
+})
+
+export type JoinGameResponse = z.infer<typeof joinGameResponseSchema>
 
 export const gamesSchema = paginatedSchema(gameSchema).meta({
   title: 'GamesSchema',
@@ -110,7 +148,7 @@ export const gameSortingSchema = createSortingQueryStringSchema(
 
 export type GameSorting = z.infer<typeof gameSortingSchema>
 
-export const enabledGameFilteringKeys = [] as const
+export const enabledGameFilteringKeys = ['createdAt'] as const
 
 export const gameFilteringSchema = createFilterQueryStringSchema(
   enabledGameFilteringKeys,

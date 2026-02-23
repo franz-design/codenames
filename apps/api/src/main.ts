@@ -34,27 +34,21 @@ async function bootstrap() {
       res: express.Response,
       next: express.NextFunction,
     ) => {
-      // If is routes of better auth, next
-      if (req.originalUrl.startsWith(`${PREFIX}/auth`)) {
-        return next()
-      }
-      // If is stripe webhook, we need the raw body
       if (req.originalUrl.startsWith(`${PREFIX}/stripe/webhook`)) {
         return express.raw({ type: 'application/json' })(req, res, next)
       }
-      // Else, apply the express json middleware
       express.json()(req, res, next)
     },
   )
 
   app.enableCors({
-    origin: config.betterAuth.trustedOrigins,
+    origin: config.cors.origins,
     credentials: true,
   })
 
-  app.useWebSocketAdapter(new IoAdapter(app))
-
   app.setGlobalPrefix(PREFIX)
+
+  app.useWebSocketAdapter(new IoAdapter(app))
 
   if (config.env === 'development') {
     const swaggerConfig = new DocumentBuilder()

@@ -29,7 +29,7 @@ Ce document décrit le plan de mise en place de la partie backend du jeu Codenam
 - [x] **3.1** Installer et configurer @nestjs/websockets et @nestjs/platform-socket.io
 - [x] **3.2** Créer GamesGateway avec rooms par partie
 - [x] **3.3** Émettre `game:state` après chaque event (état recalculé)
-- [x] **3.4** Implémenter l'authentification WebSocket (Better Auth)
+- [x] **3.4** Connexion WebSocket sans authentification (identification via pseudo + playerId, voir [player-identification.md](./player-identification.md))
 
 ### Phase 4 : Feature highlight et intégration
 
@@ -87,9 +87,10 @@ Ce document décrit le plan de mise en place de la partie backend du jeu Codenam
 
 | EventType | Payload | Description |
 |-----------|---------|-------------|
-| `GAME_CREATED` | `{ createdById }` | Création de la partie |
+| `GAME_CREATED` | `{ creatorPseudo, creatorToken }` | Création de la partie |
 | `PLAYER_JOINED` | `{ playerId, playerName }` | Un joueur rejoint la partie |
 | `PLAYER_LEFT` | `{ playerId }` | Un joueur quitte la partie |
+| `PLAYER_KICKED` | `{ playerId }` | Un joueur est éjecté par le créateur |
 | `PLAYER_CHOSE_SIDE` | `{ playerId, playerName, side }` | Joueur rejoint une équipe (red/blue) |
 | `PLAYER_DESIGNATED_SPY` | `{ playerId, playerName, side }` | Joueur se désigne espion pour son équipe |
 | `GAME_FINISHED` | `{ winningSide?, losingSide? }` | Fin de partie (winningSide si victoire, losingSide si mot noir) |
@@ -140,7 +141,7 @@ interface GameState {
 
 ### 2.1 Entités Game et Round (données immuables)
 
-**Game** : `id`, `createdBy`, `createdAt`. Pas de status/winningSide – tout vient des events.
+**Game** : `id`, `creatorPseudo`, `creatorToken`, `createdAt`. Pas de status/winningSide – tout vient des events. Lien vers [player-identification.md](./player-identification.md) pour le flux complet.
 
 **Round** : `id`, `gameId`, `order`, `words[]`, `results[]`, `createdAt`. Données de grille uniquement. Le round est créé à `ROUND_STARTED` ; tout le reste (tour, indice, révélations) vient des events.
 
@@ -156,13 +157,16 @@ interface GameState {
 
 Chaque action crée un event, le persiste, recalcule l'état, et le Gateway émet `game:state`.
 
+**Identification** : Les actions en jeu (leave, chooseSide, giveClue, etc.) requièrent le header `X-Player-Id` (UUID du joueur). Voir [player-identification.md](./player-identification.md).
+
 | Méthode | Route | Action | Event créé |
 |---------|-------|--------|------------|
-| POST | `/games` | Créer une partie | `GAME_CREATED` |
-| GET | `/games/:id` | Infos de base (createdBy, etc.) | - |
+| POST | `/games` | Créer une partie (body: `{ pseudo }`) | `GAME_CREATED` + `PLAYER_JOINED` |
+| GET | `/games/:id` | Infos de base (creatorPseudo, etc.) | - |
 | GET | `/games/:id/state` | État calculé à partir des events | - |
-| POST | `/games/:id/join` | Rejoindre | `PLAYER_JOINED` |
-| DELETE | `/games/:id/leave` | Quitter | `PLAYER_LEFT` |
+| POST | `/games/:id/join` | Rejoindre (body: `{ pseudo }`) | `PLAYER_JOINED` |
+| DELETE | `/games/:id/players/:playerId` | Éjecter un joueur (body: `{ creatorToken }`, créateur uniquement) | `PLAYER_KICKED` |
+| DELETE | `/games/:id/leave` | Quitter (header: `X-Player-Id`) | `PLAYER_LEFT` |
 | PATCH | `/games/:id/players/me/side` | Choisir son équipe | `PLAYER_CHOSE_SIDE` |
 | PATCH | `/games/:id/players/me/spy` | Se désigner espion | `PLAYER_DESIGNATED_SPY` |
 | POST | `/games/:id/rounds/start` | Démarrer un round | `ROUND_STARTED` (+ création Round) |
@@ -190,7 +194,7 @@ Chaque action crée un event, le persiste, recalcule l'état, et le Gateway éme
 - Ajouter `@nestjs/websockets` et `@nestjs/platform-socket.io`.
 - Créer un `GamesGateway` dans le module Games.
 - Rooms : une room par game (`game:${gameId}`).
-- Authentification : vérifier la session (Better Auth) avant d'accepter la connexion.
+- Connexion : aucune authentification. Toute connexion est acceptée. L'identification des joueurs se fait via le header `X-Player-Id` sur les requêtes REST (voir [player-identification.md](./player-identification.md)).
 
 ### 3.2 Événement unique émis : `game:state`
 
@@ -270,7 +274,7 @@ highlights: Record<number, { playerId: string, playerName: string }[]>
 ### 5.1 Migrations MikroORM
 
 - Créer la table `game_event` (id, gameId, roundId, eventType, payload, triggeredBy, createdAt) avec index sur `(gameId, createdAt)` et `(gameId, roundId, createdAt)`.
-- Simplifier `game` : garder id, createdBy, createdAt ; supprimer les champs dérivés des events.
+- Simplifier `game` : garder id, creatorPseudo, creatorToken, createdAt ; supprimer les champs dérivés des events.
 - Supprimer ou migrer `game_player` : les joueurs viennent des events.
 - Adapter `round` : id, gameId, order, words, results, createdAt (données de grille uniquement).
 - Supprimer `round_player_roles`, `round_events`, `round_clue`, `round_reveal` (si existants).
@@ -304,6 +308,10 @@ highlights: Record<number, { playerId: string, playerName: string }[]>
 ### Règles du jeu Codenames
 
 - **[rules.md](./rules.md)** — Règles officielles à respecter pour la logique du jeu (grille, types de cartes, tour, indices, victoire/défaite).
+
+### Identification des joueurs
+
+- **[player-identification.md](./player-identification.md)** — Flux d'identification sans inscription (pseudo, playerId, creatorToken, header X-Player-Id).
 
 ### Conventions de développement
 

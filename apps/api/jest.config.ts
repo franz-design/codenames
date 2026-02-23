@@ -32,7 +32,11 @@ const configE2E: Config = {
 
 const configUnit: Config = {
   ...commonConfig,
-  testRegex: ['^.+\\.service\\.spec\\.ts$', '^.+\\.processor\\.spec\\.ts$'],
+  testRegex: [
+    '^.+\\.service\\.spec\\.ts$',
+    '^.+\\.processor\\.spec\\.ts$',
+    '^.+\\.logic\\.spec\\.ts$',
+  ],
   setupFilesAfterEnv: [
     '<rootDir>/test/test.setup.ts',
   ],

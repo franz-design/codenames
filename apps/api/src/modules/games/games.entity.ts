@@ -1,14 +1,16 @@
-import { Entity, Index, ManyToOne, PrimaryKey, Property } from '@mikro-orm/core'
-import { User } from '../auth/auth.entity'
+import { Entity, Index, PrimaryKey, Property } from '@mikro-orm/core'
 
 @Entity({ tableName: 'game' })
 export class Game {
   @PrimaryKey({ type: 'uuid', defaultRaw: 'gen_random_uuid()' })
   id!: string
 
-  @ManyToOne(() => User, { fieldName: 'createdBy' })
+  @Property()
   @Index()
-  createdBy!: User
+  creatorPseudo!: string
+
+  @Property()
+  creatorToken!: string
 
   @Property({ fieldName: 'createdAt' })
   createdAt: Date = new Date()

@@ -11,7 +11,6 @@ The API is organized into modules following NestJS's modular architecture:
 - [Auth](./src/modules/auth/README.md)
 - [Config](./src/modules/config/README.md)
 - [Db](./src/modules/db/README.md)
-- [Email](./src/modules/email/README.md)
 
 ## Stack
 

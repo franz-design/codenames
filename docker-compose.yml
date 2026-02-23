@@ -16,12 +16,5 @@ services:
       timeout: 5s
       retries: 5
 
-  maildev:
-    container_name: codenames-maildev
-    image: maildev/maildev:latest
-    ports:
-      - '${SMTP_PORT_WEB}:1080'
-      - '${SMTP_PORT}:1025'
-
 volumes:
   postgres_data:

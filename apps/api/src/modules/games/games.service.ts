@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { EntityManager, FilterQuery } from '@mikro-orm/core'
 import {
   BadRequestException,
@@ -7,9 +8,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
-import { User } from '../auth/auth.entity'
 import {
   ChooseSideInput,
+  CreateGameResponse,
   GamePagination,
   GameResponse,
   GameSorting,
@@ -17,6 +18,8 @@ import {
   GameStateResponse,
   GiveClueInput,
   HighlightWordInput,
+  JoinGameResponse,
+  KickPlayerInput,
   SelectWordInput,
   StartRoundInput,
 } from './contracts/games.contract'
@@ -45,28 +48,40 @@ export class GamesService {
     private readonly gamesGateway: GamesGateway,
   ) {}
 
-  async createGame(userId: string): Promise<GameResponse> {
-    const user = await this.em.findOne(User, { id: userId })
-    if (!user)
-      throw new NotFoundException('User not found')
+  async createGame(pseudo: string): Promise<CreateGameResponse> {
+    const creatorToken = randomUUID()
+    const playerId = randomUUID()
 
     const game = new Game()
-    game.createdBy = user
+    game.creatorPseudo = pseudo.trim()
+    game.creatorToken = creatorToken
     await this.em.persistAndFlush(game)
 
     const gameEvent = new GameEvent()
     gameEvent.game = game
     gameEvent.eventType = GameEventType.GAME_CREATED
-    gameEvent.payload = { createdById: userId }
-    gameEvent.triggeredBy = userId
+    gameEvent.payload = { creatorPseudo: pseudo.trim(), creatorToken }
     await this.em.persistAndFlush(gameEvent)
 
-    await this.emitGameState(game.id, userId)
-    return this.mapGameToResponse(game)
+    const joinEvent = new GameEvent()
+    joinEvent.game = game
+    joinEvent.eventType = GameEventType.PLAYER_JOINED
+    joinEvent.payload = { playerId, playerName: pseudo.trim() }
+    joinEvent.triggeredBy = playerId
+    await this.em.persistAndFlush(joinEvent)
+
+    await this.emitGameState(game.id)
+    const gameState = await this.getGameState(game.id)
+    return {
+      game: this.mapGameToResponse(game),
+      creatorToken,
+      playerId,
+      gameState,
+    }
   }
 
   async getGame(gameId: string): Promise<GameResponse> {
-    const game = await this.em.findOne(Game, { id: gameId }, { populate: ['createdBy'] })
+    const game = await this.em.findOne(Game, { id: gameId })
     if (!game)
       throw new NotFoundException('Game not found')
 
@@ -87,7 +102,6 @@ export class GamesService {
     }
 
     const [games, total] = await this.em.findAndCount(Game, where, {
-      populate: ['createdBy'],
       orderBy,
       limit: pagination.pageSize,
       offset: pagination.offset,
@@ -104,7 +118,7 @@ export class GamesService {
     }
   }
 
-  async getGameState(gameId: string, userId?: string): Promise<GameStateResponse> {
+  async getGameState(gameId: string): Promise<GameStateResponse> {
     const game = await this.em.findOne(Game, { id: gameId })
     if (!game)
       throw new NotFoundException('Game not found')
@@ -115,33 +129,57 @@ export class GamesService {
     return this.mapStateToResponse(state)
   }
 
-  async joinGame(gameId: string, userId: string): Promise<GameStateResponse> {
+  async joinGame(gameId: string, pseudo: string): Promise<JoinGameResponse> {
     const game = await this.em.findOne(Game, { id: gameId })
     if (!game)
       throw new NotFoundException('Game not found')
 
-    const user = await this.em.findOne(User, { id: userId })
-    if (!user)
-      throw new NotFoundException('User not found')
-
+    const playerId = randomUUID()
     const events = await this.loadGameEvents(gameId)
     const state = computeGameState(events)
-
-    if (state.players.some(p => p.id === userId))
-      throw new BadRequestException('Player already in game')
 
     const gameEvent = new GameEvent()
     gameEvent.game = game
     gameEvent.eventType = GameEventType.PLAYER_JOINED
-    gameEvent.payload = { playerId: userId, playerName: user.name }
-    gameEvent.triggeredBy = userId
+    gameEvent.payload = { playerId, playerName: pseudo.trim() }
+    gameEvent.triggeredBy = playerId
     await this.em.persistAndFlush(gameEvent)
 
-    await this.emitGameState(gameId, userId)
-    return this.getGameState(gameId, userId)
+    await this.emitGameState(gameId)
+    const gameState = await this.getGameState(gameId)
+    return { gameState, playerId }
   }
 
-  async leaveGame(gameId: string, userId: string): Promise<GameStateResponse> {
+  async kickPlayer(
+    gameId: string,
+    playerIdToKick: string,
+    input: KickPlayerInput,
+  ): Promise<GameStateResponse> {
+    const game = await this.em.findOne(Game, { id: gameId })
+    if (!game)
+      throw new NotFoundException('Game not found')
+
+    if (game.creatorToken !== input.creatorToken)
+      throw new ForbiddenException('Only the game creator can kick players')
+
+    const events = await this.loadGameEvents(gameId)
+    const state = computeGameState(events)
+
+    if (!state.players.some(p => p.id === playerIdToKick))
+      throw new BadRequestException('Player not in game')
+
+    const gameEvent = new GameEvent()
+    gameEvent.game = game
+    gameEvent.eventType = GameEventType.PLAYER_KICKED
+    gameEvent.payload = { playerId: playerIdToKick }
+    gameEvent.triggeredBy = null
+    await this.em.persistAndFlush(gameEvent)
+
+    await this.emitGameState(gameId)
+    return this.getGameState(gameId)
+  }
+
+  async leaveGame(gameId: string, playerId: string): Promise<GameStateResponse> {
     const game = await this.em.findOne(Game, { id: gameId })
     if (!game)
       throw new NotFoundException('Game not found')
@@ -149,14 +187,14 @@ export class GamesService {
     const events = await this.loadGameEvents(gameId)
     const state = computeGameState(events)
 
-    if (!state.players.some(p => p.id === userId))
+    if (!state.players.some(p => p.id === playerId))
       throw new BadRequestException('Player not in game')
 
     const gameEvent = new GameEvent()
     gameEvent.game = game
     gameEvent.eventType = GameEventType.PLAYER_LEFT
-    gameEvent.payload = { playerId: userId }
-    gameEvent.triggeredBy = userId
+    gameEvent.payload = { playerId }
+    gameEvent.triggeredBy = playerId
     await this.em.persistAndFlush(gameEvent)
 
     await this.emitGameState(gameId)
@@ -165,51 +203,44 @@ export class GamesService {
 
   async chooseSide(
     gameId: string,
-    userId: string,
+    playerId: string,
     data: ChooseSideInput,
   ): Promise<GameStateResponse> {
     const game = await this.em.findOne(Game, { id: gameId })
     if (!game)
       throw new NotFoundException('Game not found')
 
-    const user = await this.em.findOne(User, { id: userId })
-    if (!user)
-      throw new NotFoundException('User not found')
-
     const events = await this.loadGameEvents(gameId)
     const state = computeGameState(events)
 
-    if (!state.players.some(p => p.id === userId))
+    const player = state.players.find(p => p.id === playerId)
+    if (!player)
       throw new BadRequestException('Player not in game')
 
     const gameEvent = new GameEvent()
     gameEvent.game = game
     gameEvent.eventType = GameEventType.PLAYER_CHOSE_SIDE
     gameEvent.payload = {
-      playerId: userId,
-      playerName: user.name,
+      playerId,
+      playerName: player.name,
       side: data.side,
     }
-    gameEvent.triggeredBy = userId
+    gameEvent.triggeredBy = playerId
     await this.em.persistAndFlush(gameEvent)
 
-    await this.emitGameState(gameId, userId)
-    return this.getGameState(gameId, userId)
+    await this.emitGameState(gameId)
+    return this.getGameState(gameId)
   }
 
-  async designateSpy(gameId: string, userId: string): Promise<GameStateResponse> {
+  async designateSpy(gameId: string, playerId: string): Promise<GameStateResponse> {
     const game = await this.em.findOne(Game, { id: gameId })
     if (!game)
       throw new NotFoundException('Game not found')
 
-    const user = await this.em.findOne(User, { id: userId })
-    if (!user)
-      throw new NotFoundException('User not found')
-
     const events = await this.loadGameEvents(gameId)
     const state = computeGameState(events)
 
-    const player = state.players.find(p => p.id === userId)
+    const player = state.players.find(p => p.id === playerId)
     if (!player)
       throw new BadRequestException('Player not in game')
     if (!player.side)
@@ -219,20 +250,20 @@ export class GamesService {
     gameEvent.game = game
     gameEvent.eventType = GameEventType.PLAYER_DESIGNATED_SPY
     gameEvent.payload = {
-      playerId: userId,
-      playerName: user.name,
+      playerId,
+      playerName: player.name,
       side: player.side,
     }
-    gameEvent.triggeredBy = userId
+    gameEvent.triggeredBy = playerId
     await this.em.persistAndFlush(gameEvent)
 
-    await this.emitGameState(gameId, userId)
-    return this.getGameState(gameId, userId)
+    await this.emitGameState(gameId)
+    return this.getGameState(gameId)
   }
 
   async startRound(
     gameId: string,
-    userId: string,
+    playerId: string,
     data?: StartRoundInput,
   ): Promise<GameStateResponse> {
     const game = await this.em.findOne(Game, { id: gameId })
@@ -269,16 +300,16 @@ export class GamesService {
       order,
       startingSide,
     }
-    gameEvent.triggeredBy = userId
+    gameEvent.triggeredBy = playerId
     await this.em.persistAndFlush(gameEvent)
 
-    await this.emitGameState(gameId, userId)
-    return this.getGameState(gameId, userId)
+    await this.emitGameState(gameId)
+    return this.getGameState(gameId)
   }
 
   async giveClue(
     gameId: string,
-    userId: string,
+    playerId: string,
     data: GiveClueInput,
   ): Promise<GameStateResponse> {
     const game = await this.em.findOne(Game, { id: gameId })
@@ -289,7 +320,7 @@ export class GamesService {
     const state = computeGameState(events)
 
     const action: GameAction = { type: 'giveClue', word: data.word, number: data.number }
-    if (!canPerformAction(state, action, userId))
+    if (!canPerformAction(state, action, playerId))
       throw new ForbiddenException('Cannot give clue')
 
     const round = state.currentRound!
@@ -302,16 +333,16 @@ export class GamesService {
     gameEvent.round = roundEntity
     gameEvent.eventType = GameEventType.CLUE_GIVEN
     gameEvent.payload = { word: data.word, number: data.number }
-    gameEvent.triggeredBy = userId
+    gameEvent.triggeredBy = playerId
     await this.em.persistAndFlush(gameEvent)
 
-    await this.emitGameState(gameId, userId)
-    return this.getGameState(gameId, userId)
+    await this.emitGameState(gameId)
+    return this.getGameState(gameId)
   }
 
   async selectWord(
     gameId: string,
-    userId: string,
+    playerId: string,
     data: SelectWordInput,
   ): Promise<GameStateResponse> {
     const game = await this.em.findOne(Game, { id: gameId })
@@ -322,7 +353,7 @@ export class GamesService {
     const state = computeGameState(events)
 
     const action: GameAction = { type: 'selectWord', wordIndex: data.wordIndex }
-    if (!canPerformAction(state, action, userId))
+    if (!canPerformAction(state, action, playerId))
       throw new ForbiddenException('Cannot select word')
 
     const round = state.currentRound!
@@ -336,7 +367,7 @@ export class GamesService {
     gameEvent.round = roundEntity
     gameEvent.eventType = GameEventType.WORD_SELECTED
     gameEvent.payload = { wordIndex: data.wordIndex, cardType }
-    gameEvent.triggeredBy = userId
+    gameEvent.triggeredBy = playerId
     await this.em.persistAndFlush(gameEvent)
 
     const newEvents = await this.loadGameEvents(gameId)
@@ -357,7 +388,7 @@ export class GamesService {
         winningSide: gameOver.winningSide ?? undefined,
         losingSide: gameOver.losingSide ?? undefined,
       }
-      finishEvent.triggeredBy = userId
+      finishEvent.triggeredBy = playerId
       await this.em.persistAndFlush(finishEvent)
     }
     else if (cardType !== round.currentTurn || newRound.guessesRemaining <= 0) {
@@ -366,32 +397,32 @@ export class GamesService {
       passEvent.round = roundEntity
       passEvent.eventType = GameEventType.TURN_PASSED
       passEvent.payload = {}
-      passEvent.triggeredBy = userId
+      passEvent.triggeredBy = playerId
       await this.em.persistAndFlush(passEvent)
     }
 
-    await this.emitGameState(gameId, userId)
-    return this.getGameState(gameId, userId)
+    await this.emitGameState(gameId)
+    return this.getGameState(gameId)
   }
 
   async highlightWord(
     gameId: string,
-    userId: string,
+    playerId: string,
     data: HighlightWordInput,
   ): Promise<GameStateResponse> {
     const game = await this.em.findOne(Game, { id: gameId })
     if (!game)
       throw new NotFoundException('Game not found')
 
-    const user = await this.em.findOne(User, { id: userId })
-    if (!user)
-      throw new NotFoundException('User not found')
-
     const events = await this.loadGameEvents(gameId)
     const state = computeGameState(events)
 
+    const player = state.players.find(p => p.id === playerId)
+    if (!player)
+      throw new BadRequestException('Player not in game')
+
     const action: GameAction = { type: 'highlightWord', wordIndex: data.wordIndex }
-    if (!canPerformAction(state, action, userId))
+    if (!canPerformAction(state, action, playerId))
       throw new ForbiddenException('Cannot highlight word')
 
     const round = state.currentRound!
@@ -405,19 +436,19 @@ export class GamesService {
     gameEvent.eventType = GameEventType.WORD_HIGHLIGHTED
     gameEvent.payload = {
       wordIndex: data.wordIndex,
-      playerId: userId,
-      playerName: user.name,
+      playerId,
+      playerName: player.name,
     }
-    gameEvent.triggeredBy = userId
+    gameEvent.triggeredBy = playerId
     await this.em.persistAndFlush(gameEvent)
 
-    await this.emitGameState(gameId, userId)
-    return this.getGameState(gameId, userId)
+    await this.emitGameState(gameId)
+    return this.getGameState(gameId)
   }
 
   async unhighlightWord(
     gameId: string,
-    userId: string,
+    playerId: string,
     wordIndex: number,
   ): Promise<GameStateResponse> {
     const game = await this.em.findOne(Game, { id: gameId })
@@ -428,7 +459,7 @@ export class GamesService {
     const state = computeGameState(events)
 
     const action: GameAction = { type: 'unhighlightWord', wordIndex }
-    if (!canPerformAction(state, action, userId))
+    if (!canPerformAction(state, action, playerId))
       throw new ForbiddenException('Cannot unhighlight word')
 
     const round = state.currentRound!
@@ -440,15 +471,15 @@ export class GamesService {
     gameEvent.game = game
     gameEvent.round = roundEntity
     gameEvent.eventType = GameEventType.WORD_UNHIGHLIGHTED
-    gameEvent.payload = { wordIndex, playerId: userId }
-    gameEvent.triggeredBy = userId
+    gameEvent.payload = { wordIndex, playerId }
+    gameEvent.triggeredBy = playerId
     await this.em.persistAndFlush(gameEvent)
 
-    await this.emitGameState(gameId, userId)
-    return this.getGameState(gameId, userId)
+    await this.emitGameState(gameId)
+    return this.getGameState(gameId)
   }
 
-  async passTurn(gameId: string, userId: string): Promise<GameStateResponse> {
+  async passTurn(gameId: string, playerId: string): Promise<GameStateResponse> {
     const game = await this.em.findOne(Game, { id: gameId })
     if (!game)
       throw new NotFoundException('Game not found')
@@ -457,7 +488,7 @@ export class GamesService {
     const state = computeGameState(events)
 
     const action: GameAction = { type: 'passTurn' }
-    if (!canPerformAction(state, action, userId))
+    if (!canPerformAction(state, action, playerId))
       throw new ForbiddenException('Cannot pass turn')
 
     const round = state.currentRound!
@@ -470,14 +501,14 @@ export class GamesService {
     gameEvent.round = roundEntity
     gameEvent.eventType = GameEventType.TURN_PASSED
     gameEvent.payload = {}
-    gameEvent.triggeredBy = userId
+    gameEvent.triggeredBy = playerId
     await this.em.persistAndFlush(gameEvent)
 
-    await this.emitGameState(gameId, userId)
-    return this.getGameState(gameId, userId)
+    await this.emitGameState(gameId)
+    return this.getGameState(gameId)
   }
 
-  async restartGame(gameId: string, userId: string): Promise<GameStateResponse> {
+  async restartGame(gameId: string, playerId: string): Promise<GameStateResponse> {
     const game = await this.em.findOne(Game, { id: gameId })
     if (!game)
       throw new NotFoundException('Game not found')
@@ -486,11 +517,11 @@ export class GamesService {
     gameEvent.game = game
     gameEvent.eventType = GameEventType.GAME_RESTARTED
     gameEvent.payload = {}
-    gameEvent.triggeredBy = userId
+    gameEvent.triggeredBy = playerId
     await this.em.persistAndFlush(gameEvent)
 
-    await this.emitGameState(gameId, userId)
-    return this.getGameState(gameId, userId)
+    await this.emitGameState(gameId)
+    return this.getGameState(gameId)
   }
 
   private async loadGameEvents(gameId: string): Promise<GameEventInput[]> {
@@ -514,18 +545,14 @@ export class GamesService {
   private mapGameToResponse(game: Game): GameResponse {
     return {
       id: game.id,
-      createdBy: {
-        id: game.createdBy.id,
-        name: game.createdBy.name,
-        email: game.createdBy.email,
-      },
+      creatorPseudo: game.creatorPseudo,
       createdAt: game.createdAt,
     }
   }
 
-  private async emitGameState(gameId: string, userId?: string): Promise<void> {
+  private async emitGameState(gameId: string): Promise<void> {
     try {
-      const state = await this.getGameState(gameId, userId)
+      const state = await this.getGameState(gameId)
       this.gamesGateway.broadcastGameState(gameId, state)
     }
     catch {

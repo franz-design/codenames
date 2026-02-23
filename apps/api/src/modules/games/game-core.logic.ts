@@ -61,21 +61,21 @@ export interface GameState {
 export function generateGridResults(order: number): CardType[] {
   const results: CardType[] = []
 
-  results.push('black')
+  results.push(CardType.BLACK)
 
   for (let i = 0; i < 7; i++) {
-    results.push('neutral')
+    results.push(CardType.NEUTRAL)
   }
 
   const redCount = order % 2 === 0 ? 8 : 9
   const blueCount = order % 2 === 0 ? 9 : 8
 
   for (let i = 0; i < redCount; i++) {
-    results.push('red')
+    results.push(CardType.RED)
   }
 
   for (let i = 0; i < blueCount; i++) {
-    results.push('blue')
+    results.push(CardType.BLUE)
   }
 
   for (let i = results.length - 1; i > 0; i--) {
@@ -100,6 +100,14 @@ export function applyEvent(
       ...state,
       status: 'LOBBY',
       players: [],
+    }
+  }
+
+  if (eventType === GameEventType.PLAYER_KICKED) {
+    const { playerId } = payload as { playerId: string }
+    return {
+      ...state,
+      players: state.players.filter(p => p.id !== playerId),
     }
   }
 
@@ -302,6 +310,8 @@ export interface GameOverResult {
 /**
  * Checks if the game is over based on revealed words and grid results.
  * Win: all team cards found. Lose: assassin (black) clicked.
+ * @param revealedWords - Words revealed so far
+ * @param results - Grid card types
  * @param currentTurn - The team whose turn it was when the last word was selected (used when black is clicked)
  */
 export function checkGameOver(
@@ -309,7 +319,7 @@ export function checkGameOver(
   results: CardType[],
   currentTurn?: Side,
 ): GameOverResult {
-  const hasBlack = revealedWords.some(r => r.cardType === 'black')
+  const hasBlack = revealedWords.some(r => r.cardType === CardType.BLACK)
   if (hasBlack) {
     return {
       isOver: true,
@@ -318,10 +328,10 @@ export function checkGameOver(
     }
   }
 
-  const redCount = results.filter(r => r === 'red').length
-  const blueCount = results.filter(r => r === 'blue').length
-  const redRevealed = revealedWords.filter(r => r.cardType === 'red').length
-  const blueRevealed = revealedWords.filter(r => r.cardType === 'blue').length
+  const redCount = results.filter(r => r === CardType.RED).length
+  const blueCount = results.filter(r => r === CardType.BLUE).length
+  const redRevealed = revealedWords.filter(r => r.cardType === CardType.RED).length
+  const blueRevealed = revealedWords.filter(r => r.cardType === CardType.BLUE).length
 
   if (redRevealed === redCount)
     return { isOver: true, winningSide: 'red' }

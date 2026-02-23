@@ -3,9 +3,7 @@ import { Module } from '@nestjs/common'
 import { ConfigModule as NestConfigModule } from '@nestjs/config'
 import { LoggerModule } from 'nestjs-pino'
 import { AppController } from './app.controller'
-import { AuthModule } from './modules/auth/auth.module'
 import { DbModule } from './modules/db/db.module'
-import { EmailModule } from './modules/email/email.module'
 import { GamesModule } from './modules/games/games.module'
 import { WordsModule } from './modules/words/words.module'
 
@@ -86,8 +84,6 @@ interface ExpressResponse extends ServerResponse<IncomingMessage> {
       },
     }),
     DbModule,
-    AuthModule.forRootAsync(),
-    EmailModule,
     GamesModule,
     WordsModule,
     NestConfigModule,

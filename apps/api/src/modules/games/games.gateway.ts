@@ -1,4 +1,8 @@
 import {
+  forwardRef,
+  Inject,
+} from '@nestjs/common'
+import {
   ConnectedSocket,
   MessageBody,
   OnGatewayConnection,
@@ -9,9 +13,7 @@ import {
 } from '@nestjs/websockets'
 import type { Server } from 'socket.io'
 import type { Socket } from 'socket.io'
-import { fromNodeHeaders } from 'better-auth/node'
 import type { GameStateResponse } from './contracts/games.contract'
-import { AuthService } from '../auth/auth.service'
 import { GamesService } from './games.service'
 
 const GAME_STATE_EVENT = 'game:state'
@@ -19,10 +21,6 @@ const GAME_JOIN_EVENT = 'game:join'
 
 function getGameRoomId(gameId: string): string {
   return `game:${gameId}`
-}
-
-export interface AuthenticatedSocket extends Socket {
-  userId?: string
 }
 
 @WebSocketGateway({
@@ -34,39 +32,24 @@ export class GamesGateway implements OnGatewayConnection, OnGatewayDisconnect {
   server!: Server
 
   constructor(
-    private readonly authService: AuthService,
+    @Inject(forwardRef(() => GamesService))
     private readonly gamesService: GamesService,
   ) {}
 
-  async handleConnection(client: AuthenticatedSocket): Promise<void> {
-    try {
-      const session = await this.authService.api.getSession({
-        headers: fromNodeHeaders(client.handshake.headers),
-      })
-
-      if (!session?.user?.id) {
-        client.disconnect()
-        return
-      }
-
-      client.userId = session.user.id
-    }
-    catch {
-      client.disconnect()
-    }
+  handleConnection(_client: Socket): void {
+    // No auth required - anyone can connect
   }
 
-  handleDisconnect(_client: AuthenticatedSocket): void {
+  handleDisconnect(_client: Socket): void {
     // Cleanup if needed
   }
 
   @SubscribeMessage(GAME_JOIN_EVENT)
   async handleGameJoin(
-    @ConnectedSocket() client: AuthenticatedSocket,
+    @ConnectedSocket() client: Socket,
     @MessageBody() gameId: string,
   ): Promise<void> {
-    const userId = client.userId
-    if (!userId || typeof gameId !== 'string')
+    if (typeof gameId !== 'string')
       return
 
     try {
