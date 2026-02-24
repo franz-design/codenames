@@ -1,4 +1,6 @@
-import { RequestContext } from '@mikro-orm/core'
+import type { Server, Socket } from 'socket.io'
+import type { GameStateResponse } from './contracts/games.contract'
+import { MikroORM, RequestContext } from '@mikro-orm/core'
 import {
   forwardRef,
   Inject,
@@ -13,10 +15,6 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets'
-import { MikroORM } from '@mikro-orm/core'
-import type { Server } from 'socket.io'
-import type { Socket } from 'socket.io'
-import type { GameStateResponse } from './contracts/games.contract'
 import { GamesService } from './games.service'
 
 const GAME_STATE_EVENT = 'game:state'
@@ -36,6 +34,7 @@ export class GamesGateway implements OnGatewayConnection, OnGatewayDisconnect {
   server!: Server
 
   constructor(
+    // eslint-disable-next-line react/no-forward-ref, react/no-useless-forward-ref
     @Inject(forwardRef(() => GamesService))
     private readonly gamesService: GamesService,
     private readonly orm: MikroORM,
@@ -70,7 +69,7 @@ export class GamesGateway implements OnGatewayConnection, OnGatewayDisconnect {
         await this.gamesService.getGame(idToUse)
       }
       catch (err) {
-        this.logger.warn(`[WS] game:join ignored: game not found for id: ${idToUse}`)
+        this.logger.warn(`[WS] game:join ignored: game not found for id: ${idToUse}`, err instanceof Error ? err.message : String(err))
         return
       }
 

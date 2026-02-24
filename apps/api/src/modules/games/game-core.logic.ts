@@ -4,54 +4,25 @@
  * See docs/game-backend-plan.md and docs/rules.md for reference.
  */
 
+import type {
+  GameAction,
+  GameEventInput,
+  GameOverResult,
+  GameState,
+  RevealedWord,
+} from './game-core.types'
 import type { Side } from './game-event.types'
-import {
-  CardType,
-  GameEventType,
+import { CardType, GameEventType } from './game-event.types'
 
-} from './game-event.types'
-
-export interface GameEventInput {
-  id: string
-  gameId: string
-  roundId?: string | null
-  eventType: GameEventType
-  payload: Record<string, unknown>
-  triggeredBy?: string | null
-  createdAt: Date
-}
-
-export interface GameStatePlayer {
-  id: string
-  name: string
-  side?: Side | null
-  isSpy?: boolean
-}
-
-export interface RevealedWord {
-  wordIndex: number
-  cardType: CardType
-}
-
-export interface RoundState {
-  id: string
-  words: string[]
-  results: CardType[]
-  order: number
-  currentTurn: Side
-  currentClue?: { word: string, number: number } | null
-  guessesRemaining: number
-  revealedWords: RevealedWord[]
-  highlights: Record<number, { playerId: string, playerName: string }[]>
-}
-
-export interface GameState {
-  status: 'LOBBY' | 'PLAYING' | 'FINISHED'
-  players: GameStatePlayer[]
-  currentRound?: RoundState | null
-  winningSide?: Side | null
-  losingSide?: Side | null
-}
+export type {
+  GameAction,
+  GameEventInput,
+  GameOverResult,
+  GameState,
+  GameStatePlayer,
+  RevealedWord,
+  RoundState,
+} from './game-core.types'
 
 /**
  * Generates the grid results for a round.
@@ -303,12 +274,6 @@ export function computeGameState(events: GameEventInput[]): GameState {
   return state
 }
 
-export interface GameOverResult {
-  isOver: boolean
-  winningSide?: Side | null
-  losingSide?: Side | null
-}
-
 /**
  * Checks if the game is over based on revealed words and grid results.
  * Win: all team cards found. Lose: assassin (black) clicked.
@@ -342,13 +307,6 @@ export function checkGameOver(
 
   return { isOver: false }
 }
-
-export type GameAction
-  = | { type: 'giveClue', word: string, number: number }
-    | { type: 'selectWord', wordIndex: number }
-    | { type: 'highlightWord', wordIndex: number }
-    | { type: 'unhighlightWord', wordIndex: number }
-    | { type: 'passTurn' }
 
 /**
  * Validates if a player can perform an action.
