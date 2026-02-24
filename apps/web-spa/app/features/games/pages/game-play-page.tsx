@@ -1,13 +1,14 @@
-import { useQuery } from '@tanstack/react-query'
+import { toast } from '@codenames/ui/components/primitives/sonner'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
-import { toast } from '@codenames/ui/components/primitives/sonner'
+import { GameLobbyView } from '../components/game-lobby-view'
+import { GamePlayView } from '../components/game-play-view'
 import {
   createGamesApiClient,
   useGameSession,
   useGameWebSocket,
 } from '../index'
-import { GameLobbyView } from '../components/game-lobby-view'
 
 export default function GamePlayPage() {
   const { gameId } = useParams<{ gameId: string }>()
@@ -30,6 +31,15 @@ export default function GamePlayPage() {
 
   const gameState = wsGameState ?? fetchedState ?? null
   const isLoading = !gameState && (isFetching || isConnected)
+
+  const api = createGamesApiClient(playerId ?? '')
+  const { mutate: leaveGame, isPending: isLeaving } = useMutation({
+    mutationFn: () => api.leaveGame(gameId!),
+    onSuccess: () => {
+      clearSession()
+      navigate('/')
+    },
+  })
 
   useEffect(() => {
     if (!gameState || !playerId)
@@ -64,7 +74,10 @@ export default function GamePlayPage() {
   if (error) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center p-4">
-        <p className="text-muted-foreground">Erreur de connexion : {error.message}</p>
+        <p className="text-muted-foreground">
+          Erreur de connexion :
+          {error.message}
+        </p>
       </main>
     )
   }
@@ -84,28 +97,13 @@ export default function GamePlayPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4">
-      <div className="w-full max-w-2xl space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Partie</h1>
-          <span className="text-sm text-muted-foreground">
-            {playerName}
-          </span>
-        </div>
-
-        <div className="rounded-lg border p-4">
-          <p className="text-sm text-muted-foreground">
-            Statut : {isConnected ? 'Connecté' : 'Connexion...'}
-          </p>
-          <p className="mt-2 text-sm">
-            État : {gameState.status} — {gameState.players.length} joueur(s)
-          </p>
-        </div>
-
-        <p className="text-center text-sm text-muted-foreground">
-          La vue de jeu sera implémentée en Phase 4.
-        </p>
-      </div>
-    </main>
+    <GamePlayView
+      gameState={gameState}
+      playerId={playerId ?? ''}
+      playerName={playerName}
+      isConnected={isConnected}
+      onLeaveGame={() => leaveGame()}
+      isLeaving={isLeaving}
+    />
   )
 }

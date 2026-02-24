@@ -34,11 +34,11 @@ Ce document décrit le plan de mise en place de la partie frontend du jeu Codena
 
 ### Phase 4 : Vue de jeu – structure commune
 
-- [ ] **4.1** Créer le layout de la page de jeu (`/games/:gameId`) avec WebSocket connecté
-- [ ] **4.2** Créer le composant `WordGrid` (grille 5×5 de cartes)
-- [ ] **4.3** Créer le composant `WordCard` (mot révélé/non révélé, type de carte, highlights)
-- [ ] **4.4** Afficher l'indicateur de tour (équipe courante, indice en cours, guessesRemaining)
-- [ ] **4.5** Gérer l'affichage selon le rôle (Espion vs Opératif) et l'équipe
+- [x] **4.1** Créer le layout de la page de jeu (`/games/:gameId`) avec WebSocket connecté
+- [x] **4.2** Créer le composant `WordGrid` (grille 5×5 de cartes)
+- [x] **4.3** Créer le composant `WordCard` (mot révélé/non révélé, type de carte, highlights)
+- [x] **4.4** Afficher l'indicateur de tour (équipe courante, indice en cours, guessesRemaining)
+- [x] **4.5** Gérer l'affichage selon le rôle (Espion vs Opératif) et l'équipe
 
 ### Phase 5 : Vue Espion
 
