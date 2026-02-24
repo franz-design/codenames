@@ -12,10 +12,10 @@ Ce document décrit le plan de mise en place de la partie frontend du jeu Codena
 
 ### Phase 1 : Fondations et SDK
 
-- [ ] **1.1** Régénérer le client OpenAPI pour inclure les endpoints Games
-- [ ] **1.2** Créer un client API Games avec support du header `X-Player-Id`
-- [ ] **1.3** Créer le hook `useGameSession` pour stocker playerId, creatorToken, gameId (sessionStorage)
-- [ ] **1.4** Créer le hook `useGameWebSocket` pour connexion WebSocket namespace `/games` et écoute de `game:state`
+- [x] **1.1** Régénérer le client OpenAPI pour inclure les endpoints Games (nécessite API démarrée : `pnpm generate`)
+- [x] **1.2** Créer un client API Games avec support du header `X-Player-Id`
+- [x] **1.3** Créer le hook `useGameSession` pour stocker playerId, creatorToken, gameId (sessionStorage)
+- [x] **1.4** Créer le hook `useGameWebSocket` pour connexion WebSocket namespace `/games` et écoute de `game:state`
 
 ### Phase 2 : Pages d'entrée et routing
 

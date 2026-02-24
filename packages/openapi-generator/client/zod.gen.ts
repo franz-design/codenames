@@ -3,169 +3,205 @@
 import { z } from "zod";
 
 /**
- * CreateCommentSchema
- * Schema for creating a comment
+ * CreateGameSchema
+ * Schema for creating a game
  */
-export const zCreateCommentSchema = z.object({
-  content: z.string().min(1).max(1000),
-  parentId: z.optional(
-    z
-      .uuid()
-      .regex(
-        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
-      ),
-  ),
+export const zCreateGameSchema = z.object({
+  pseudo: z.string().min(1).max(100),
 });
 
 /**
- * PostContentSchema
- * Schema for content items (text, image, video)
+ * JoinGameSchema
+ * Schema for joining a game
  */
-export const zPostContentSchema = z.union([
-  z.object({
-    type: z.literal("text"),
-    data: z.string(),
-  }),
-  z.object({
-    type: z.literal("image"),
-    data: z.string(),
-  }),
-  z.object({
-    type: z.literal("video"),
-    data: z.string(),
-  }),
-]);
-
-/**
- * CreatePostSchema
- * Schema for creating/updating a post
- */
-export const zCreatePostSchema = z.object({
-  title: z.string().min(1),
-  content: z.array(zPostContentSchema),
+export const zJoinGameSchema = z.object({
+  pseudo: z.string().min(1).max(100),
 });
 
 /**
- * UpdatePostSchema
- * Schema for updating a post
+ * KickPlayerSchema
+ * Schema for kicking a player (creator only)
  */
-export const zUpdatePostSchema = z.object({
-  title: z.optional(z.string().min(1)),
-  content: z.optional(z.array(zPostContentSchema)),
+export const zKickPlayerSchema = z.object({
+  creatorToken: z
+    .uuid()
+    .regex(
+      /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+    ),
 });
 
 /**
- * CommentSchema
- * Schema for a comment
+ * SideSchema
+ * Player side in a game
  */
-export const zCommentSchema = z.object({
+export const zSideSchema = z.enum(["red", "blue"]);
+
+/**
+ * ChooseSideSchema
+ * Schema for choosing team side
+ */
+export const zChooseSideSchema = z.object({
+  side: zSideSchema,
+});
+
+/**
+ * StartRoundSchema
+ * Schema for starting a round
+ */
+export const zStartRoundSchema = z.object({
+  wordCount: z.optional(z.int().gte(1).lte(400)),
+});
+
+/**
+ * GiveClueSchema
+ * Schema for giving a clue
+ */
+export const zGiveClueSchema = z.object({
+  word: z.string().min(1),
+  number: z.int().gte(0).lte(9007199254740991),
+});
+
+/**
+ * SelectWordSchema
+ * Schema for selecting a word
+ */
+export const zSelectWordSchema = z.object({
+  wordIndex: z.int().gte(0).lte(9007199254740991),
+});
+
+/**
+ * HighlightWordSchema
+ * Schema for highlighting a word
+ */
+export const zHighlightWordSchema = z.object({
+  wordIndex: z.int().gte(0).lte(9007199254740991),
+});
+
+/**
+ * WordSchema
+ * Schema for a word
+ */
+export const zWordSchema = z.object({
   id: z
     .uuid()
     .regex(
       /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
     ),
-  content: z.string(),
-  authorName: z.union([z.string(), z.null()]),
+  label: z.string(),
+});
+
+/**
+ * WordsSchema
+ * Schema for a list of words
+ */
+export const zWordsSchema = z.array(zWordSchema);
+
+/**
+ * GameSchema
+ * Schema for a game (basic info)
+ */
+export const zGameSchema = z.object({
+  id: z
+    .uuid()
+    .regex(
+      /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+    ),
+  creatorPseudo: z.string(),
   createdAt: z.string(),
-  user: z.union([
+});
+
+/**
+ * GameStatePlayerSchema
+ * Player in game state
+ */
+export const zGameStatePlayerSchema = z.object({
+  id: z
+    .uuid()
+    .regex(
+      /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+    ),
+  name: z.string(),
+  side: z.union([z.enum(["red", "blue"]), z.null()]),
+  isSpy: z.optional(z.boolean()),
+});
+
+/**
+ * GameStateSchema
+ * Full game state computed from events
+ */
+export const zGameStateSchema = z.object({
+  status: z.enum(["LOBBY", "PLAYING", "FINISHED"]),
+  players: z.array(zGameStatePlayerSchema),
+  currentRound: z.union([
     z.object({
       id: z
         .uuid()
         .regex(
           /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
         ),
-      name: z.string(),
-    }),
-    z.null(),
-  ]),
-  parentId: z.union([
-    z
-      .uuid()
-      .regex(
-        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      words: z.array(z.string()),
+      results: z.array(z.enum(["neutral", "red", "blue", "black"])),
+      order: z.int().gt(0).lte(9007199254740991),
+      currentTurn: z.enum(["red", "blue"]),
+      currentClue: z.union([
+        z.object({
+          word: z.string(),
+          number: z.int().gte(0).lte(9007199254740991),
+        }),
+        z.null(),
+      ]),
+      guessesRemaining: z.int().gte(0).lte(9007199254740991),
+      revealedWords: z.array(
+        z.object({
+          wordIndex: z.int().gte(0).lte(9007199254740991),
+          cardType: z.enum(["neutral", "red", "blue", "black"]),
+        }),
       ),
+      highlights: z.record(
+        z.string(),
+        z.array(
+          z.object({
+            playerId: z
+              .uuid()
+              .regex(
+                /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+              ),
+            playerName: z.string(),
+          }),
+        ),
+      ),
+    }),
     z.null(),
   ]),
-  replyIds: z.optional(
-    z.array(
-      z
-        .uuid()
-        .regex(
-          /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
-        ),
-    ),
-  ),
-  replyCount: z.optional(z.number()),
+  winningSide: z.union([z.enum(["red", "blue"]), z.null()]),
+  losingSide: z.union([z.enum(["red", "blue"]), z.null()]),
 });
 
 /**
- * CommentsSchema
- * Schema for a paginated list of comments
+ * CreateGameResponseSchema
+ * Response when creating a game
  */
-export const zCommentsSchema = z.object({
-  data: z.array(zCommentSchema),
-  meta: z.object({
-    offset: z.number(),
-    pageSize: z.number(),
-    itemCount: z.number(),
-    hasMore: z.boolean(),
-  }),
-});
-
-/**
- * PostVersionSchema
- * Schema for a post version
- */
-export const zPostVersionSchema = z.object({
-  id: z
+export const zCreateGameResponseSchema = z.object({
+  game: zGameSchema,
+  creatorToken: z
     .uuid()
     .regex(
       /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
     ),
-  title: z.string(),
-  createdAt: z.string(),
-});
-
-/**
- * UserPostSchema
- * Schema for a user's post
- */
-export const zUserPostSchema = z.object({
-  id: z
+  playerId: z
     .uuid()
     .regex(
       /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
     ),
-  slug: z.optional(z.union([z.string(), z.null()])),
-  title: z.string(),
-  content: z.array(zPostContentSchema),
-  versions: z.array(zPostVersionSchema),
-  publishedAt: z.optional(z.union([z.string(), z.null()])),
-  type: z.enum(["published", "draft"]),
-  commentCount: z.optional(z.number()),
+  gameState: zGameStateSchema,
 });
 
 /**
- * UserPostsSchema
- * Schema for a list of user's posts
+ * GamesSchema
+ * Schema for a paginated list of games
  */
-export const zUserPostsSchema = z.object({
-  data: z.array(
-    z.object({
-      id: z
-        .uuid()
-        .regex(
-          /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
-        ),
-      slug: z.optional(z.union([z.string(), z.null()])),
-      title: z.string(),
-      versions: z.array(zPostVersionSchema),
-      publishedAt: z.optional(z.union([z.string(), z.null()])),
-      type: z.enum(["published", "draft"]),
-      commentCount: z.optional(z.number()),
-      contentPreview: zPostContentSchema,
-    }),
-  ),
+export const zGamesSchema = z.object({
+  data: z.array(zGameSchema),
   meta: z.object({
     offset: z.number(),
     pageSize: z.number(),
@@ -175,43 +211,16 @@ export const zUserPostsSchema = z.object({
 });
 
 /**
- * PublicPostSchema
- * A public post
+ * JoinGameResponseSchema
+ * Response when joining a game
  */
-export const zPublicPostSchema = z.object({
-  title: z.string(),
-  author: z.object({
-    name: z.string(),
-  }),
-  content: z.array(zPostContentSchema),
-  publishedAt: z.string(),
-  slug: z.optional(z.string()),
-  commentCount: z.optional(z.number()),
-});
-
-/**
- * PublicPostsSchema
- * A list of public posts
- */
-export const zPublicPostsSchema = z.object({
-  data: z.array(
-    z.object({
-      title: z.string(),
-      author: z.object({
-        name: z.string(),
-      }),
-      publishedAt: z.string(),
-      slug: z.optional(z.string()),
-      commentCount: z.optional(z.number()),
-      contentPreview: zPostContentSchema,
-    }),
-  ),
-  meta: z.object({
-    offset: z.number(),
-    pageSize: z.number(),
-    itemCount: z.number(),
-    hasMore: z.boolean(),
-  }),
+export const zJoinGameResponseSchema = z.object({
+  gameState: zGameStateSchema,
+  playerId: z
+    .uuid()
+    .regex(
+      /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+    ),
 });
 
 /**
@@ -227,41 +236,7 @@ export const zPaginationQuerySchema = z.object({
  * SortingQueryStringSchema
  * Schema for sorting items
  */
-export const zSortingQueryStringSchema = z.array(
-  z.object({
-    property: z.union([z.literal("title"), z.literal("createdAt")]),
-    direction: z.enum(["asc", "desc"]),
-  }),
-);
-
-/**
- * FilterQueryStringSchema
- * Filtering query string, in the format of "property:rule[:value];property:rule[:value];..."
- * <br> Available rules: eq, neq, gt, gte, lt, lte, like, nlike, in, nin, isnull, isnotnull
- * <br> Available properties: title
- */
-export const zFilterQueryStringSchema = z.array(
-  z.object({
-    property: z.literal("title"),
-    rule: z.enum([
-      "eq",
-      "neq",
-      "gt",
-      "gte",
-      "lt",
-      "lte",
-      "like",
-      "nlike",
-      "in",
-      "nin",
-      "isnull",
-      "isnotnull",
-    ]),
-    value: z.optional(z.string()),
-  }),
-);
-
-export const zCommentsControllerPostSlug = z.string();
+export const zSortingQueryStringSchema = z.string();
 
 export const zAppControllerGetHelloData = z.object({
   body: z.optional(z.never()),
@@ -269,315 +244,306 @@ export const zAppControllerGetHelloData = z.object({
   query: z.optional(z.never()),
 });
 
-export const zPostControllerGetUserPostsData = z.object({
+export const zGamesControllerGetGamesData = z.object({
   body: z.optional(z.never()),
   path: z.optional(z.never()),
   query: z.object({
-    filter: z.optional(
-      z.array(
-        z.object({
-          property: z.literal("title"),
-          rule: z.enum([
-            "eq",
-            "neq",
-            "gt",
-            "gte",
-            "lt",
-            "lte",
-            "like",
-            "nlike",
-            "in",
-            "nin",
-            "isnull",
-            "isnotnull",
-          ]),
-          value: z.optional(z.string()),
-        }),
-      ),
-    ),
-    sort: z.optional(
-      z.array(
-        z.object({
-          property: z.union([z.literal("title"), z.literal("createdAt")]),
-          direction: z.enum(["asc", "desc"]),
-        }),
-      ),
-    ),
+    sort: z.optional(z.string()),
     offset: z.int().gte(0).lte(9007199254740991).default(0),
     pageSize: z.int().gte(1).lte(100).default(20),
   }),
 });
 
 /**
- * Schema for a list of user's posts
+ * Schema for a paginated list of games
  */
-export const zPostControllerGetUserPostsResponse = zUserPostsSchema;
+export const zGamesControllerGetGamesResponse = zGamesSchema;
 
-export const zPostControllerCreatePostData = z.object({
+export const zGamesControllerCreateGameData = z.object({
   body: z.object({
-    title: z.string().min(1),
-    content: z.array(
-      z.union([
-        z.object({
-          type: z.literal("text"),
-          data: z.string(),
-        }),
-        z.object({
-          type: z.literal("image"),
-          data: z.string(),
-        }),
-        z.object({
-          type: z.literal("video"),
-          data: z.string(),
-        }),
-      ]),
-    ),
+    pseudo: z.string().min(1).max(100),
   }),
   path: z.optional(z.never()),
   query: z.optional(z.never()),
 });
 
 /**
- * Schema for a user's post
+ * Response when creating a game
  */
-export const zPostControllerCreatePostResponse = zUserPostSchema;
+export const zGamesControllerCreateGameResponse = zCreateGameResponseSchema;
 
-export const zPostControllerGetUserPostData = z.object({
+export const zGamesControllerGetGameData = z.object({
   body: z.optional(z.never()),
   path: z.object({
-    id: z.string(),
+    id: z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      ),
   }),
   query: z.optional(z.never()),
 });
 
 /**
- * Schema for a user's post
+ * Schema for a game (basic info)
  */
-export const zPostControllerGetUserPostResponse = zUserPostSchema;
+export const zGamesControllerGetGameResponse = zGameSchema;
 
-export const zPostControllerUpdatePostData = z.object({
+export const zGamesControllerGetGameStateData = z.object({
+  body: z.optional(z.never()),
+  path: z.object({
+    id: z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      ),
+  }),
+  query: z.optional(z.never()),
+});
+
+/**
+ * Full game state computed from events
+ */
+export const zGamesControllerGetGameStateResponse = zGameStateSchema;
+
+export const zGamesControllerJoinGameData = z.object({
   body: z.object({
-    title: z.optional(z.string().min(1)),
-    content: z.optional(
-      z.array(
-        z.union([
-          z.object({
-            type: z.literal("text"),
-            data: z.string(),
-          }),
-          z.object({
-            type: z.literal("image"),
-            data: z.string(),
-          }),
-          z.object({
-            type: z.literal("video"),
-            data: z.string(),
-          }),
-        ]),
-      ),
-    ),
+    pseudo: z.string().min(1).max(100),
   }),
   path: z.object({
-    id: z.string(),
+    id: z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      ),
   }),
   query: z.optional(z.never()),
 });
 
 /**
- * Schema for a user's post
+ * Response when joining a game
  */
-export const zPostControllerUpdatePostResponse = zUserPostSchema;
+export const zGamesControllerJoinGameResponse = zJoinGameResponseSchema;
 
-export const zPostControllerPublishPostData = z.object({
-  body: z.optional(z.never()),
-  path: z.object({
-    id: z.string(),
-  }),
-  query: z.optional(z.never()),
-});
-
-export const zPostControllerUnpublishPostData = z.object({
-  body: z.optional(z.never()),
-  path: z.object({
-    id: z.string(),
-  }),
-  query: z.optional(z.never()),
-});
-
-export const zPublicPostControllerGetRandomPostData = z.object({
-  body: z.optional(z.never()),
-  path: z.optional(z.never()),
-  query: z.optional(z.never()),
-});
-
-/**
- * A public post
- */
-export const zPublicPostControllerGetRandomPostResponse = zPublicPostSchema;
-
-export const zPublicPostControllerGetPostData = z.object({
-  body: z.optional(z.never()),
-  path: z.object({
-    slug: z.string(),
-  }),
-  query: z.optional(z.never()),
-});
-
-/**
- * A public post
- */
-export const zPublicPostControllerGetPostResponse = zPublicPostSchema;
-
-export const zPublicPostControllerGetPostsData = z.object({
-  body: z.optional(z.never()),
-  path: z.optional(z.never()),
-  query: z.object({
-    filter: z.optional(
-      z.array(
-        z.object({
-          property: z.literal("title"),
-          rule: z.enum([
-            "eq",
-            "neq",
-            "gt",
-            "gte",
-            "lt",
-            "lte",
-            "like",
-            "nlike",
-            "in",
-            "nin",
-            "isnull",
-            "isnotnull",
-          ]),
-          value: z.optional(z.string()),
-        }),
-      ),
-    ),
-    sort: z.optional(
-      z.array(
-        z.object({
-          property: z.union([z.literal("title"), z.literal("createdAt")]),
-          direction: z.enum(["asc", "desc"]),
-        }),
-      ),
-    ),
-    offset: z.int().gte(0).lte(9007199254740991).default(0),
-    pageSize: z.int().gte(1).lte(100).default(20),
-  }),
-});
-
-/**
- * A list of public posts
- */
-export const zPublicPostControllerGetPostsResponse = zPublicPostsSchema;
-
-export const zCommentsControllerGetCommentsData = z.object({
-  body: z.optional(z.never()),
-  path: z.object({
-    postSlug: z.string(),
-  }),
-  query: z.object({
-    filter: z.optional(
-      z.array(
-        z.object({
-          property: z.literal("content"),
-          rule: z.enum([
-            "eq",
-            "neq",
-            "gt",
-            "gte",
-            "lt",
-            "lte",
-            "like",
-            "nlike",
-            "in",
-            "nin",
-            "isnull",
-            "isnotnull",
-          ]),
-          value: z.optional(z.string()),
-        }),
-      ),
-    ),
-    sort: z.optional(
-      z.array(
-        z.object({
-          property: z.union([z.literal("createdAt"), z.literal("authorName")]),
-          direction: z.enum(["asc", "desc"]),
-        }),
-      ),
-    ),
-    offset: z.int().gte(0).lte(9007199254740991).default(0),
-    pageSize: z.int().gte(1).lte(100).default(20),
-  }),
-});
-
-/**
- * Schema for a paginated list of comments
- */
-export const zCommentsControllerGetCommentsResponse = zCommentsSchema;
-
-export const zCommentsControllerCreateCommentData = z.object({
+export const zGamesControllerKickPlayerData = z.object({
   body: z.object({
-    content: z.string().min(1).max(1000),
-    parentId: z.optional(
-      z
-        .uuid()
-        .regex(
-          /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
-        ),
-    ),
-  }),
-  path: z.object({
-    postSlug: z.string(),
-  }),
-  query: z.optional(z.never()),
-});
-
-/**
- * Schema for a comment
- */
-export const zCommentsControllerCreateCommentResponse = zCommentSchema;
-
-export const zCommentsControllerGetCommentCountData = z.object({
-  body: z.optional(z.never()),
-  path: z.object({
-    postSlug: z.string(),
-  }),
-  query: z.optional(z.never()),
-});
-
-export const zCommentsControllerGetCommentRepliesData = z.object({
-  body: z.optional(z.never()),
-  path: z.object({
-    commentId: z.string(),
-    postSlug: z.string(),
-  }),
-  query: z.object({
-    sort: z.optional(
-      z.array(
-        z.object({
-          property: z.union([z.literal("createdAt"), z.literal("authorName")]),
-          direction: z.enum(["asc", "desc"]),
-        }),
+    creatorToken: z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
       ),
-    ),
-    offset: z.int().gte(0).lte(9007199254740991).default(0),
-    pageSize: z.int().gte(1).lte(100).default(20),
+  }),
+  path: z.object({
+    playerId: z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      ),
+    id: z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      ),
+  }),
+  query: z.optional(z.never()),
+});
+
+/**
+ * Full game state computed from events
+ */
+export const zGamesControllerKickPlayerResponse = zGameStateSchema;
+
+export const zGamesControllerLeaveGameData = z.object({
+  body: z.optional(z.never()),
+  path: z.object({
+    id: z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      ),
+  }),
+  query: z.optional(z.never()),
+});
+
+/**
+ * Full game state computed from events
+ */
+export const zGamesControllerLeaveGameResponse = zGameStateSchema;
+
+export const zGamesControllerChooseSideData = z.object({
+  body: z.object({
+    side: z.enum(["red", "blue"]),
+  }),
+  path: z.object({
+    id: z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      ),
+  }),
+  query: z.optional(z.never()),
+});
+
+/**
+ * Full game state computed from events
+ */
+export const zGamesControllerChooseSideResponse = zGameStateSchema;
+
+export const zGamesControllerDesignateSpyData = z.object({
+  body: z.optional(z.never()),
+  path: z.object({
+    id: z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      ),
+  }),
+  query: z.optional(z.never()),
+});
+
+/**
+ * Full game state computed from events
+ */
+export const zGamesControllerDesignateSpyResponse = zGameStateSchema;
+
+export const zGamesControllerStartRoundData = z.object({
+  body: z.object({
+    wordCount: z.optional(z.int().gte(1).lte(400)),
+  }),
+  path: z.object({
+    id: z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      ),
+  }),
+  query: z.optional(z.never()),
+});
+
+/**
+ * Full game state computed from events
+ */
+export const zGamesControllerStartRoundResponse = zGameStateSchema;
+
+export const zGamesControllerGiveClueData = z.object({
+  body: z.object({
+    word: z.string().min(1),
+    number: z.int().gte(0).lte(9007199254740991),
+  }),
+  path: z.object({
+    id: z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      ),
+  }),
+  query: z.optional(z.never()),
+});
+
+/**
+ * Full game state computed from events
+ */
+export const zGamesControllerGiveClueResponse = zGameStateSchema;
+
+export const zGamesControllerSelectWordData = z.object({
+  body: z.object({
+    wordIndex: z.int().gte(0).lte(9007199254740991),
+  }),
+  path: z.object({
+    id: z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      ),
+  }),
+  query: z.optional(z.never()),
+});
+
+/**
+ * Full game state computed from events
+ */
+export const zGamesControllerSelectWordResponse = zGameStateSchema;
+
+export const zGamesControllerHighlightWordData = z.object({
+  body: z.object({
+    wordIndex: z.int().gte(0).lte(9007199254740991),
+  }),
+  path: z.object({
+    id: z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      ),
+  }),
+  query: z.optional(z.never()),
+});
+
+/**
+ * Full game state computed from events
+ */
+export const zGamesControllerHighlightWordResponse = zGameStateSchema;
+
+export const zGamesControllerUnhighlightWordData = z.object({
+  body: z.optional(z.never()),
+  path: z.object({
+    wordIndex: z.int().gte(0).lte(9007199254740991),
+    id: z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      ),
+  }),
+  query: z.optional(z.never()),
+});
+
+/**
+ * Full game state computed from events
+ */
+export const zGamesControllerUnhighlightWordResponse = zGameStateSchema;
+
+export const zGamesControllerPassTurnData = z.object({
+  body: z.optional(z.never()),
+  path: z.object({
+    id: z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      ),
+  }),
+  query: z.optional(z.never()),
+});
+
+/**
+ * Full game state computed from events
+ */
+export const zGamesControllerPassTurnResponse = zGameStateSchema;
+
+export const zGamesControllerRestartGameData = z.object({
+  body: z.optional(z.never()),
+  path: z.object({
+    id: z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      ),
+  }),
+  query: z.optional(z.never()),
+});
+
+/**
+ * Full game state computed from events
+ */
+export const zGamesControllerRestartGameResponse = zGameStateSchema;
+
+export const zWordsControllerGetRandomWordsData = z.object({
+  body: z.optional(z.never()),
+  path: z.optional(z.never()),
+  query: z.object({
+    count: z.string(),
   }),
 });
 
 /**
- * Schema for a paginated list of comments
+ * Schema for a list of words
  */
-export const zCommentsControllerGetCommentRepliesResponse = zCommentsSchema;
-
-export const zCommentsControllerDeleteCommentData = z.object({
-  body: z.optional(z.never()),
-  path: z.object({
-    commentId: z.string(),
-    postSlug: z.string(),
-  }),
-  query: z.optional(z.never()),
-});
+export const zWordsControllerGetRandomWordsResponse = zWordsSchema;

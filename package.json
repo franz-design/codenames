@@ -22,7 +22,7 @@
     "docker:logs": "docker compose logs -f",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
-    "generate": "pnpm --filter=@boilerstone/openapi-generator run generate",
+    "generate": "pnpm --filter=@codenames/openapi-generator run generate",
     "test": "pnpm -r test",
     "schematics:module": "pnpm --filter=@boilerstone/schematics run schematics:module",
     "docs-only": "pnpm --filter=@boilerstone/documentation run dev"

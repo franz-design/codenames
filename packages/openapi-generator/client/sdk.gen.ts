@@ -4,34 +4,40 @@ import type { Options as ClientOptions, TDataShape, Client } from "./client";
 import type {
   AppControllerGetHelloData,
   AppControllerGetHelloResponses,
-  PostControllerGetUserPostsData,
-  PostControllerGetUserPostsResponses,
-  PostControllerCreatePostData,
-  PostControllerCreatePostResponses,
-  PostControllerGetUserPostData,
-  PostControllerGetUserPostResponses,
-  PostControllerUpdatePostData,
-  PostControllerUpdatePostResponses,
-  PostControllerPublishPostData,
-  PostControllerPublishPostResponses,
-  PostControllerUnpublishPostData,
-  PostControllerUnpublishPostResponses,
-  PublicPostControllerGetRandomPostData,
-  PublicPostControllerGetRandomPostResponses,
-  PublicPostControllerGetPostData,
-  PublicPostControllerGetPostResponses,
-  PublicPostControllerGetPostsData,
-  PublicPostControllerGetPostsResponses,
-  CommentsControllerGetCommentsData,
-  CommentsControllerGetCommentsResponses,
-  CommentsControllerCreateCommentData,
-  CommentsControllerCreateCommentResponses,
-  CommentsControllerGetCommentCountData,
-  CommentsControllerGetCommentCountResponses,
-  CommentsControllerGetCommentRepliesData,
-  CommentsControllerGetCommentRepliesResponses,
-  CommentsControllerDeleteCommentData,
-  CommentsControllerDeleteCommentResponses,
+  GamesControllerGetGamesData,
+  GamesControllerGetGamesResponses,
+  GamesControllerCreateGameData,
+  GamesControllerCreateGameResponses,
+  GamesControllerGetGameData,
+  GamesControllerGetGameResponses,
+  GamesControllerGetGameStateData,
+  GamesControllerGetGameStateResponses,
+  GamesControllerJoinGameData,
+  GamesControllerJoinGameResponses,
+  GamesControllerKickPlayerData,
+  GamesControllerKickPlayerResponses,
+  GamesControllerLeaveGameData,
+  GamesControllerLeaveGameResponses,
+  GamesControllerChooseSideData,
+  GamesControllerChooseSideResponses,
+  GamesControllerDesignateSpyData,
+  GamesControllerDesignateSpyResponses,
+  GamesControllerStartRoundData,
+  GamesControllerStartRoundResponses,
+  GamesControllerGiveClueData,
+  GamesControllerGiveClueResponses,
+  GamesControllerSelectWordData,
+  GamesControllerSelectWordResponses,
+  GamesControllerHighlightWordData,
+  GamesControllerHighlightWordResponses,
+  GamesControllerUnhighlightWordData,
+  GamesControllerUnhighlightWordResponses,
+  GamesControllerPassTurnData,
+  GamesControllerPassTurnResponses,
+  GamesControllerRestartGameData,
+  GamesControllerRestartGameResponses,
+  WordsControllerGetRandomWordsData,
+  WordsControllerGetRandomWordsResponses,
 } from "./types.gen";
 import { client as _heyApiClient } from "./client.gen";
 
@@ -65,30 +71,28 @@ export const appControllerGetHello = <ThrowOnError extends boolean = false>(
   });
 };
 
-export const postControllerGetUserPosts = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<PostControllerGetUserPostsData, ThrowOnError>,
+export const gamesControllerGetGames = <ThrowOnError extends boolean = false>(
+  options: Options<GamesControllerGetGamesData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<
-    PostControllerGetUserPostsResponses,
+    GamesControllerGetGamesResponses,
     unknown,
     ThrowOnError
   >({
-    url: "/api/admin/posts",
+    url: "/api/games",
     ...options,
   });
 };
 
-export const postControllerCreatePost = <ThrowOnError extends boolean = false>(
-  options: Options<PostControllerCreatePostData, ThrowOnError>,
+export const gamesControllerCreateGame = <ThrowOnError extends boolean = false>(
+  options: Options<GamesControllerCreateGameData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).post<
-    PostControllerCreatePostResponses,
+    GamesControllerCreateGameResponses,
     unknown,
     ThrowOnError
   >({
-    url: "/api/admin/posts",
+    url: "/api/games",
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -97,135 +101,43 @@ export const postControllerCreatePost = <ThrowOnError extends boolean = false>(
   });
 };
 
-export const postControllerGetUserPost = <ThrowOnError extends boolean = false>(
-  options: Options<PostControllerGetUserPostData, ThrowOnError>,
+export const gamesControllerGetGame = <ThrowOnError extends boolean = false>(
+  options: Options<GamesControllerGetGameData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<
-    PostControllerGetUserPostResponses,
+    GamesControllerGetGameResponses,
     unknown,
     ThrowOnError
   >({
-    url: "/api/admin/posts/{id}",
+    url: "/api/games/{id}",
     ...options,
   });
 };
 
-export const postControllerUpdatePost = <ThrowOnError extends boolean = false>(
-  options: Options<PostControllerUpdatePostData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).put<
-    PostControllerUpdatePostResponses,
-    unknown,
-    ThrowOnError
-  >({
-    url: "/api/admin/posts/{id}",
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
-};
-
-export const postControllerPublishPost = <ThrowOnError extends boolean = false>(
-  options: Options<PostControllerPublishPostData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).patch<
-    PostControllerPublishPostResponses,
-    unknown,
-    ThrowOnError
-  >({
-    url: "/api/admin/posts/{id}/publish",
-    ...options,
-  });
-};
-
-export const postControllerUnpublishPost = <
+export const gamesControllerGetGameState = <
   ThrowOnError extends boolean = false,
 >(
-  options: Options<PostControllerUnpublishPostData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).patch<
-    PostControllerUnpublishPostResponses,
-    unknown,
-    ThrowOnError
-  >({
-    url: "/api/admin/posts/{id}/unpublish",
-    ...options,
-  });
-};
-
-export const publicPostControllerGetRandomPost = <
-  ThrowOnError extends boolean = false,
->(
-  options?: Options<PublicPostControllerGetRandomPostData, ThrowOnError>,
-) => {
-  return (options?.client ?? _heyApiClient).get<
-    PublicPostControllerGetRandomPostResponses,
-    unknown,
-    ThrowOnError
-  >({
-    url: "/api/public/posts/random",
-    ...options,
-  });
-};
-
-export const publicPostControllerGetPost = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<PublicPostControllerGetPostData, ThrowOnError>,
+  options: Options<GamesControllerGetGameStateData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<
-    PublicPostControllerGetPostResponses,
+    GamesControllerGetGameStateResponses,
     unknown,
     ThrowOnError
   >({
-    url: "/api/public/posts/{slug}",
+    url: "/api/games/{id}/state",
     ...options,
   });
 };
 
-export const publicPostControllerGetPosts = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<PublicPostControllerGetPostsData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<
-    PublicPostControllerGetPostsResponses,
-    unknown,
-    ThrowOnError
-  >({
-    url: "/api/public/posts",
-    ...options,
-  });
-};
-
-export const commentsControllerGetComments = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<CommentsControllerGetCommentsData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<
-    CommentsControllerGetCommentsResponses,
-    unknown,
-    ThrowOnError
-  >({
-    url: "/api/posts/{postSlug}/comments",
-    ...options,
-  });
-};
-
-export const commentsControllerCreateComment = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<CommentsControllerCreateCommentData, ThrowOnError>,
+export const gamesControllerJoinGame = <ThrowOnError extends boolean = false>(
+  options: Options<GamesControllerJoinGameData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).post<
-    CommentsControllerCreateCommentResponses,
+    GamesControllerJoinGameResponses,
     unknown,
     ThrowOnError
   >({
-    url: "/api/posts/{postSlug}/comments",
+    url: "/api/games/{id}/join",
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -234,47 +146,192 @@ export const commentsControllerCreateComment = <
   });
 };
 
-export const commentsControllerGetCommentCount = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<CommentsControllerGetCommentCountData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<
-    CommentsControllerGetCommentCountResponses,
-    unknown,
-    ThrowOnError
-  >({
-    url: "/api/posts/{postSlug}/comments/count",
-    ...options,
-  });
-};
-
-export const commentsControllerGetCommentReplies = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<CommentsControllerGetCommentRepliesData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<
-    CommentsControllerGetCommentRepliesResponses,
-    unknown,
-    ThrowOnError
-  >({
-    url: "/api/posts/{postSlug}/comments/{commentId}/replies",
-    ...options,
-  });
-};
-
-export const commentsControllerDeleteComment = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<CommentsControllerDeleteCommentData, ThrowOnError>,
+export const gamesControllerKickPlayer = <ThrowOnError extends boolean = false>(
+  options: Options<GamesControllerKickPlayerData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).delete<
-    CommentsControllerDeleteCommentResponses,
+    GamesControllerKickPlayerResponses,
     unknown,
     ThrowOnError
   >({
-    url: "/api/posts/{postSlug}/comments/{commentId}",
+    url: "/api/games/{id}/players/{playerId}",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+};
+
+export const gamesControllerLeaveGame = <ThrowOnError extends boolean = false>(
+  options: Options<GamesControllerLeaveGameData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).delete<
+    GamesControllerLeaveGameResponses,
+    unknown,
+    ThrowOnError
+  >({
+    url: "/api/games/{id}/leave",
+    ...options,
+  });
+};
+
+export const gamesControllerChooseSide = <ThrowOnError extends boolean = false>(
+  options: Options<GamesControllerChooseSideData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).patch<
+    GamesControllerChooseSideResponses,
+    unknown,
+    ThrowOnError
+  >({
+    url: "/api/games/{id}/players/me/side",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+};
+
+export const gamesControllerDesignateSpy = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<GamesControllerDesignateSpyData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).patch<
+    GamesControllerDesignateSpyResponses,
+    unknown,
+    ThrowOnError
+  >({
+    url: "/api/games/{id}/players/me/spy",
+    ...options,
+  });
+};
+
+export const gamesControllerStartRound = <ThrowOnError extends boolean = false>(
+  options: Options<GamesControllerStartRoundData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    GamesControllerStartRoundResponses,
+    unknown,
+    ThrowOnError
+  >({
+    url: "/api/games/{id}/rounds/start",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+};
+
+export const gamesControllerGiveClue = <ThrowOnError extends boolean = false>(
+  options: Options<GamesControllerGiveClueData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    GamesControllerGiveClueResponses,
+    unknown,
+    ThrowOnError
+  >({
+    url: "/api/games/{id}/rounds/current/clue",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+};
+
+export const gamesControllerSelectWord = <ThrowOnError extends boolean = false>(
+  options: Options<GamesControllerSelectWordData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    GamesControllerSelectWordResponses,
+    unknown,
+    ThrowOnError
+  >({
+    url: "/api/games/{id}/rounds/current/select",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+};
+
+export const gamesControllerHighlightWord = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<GamesControllerHighlightWordData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    GamesControllerHighlightWordResponses,
+    unknown,
+    ThrowOnError
+  >({
+    url: "/api/games/{id}/rounds/current/highlight",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+};
+
+export const gamesControllerUnhighlightWord = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<GamesControllerUnhighlightWordData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).delete<
+    GamesControllerUnhighlightWordResponses,
+    unknown,
+    ThrowOnError
+  >({
+    url: "/api/games/{id}/rounds/current/highlight/{wordIndex}",
+    ...options,
+  });
+};
+
+export const gamesControllerPassTurn = <ThrowOnError extends boolean = false>(
+  options: Options<GamesControllerPassTurnData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    GamesControllerPassTurnResponses,
+    unknown,
+    ThrowOnError
+  >({
+    url: "/api/games/{id}/rounds/current/pass",
+    ...options,
+  });
+};
+
+export const gamesControllerRestartGame = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<GamesControllerRestartGameData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    GamesControllerRestartGameResponses,
+    unknown,
+    ThrowOnError
+  >({
+    url: "/api/games/{id}/restart",
+    ...options,
+  });
+};
+
+export const wordsControllerGetRandomWords = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<WordsControllerGetRandomWordsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<
+    WordsControllerGetRandomWordsResponses,
+    unknown,
+    ThrowOnError
+  >({
+    url: "/api/words/random",
     ...options,
   });
 };
