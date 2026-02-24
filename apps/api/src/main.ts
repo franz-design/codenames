@@ -1,6 +1,6 @@
 import { createOpenApiDocument, ZodSerializationExceptionFilter, ZodValidationExceptionFilter } from '@lonestone/nzoth/server'
 import { NestFactory } from '@nestjs/core'
-import { IoAdapter } from '@nestjs/platform-socket.io'
+import { SocketIoAdapter } from './socket-io.adapter'
 import { DocumentBuilder } from '@nestjs/swagger'
 import { apiReference } from '@scalar/nestjs-api-reference'
 import * as express from 'express'
@@ -48,7 +48,7 @@ async function bootstrap() {
 
   app.setGlobalPrefix(PREFIX)
 
-  app.useWebSocketAdapter(new IoAdapter(app))
+  app.useWebSocketAdapter(new SocketIoAdapter(app))
 
   if (config.env === 'development') {
     const swaggerConfig = new DocumentBuilder()

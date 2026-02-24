@@ -34,6 +34,7 @@ interface GameStore {
   socket: Socket | null
   snapshot: GameWebSocketSnapshot
   listeners: Set<() => void>
+  _disconnectTimeout?: ReturnType<typeof setTimeout>
 }
 
 const stores = new Map<string, GameStore>()
@@ -123,20 +124,40 @@ function getOrCreateStore(gameId: string): GameStore {
   return store
 }
 
+const DISCONNECT_DELAY_MS = 500
+
+function scheduleDisconnect(store: GameStore, gameId: string): void {
+  if (store._disconnectTimeout !== undefined)
+    clearTimeout(store._disconnectTimeout)
+  store._disconnectTimeout = setTimeout(() => {
+    store._disconnectTimeout = undefined
+    if (store.listeners.size === 0 && store.socket) {
+      store.socket.disconnect()
+      stores.delete(gameId)
+    }
+  }, DISCONNECT_DELAY_MS)
+}
+
+function cancelScheduledDisconnect(store: GameStore): void {
+  if (store._disconnectTimeout !== undefined) {
+    clearTimeout(store._disconnectTimeout)
+    store._disconnectTimeout = undefined
+  }
+}
+
 function subscribeToStore(callback: () => void, gameId: string | null, enabled: boolean): () => void {
   if (!enabled || !gameId) {
     return () => {}
   }
 
   const store = getOrCreateStore(gameId)
+  cancelScheduledDisconnect(store)
   store.listeners.add(callback)
 
   return () => {
     store.listeners.delete(callback)
     if (store.listeners.size === 0) {
-      if (store.socket)
-        store.socket.disconnect()
-      stores.delete(gameId)
+      scheduleDisconnect(store, gameId)
     }
   }
 }

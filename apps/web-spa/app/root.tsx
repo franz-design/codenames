@@ -1,8 +1,10 @@
 import type { Route } from './+types/root'
 import { client } from '@codenames/openapi-generator'
+import { Header } from '@codenames/ui/components/layout/Header'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { useEffect } from 'react'
-import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
+import { isRouteErrorResponse, Link, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
+import { Toaster } from 'sonner'
 import { queryClient } from '@/lib/query-client'
 import useTheme from './hooks/useTheme'
 import '@fontsource/source-sans-pro'
@@ -54,9 +56,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body className="dark bg-gradient-bg">
         {children}
+        <Toaster richColors position="top-center" />
         <ScrollRestoration />
         <Scripts />
-
       </body>
     </html>
   )
@@ -65,7 +67,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
+      <div className="flex min-h-screen flex-col">
+        <Header className="px-4">
+          <Link
+            to="/"
+            className="text-xl font-bold tracking-tight hover:text-primary transition-colors"
+          >
+            codenames
+          </Link>
+        </Header>
+        <main className="flex-1">
+          <Outlet />
+        </main>
+      </div>
     </QueryClientProvider>
   )
 }

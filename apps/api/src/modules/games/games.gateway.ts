@@ -1,6 +1,8 @@
+import { RequestContext } from '@mikro-orm/core'
 import {
   forwardRef,
   Inject,
+  Logger,
 } from '@nestjs/common'
 import {
   ConnectedSocket,
@@ -11,6 +13,7 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets'
+import { MikroORM } from '@mikro-orm/core'
 import type { Server } from 'socket.io'
 import type { Socket } from 'socket.io'
 import type { GameStateResponse } from './contracts/games.contract'
@@ -24,45 +27,69 @@ function getGameRoomId(gameId: string): string {
 }
 
 @WebSocketGateway({
-  cors: { origin: '*' },
   namespace: '/games',
 })
 export class GamesGateway implements OnGatewayConnection, OnGatewayDisconnect {
+  private readonly logger = new Logger(GamesGateway.name)
+
   @WebSocketServer()
   server!: Server
 
   constructor(
     @Inject(forwardRef(() => GamesService))
     private readonly gamesService: GamesService,
+    private readonly orm: MikroORM,
   ) {}
 
-  handleConnection(_client: Socket): void {
-    // No auth required - anyone can connect
+  handleConnection(client: Socket): void {
+    this.logger.log(`[WS] Client connected to /games namespace, id: ${client.id}`)
   }
 
-  handleDisconnect(_client: Socket): void {
-    // Cleanup if needed
+  handleDisconnect(client: Socket): void {
+    this.logger.log(`[WS] Client disconnected from /games, id: ${client.id}`)
   }
 
   @SubscribeMessage(GAME_JOIN_EVENT)
   async handleGameJoin(
     @ConnectedSocket() client: Socket,
-    @MessageBody() gameId: string,
+    @MessageBody() gameId: unknown,
   ): Promise<void> {
-    if (typeof gameId !== 'string')
+    const resolvedGameId = typeof gameId === 'string'
+      ? gameId
+      : Array.isArray(gameId) && gameId[0]
+        ? gameId[0]
+        : (gameId as { gameId?: string })?.gameId
+    const idToUse = typeof resolvedGameId === 'string' ? resolvedGameId : undefined
+    if (!idToUse) {
+      this.logger.warn(`[WS] game:join ignored: no valid gameId`)
       return
-
-    try {
-      await this.gamesService.getGame(gameId)
-    }
-    catch {
-      return
     }
 
-    client.join(getGameRoomId(gameId))
+    await RequestContext.create(this.orm.em, async () => {
+      try {
+        await this.gamesService.getGame(idToUse)
+      }
+      catch (err) {
+        this.logger.warn(`[WS] game:join ignored: game not found for id: ${idToUse}`)
+        return
+      }
+
+      const roomId = getGameRoomId(idToUse)
+      client.join(roomId)
+
+      const state = await this.gamesService.getGameState(idToUse)
+      client.emit(GAME_STATE_EVENT, state)
+
+      const socketsInRoom = await this.server.in(roomId).fetchSockets()
+      this.logger.log(`[WS] Client joined room ${roomId}, ${socketsInRoom.length} socket(s) in room`)
+    })
   }
 
   broadcastGameState(gameId: string, state: GameStateResponse): void {
-    this.server.to(getGameRoomId(gameId)).emit(GAME_STATE_EVENT, state)
+    const roomId = getGameRoomId(gameId)
+    this.server.in(roomId).fetchSockets().then((sockets) => {
+      this.logger.log(`[WS] Broadcast game:state to room ${roomId}, ${sockets.length} socket(s) will receive`)
+    })
+    this.server.to(roomId).emit(GAME_STATE_EVENT, state)
   }
 }

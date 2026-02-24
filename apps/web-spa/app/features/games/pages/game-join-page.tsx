@@ -11,7 +11,7 @@ import { Input } from '@codenames/ui/components/primitives/input'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
-import { Link, useNavigate } from 'react-router'
+import { useNavigate } from 'react-router'
 import { z } from 'zod'
 import {
   createGamesApiClient,
@@ -117,12 +117,6 @@ export default function GameJoinPage() {
             </Button>
           </form>
         </Form>
-
-        <p className="text-center text-sm text-muted-foreground">
-          <Link to="/" className="underline hover:no-underline">
-            Retour à l&apos;accueil
-          </Link>
-        </p>
       </div>
     </main>
   )

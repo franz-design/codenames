@@ -40,12 +40,6 @@ export default function GameHomePage() {
             </Button>
           </CardContent>
         </Card>
-
-        <p className="text-center text-sm text-muted-foreground">
-          <Link to="/dashboard" className="underline hover:no-underline">
-            Retour au tableau de bord
-          </Link>
-        </p>
       </div>
     </main>
   )

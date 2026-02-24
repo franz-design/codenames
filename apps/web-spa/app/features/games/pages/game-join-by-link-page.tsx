@@ -11,7 +11,7 @@ import { Input } from '@codenames/ui/components/primitives/input'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
-import { Link, useNavigate, useParams } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 import { z } from 'zod'
 import {
   createGamesApiClient,
@@ -60,9 +60,6 @@ export default function GameJoinByLinkPage() {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center p-4">
         <p className="text-muted-foreground">Partie introuvable</p>
-        <Link to="/" className="mt-4 text-sm underline hover:no-underline">
-          Retour à l&apos;accueil
-        </Link>
       </main>
     )
   }
@@ -110,12 +107,6 @@ export default function GameJoinByLinkPage() {
             </Button>
           </form>
         </Form>
-
-        <p className="text-center text-sm text-muted-foreground">
-          <Link to="/" className="underline hover:no-underline">
-            Retour à l&apos;accueil
-          </Link>
-        </p>
       </div>
     </main>
   )

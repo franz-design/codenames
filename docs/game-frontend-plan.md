@@ -26,11 +26,11 @@ Ce document décrit le plan de mise en place de la partie frontend du jeu Codena
 
 ### Phase 3 : Lobby
 
-- [ ] **3.1** Créer la page/vue Lobby affichant les joueurs et le statut `LOBBY`
-- [ ] **3.2** Créer le composant de sélection d'équipe (rouge/bleu) pour chaque joueur
-- [ ] **3.3** Créer le composant de désignation d'espion par équipe
-- [ ] **3.4** Afficher le bouton « Démarrer la partie » (créateur uniquement, quand équipes et espions OK)
-- [ ] **3.5** Implémenter l'éjection de joueurs (créateur uniquement, avec creatorToken)
+- [x] **3.1** Créer la page/vue Lobby affichant les joueurs et le statut `LOBBY`
+- [x] **3.2** Créer le composant de sélection d'équipe (rouge/bleu) pour chaque joueur
+- [x] **3.3** Créer le composant de désignation d'espion par équipe
+- [x] **3.4** Afficher le bouton « Démarrer la partie » (créateur uniquement, quand équipes et espions OK)
+- [x] **3.5** Implémenter l'éjection de joueurs (créateur uniquement, avec creatorToken)
 
 ### Phase 4 : Vue de jeu – structure commune
 
