@@ -8,10 +8,9 @@ This repository represents the typical project structure at Lonestone, consistin
 
 To start a new project using this boilerplate, simply create a project on Github and select the boilerplate from the template list.
 
-For more details, see the [documentation](https://lonestone.github.io/lonestone-boilerplate/) or check out the local documentation in the `apps/documentation` folder.
+For more details, see the [documentation](https://lonestone.github.io/lonestone-boilerplate/).
 
 [![CI ✨](https://github.com/lonestone/lonestone-boilerplate/actions/workflows/ci.yml/badge.svg)](https://github.com/lonestone/lonestone-boilerplate/actions/workflows/ci.yml)
-[![Deploy documentation to GitHub Pages](https://github.com/lonestone/lonestone-boilerplate/actions/workflows/deploy-docs.yml/badge.svg)](https://github.com/lonestone/lonestone-boilerplate/actions/workflows/deploy-docs.yml)
 
 ## 📋 Table of Contents
 
@@ -38,11 +37,17 @@ This project uses a "monorepo" architecture. The advantages are numerous, but pr
 
 ## 🛠️ Tech Stack
 
-See the [Architecture](apps/documentation/src/content/docs/explanations/architecture.mdx) page for more details.
+- NestJS (API)
+- React (Web SPA, Web SSR)
+- TypeScript
+- TailwindCSS
+- MikroORM
+- Zod
+- Better Auth
 
 ## 📁 Project Structure
 
-See the [Project Structure](apps/documentation/src/content/docs/explanations/architecture.mdx) page for more details.
+See the [Architecture](docs/backend-guidelines.md) and [Frontend Guidelines](docs/frontend-guidelines.md) for more details.
 
 ## 📋 Prerequisites
 

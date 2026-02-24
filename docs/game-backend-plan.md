@@ -316,4 +316,4 @@ highlights: Record<number, { playerId: string, playerName: string }[]>
 ### Conventions de développement
 
 - [common.mdc](../.cursor/rules/common.mdc)
-- [backend.mdx](../apps/documentation/src/content/docs/guidelines/backend.mdx)
+- [backend-guidelines.md](./backend-guidelines.md)

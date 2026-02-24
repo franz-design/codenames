@@ -19,7 +19,7 @@ export interface RevealedWord {
 export interface RoundState {
   id: string
   words: string[]
-  results: CardType[]
+  results?: CardType[]
   order: number
   currentTurn: Side
   currentClue: { word: string, number: number } | null

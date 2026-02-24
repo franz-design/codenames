@@ -10,11 +10,13 @@ import {
 import { Input } from '@codenames/ui/components/primitives/input'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router'
 import { z } from 'zod'
 import {
   createGamesApiClient,
+  PENDING_REDIRECT_KEY,
   useGameSession,
 } from '../index'
 
@@ -26,7 +28,15 @@ type CreateGameFormData = z.infer<typeof createGameSchema>
 
 export default function GameCreatePage() {
   const navigate = useNavigate()
-  const { setSession } = useGameSession()
+  const { setSession, hasSession, gameId } = useGameSession()
+
+  useEffect(() => {
+    const pendingGameId = typeof window !== 'undefined' ? sessionStorage.getItem(PENDING_REDIRECT_KEY) : null
+    if (hasSession && gameId && pendingGameId === gameId) {
+      sessionStorage.removeItem(PENDING_REDIRECT_KEY)
+      navigate(`/games/${gameId}`, { replace: true })
+    }
+  }, [hasSession, gameId, navigate])
 
   const { mutate: createGame, isPending, error } = useMutation({
     mutationFn: async (data: CreateGameFormData) => {
@@ -41,6 +51,7 @@ export default function GameCreatePage() {
         playerName: response.game.creatorPseudo,
         creatorToken: response.creatorToken,
       })
+      sessionStorage.setItem(PENDING_REDIRECT_KEY, response.game.id)
       navigate(`/games/${response.game.id}`)
     },
   })

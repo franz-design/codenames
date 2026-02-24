@@ -71,7 +71,7 @@ export class GamesService {
     await this.em.persistAndFlush(joinEvent)
 
     await this.emitGameState(game.id)
-    const gameState = await this.getGameState(game.id)
+    const gameState = await this.getGameState(game.id, playerId)
     return {
       game: this.mapGameToResponse(game),
       creatorToken,
@@ -118,7 +118,7 @@ export class GamesService {
     }
   }
 
-  async getGameState(gameId: string): Promise<GameStateResponse> {
+  async getGameState(gameId: string, playerId?: string): Promise<GameStateResponse> {
     const game = await this.em.findOne(Game, { id: gameId })
     if (!game)
       throw new NotFoundException('Game not found')
@@ -126,7 +126,20 @@ export class GamesService {
     const events = await this.loadGameEvents(gameId)
     const state = computeGameState(events)
 
-    return this.mapStateToResponse(state)
+    const excludeResults = this.shouldExcludeResultsForPlayer(state, playerId)
+    return this.mapStateToResponse(state, excludeResults)
+  }
+
+  private shouldExcludeResultsForPlayer(
+    state: ReturnType<typeof computeGameState>,
+    playerId?: string,
+  ): boolean {
+    if (!playerId)
+      return true
+    const player = state.players.find(p => p.id === playerId)
+    if (!player)
+      return true
+    return !player.isSpy
   }
 
   async joinGame(gameId: string, pseudo: string): Promise<JoinGameResponse> {
@@ -144,7 +157,7 @@ export class GamesService {
     await this.em.persistAndFlush(gameEvent)
 
     await this.emitGameState(gameId)
-    const gameState = await this.getGameState(gameId)
+    const gameState = await this.getGameState(gameId, playerId)
     return { gameState, playerId }
   }
 
@@ -196,7 +209,7 @@ export class GamesService {
     await this.em.persistAndFlush(gameEvent)
 
     await this.emitGameState(gameId)
-    return this.getGameState(gameId)
+    return this.getGameState(gameId, playerId)
   }
 
   async chooseSide(
@@ -227,7 +240,7 @@ export class GamesService {
     await this.em.persistAndFlush(gameEvent)
 
     await this.emitGameState(gameId)
-    return this.getGameState(gameId)
+    return this.getGameState(gameId, playerId)
   }
 
   async designateSpy(gameId: string, playerId: string): Promise<GameStateResponse> {
@@ -256,7 +269,7 @@ export class GamesService {
     await this.em.persistAndFlush(gameEvent)
 
     await this.emitGameState(gameId)
-    return this.getGameState(gameId)
+    return this.getGameState(gameId, playerId)
   }
 
   async designatePlayerAsSpy(
@@ -337,7 +350,7 @@ export class GamesService {
     await this.em.persistAndFlush(gameEvent)
 
     await this.emitGameState(gameId)
-    return this.getGameState(gameId)
+    return this.getGameState(gameId, playerId)
   }
 
   async giveClue(
@@ -370,7 +383,7 @@ export class GamesService {
     await this.em.persistAndFlush(gameEvent)
 
     await this.emitGameState(gameId)
-    return this.getGameState(gameId)
+    return this.getGameState(gameId, playerId)
   }
 
   async selectWord(
@@ -435,7 +448,7 @@ export class GamesService {
     }
 
     await this.emitGameState(gameId)
-    return this.getGameState(gameId)
+    return this.getGameState(gameId, playerId)
   }
 
   async highlightWord(
@@ -476,7 +489,7 @@ export class GamesService {
     await this.em.persistAndFlush(gameEvent)
 
     await this.emitGameState(gameId)
-    return this.getGameState(gameId)
+    return this.getGameState(gameId, playerId)
   }
 
   async unhighlightWord(
@@ -509,7 +522,7 @@ export class GamesService {
     await this.em.persistAndFlush(gameEvent)
 
     await this.emitGameState(gameId)
-    return this.getGameState(gameId)
+    return this.getGameState(gameId, playerId)
   }
 
   async passTurn(gameId: string, playerId: string): Promise<GameStateResponse> {
@@ -538,7 +551,7 @@ export class GamesService {
     await this.em.persistAndFlush(gameEvent)
 
     await this.emitGameState(gameId)
-    return this.getGameState(gameId)
+    return this.getGameState(gameId, playerId)
   }
 
   async restartGame(gameId: string, playerId: string): Promise<GameStateResponse> {
@@ -554,7 +567,7 @@ export class GamesService {
     await this.em.persistAndFlush(gameEvent)
 
     await this.emitGameState(gameId)
-    return this.getGameState(gameId)
+    return this.getGameState(gameId, playerId)
   }
 
   private async loadGameEvents(gameId: string): Promise<GameEventInput[]> {
@@ -585,21 +598,35 @@ export class GamesService {
 
   private async emitGameState(gameId: string): Promise<void> {
     try {
-      const state = await this.getGameState(gameId)
-      this.gamesGateway.broadcastGameState(gameId, state)
+      await this.gamesGateway.broadcastGameState(gameId)
     }
     catch {
       // Ignore emit errors (e.g. no clients in room)
     }
   }
 
-  private mapStateToResponse(state: ReturnType<typeof computeGameState>): GameStateResponse {
+  private mapStateToResponse(
+    state: ReturnType<typeof computeGameState>,
+    excludeResults: boolean,
+  ): GameStateResponse {
     const highlights: Record<string, { playerId: string, playerName: string }[]> = {}
     if (state.currentRound) {
       for (const [key, value] of Object.entries(state.currentRound.highlights)) {
         highlights[String(key)] = value
       }
     }
+
+    const currentRound = state.currentRound
+      ? (() => {
+          const { results: _results, ...rest } = state.currentRound
+          return {
+            ...rest,
+            currentClue: state.currentRound.currentClue ?? null,
+            highlights,
+            ...(excludeResults ? {} : { results: _results }),
+          }
+        })()
+      : null
 
     return {
       status: state.status,
@@ -609,13 +636,7 @@ export class GamesService {
         side: p.side ?? null,
         isSpy: p.isSpy,
       })),
-      currentRound: state.currentRound
-        ? {
-            ...state.currentRound,
-            currentClue: state.currentRound.currentClue ?? null,
-            highlights,
-          }
-        : null,
+      currentRound,
       winningSide: state.winningSide ?? null,
       losingSide: state.losingSide ?? null,
     }

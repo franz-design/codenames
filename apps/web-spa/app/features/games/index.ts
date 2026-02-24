@@ -1,4 +1,4 @@
-export { useGameSession } from './hooks/use-game-session'
+export { PENDING_REDIRECT_KEY, useGameSession } from './hooks/use-game-session'
 export type { GameSessionData, SetSessionInput } from './hooks/use-game-session'
 export { useGameWebSocket } from './hooks/use-game-websocket'
 export type {

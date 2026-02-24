@@ -75,7 +75,7 @@ export const revealedWordSchema = z.object({
 export const roundStateSchema = z.object({
   id: z.string().uuid(),
   words: z.array(z.string()),
-  results: z.array(cardTypeSchema),
+  results: z.array(cardTypeSchema).optional(),
   order: z.number().int().positive(),
   currentTurn: sideSchema,
   currentClue: z.object({

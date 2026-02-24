@@ -6,6 +6,7 @@ import { GameLobbyView } from '../components/game-lobby-view'
 import { GamePlayView } from '../components/game-play-view'
 import {
   createGamesApiClient,
+  PENDING_REDIRECT_KEY,
   useGameSession,
   useGameWebSocket,
 } from '../index'
@@ -27,6 +28,7 @@ export default function GamePlayPage() {
   const { playerName, hasSession, playerId, clearSession, isCreator } = useGameSession()
   const { gameState: wsGameState, isConnected, error: wsError } = useGameWebSocket({
     gameId: gameId ?? null,
+    playerId: playerId ?? null,
     enabled: Boolean(gameId) && hasSession,
   })
 
@@ -50,6 +52,11 @@ export default function GamePlayPage() {
   const gameState = wsGameState ?? fetchedState ?? null
   const isLoading = !gameState && (isFetching || (isConnected && !wsError))
   const error = wsError ?? fetchError
+
+  useEffect(() => {
+    if (gameId)
+      sessionStorage.removeItem(PENDING_REDIRECT_KEY)
+  }, [gameId])
 
   const api = createGamesApiClient(playerId ?? '')
   const { mutate: leaveGame, isPending: isLeaving } = useMutation({

@@ -70,7 +70,7 @@ Better-auth also has a plugin to generate the documentation for you. You can fin
 
 ## Database management
 
-Ensure you have read the [Database Migrations](../documentation/src/content/docs/explanations/database.mdx) page to know which flow to use (development vs migrations).
+See the database migrations section above for development vs migrations flow.
 
 ### Resetting the database
 

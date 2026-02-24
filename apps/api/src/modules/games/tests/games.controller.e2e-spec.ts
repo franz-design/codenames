@@ -177,5 +177,24 @@ describe('GamesController (e2e)', () => {
 
       expect(res.status).toBe(403)
     })
+
+    it('should not expose results to operators in game state', async () => {
+      const operativeRes = await supertest(context.app.getHttpServer())
+        .get(`/games/${highlightGameId}/state`)
+        .set('X-Player-Id', redGuesserPlayerId)
+
+      expect(operativeRes.status).toBe(200)
+      expect(operativeRes.body.currentRound?.results).toBeUndefined()
+    })
+
+    it('should expose results to spymasters in game state', async () => {
+      const spyRes = await supertest(context.app.getHttpServer())
+        .get(`/games/${highlightGameId}/state`)
+        .set('X-Player-Id', redSpyPlayerId)
+
+      expect(spyRes.status).toBe(200)
+      expect(spyRes.body.currentRound?.results).toBeDefined()
+      expect(Array.isArray(spyRes.body.currentRound.results)).toBe(true)
+    })
   })
 })

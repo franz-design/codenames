@@ -24,8 +24,7 @@
     "lint:fix": "eslint --fix",
     "generate": "pnpm --filter=@codenames/openapi-generator run generate",
     "test": "pnpm -r test",
-    "schematics:module": "pnpm --filter=@codenames/schematics run schematics:module",
-    "docs-only": "pnpm --filter=@codenames/documentation run dev"
+    "schematics:module": "pnpm --filter=@codenames/schematics run schematics:module"
   },
   "dependencies": {
     "typescript": "^5.9.2"

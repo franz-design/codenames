@@ -43,7 +43,14 @@ function notifyListeners(store: GameStore): void {
   store.listeners.forEach(listener => listener())
 }
 
-function createStore(gameId: string): GameStore {
+function emitGameJoin(socket: Socket, gameId: string, playerId: string | null): void {
+  if (playerId)
+    socket.emit(GAME_JOIN_EVENT, { gameId, playerId })
+  else
+    socket.emit(GAME_JOIN_EVENT, gameId)
+}
+
+function createStore(gameId: string, playerId: string | null): GameStore {
   let socket: Socket
   const snapshot: GameWebSocketSnapshot = { ...EMPTY_SNAPSHOT }
   const listeners = new Set<() => void>()
@@ -75,7 +82,7 @@ function createStore(gameId: string): GameStore {
       isConnected: true,
       error: null,
     }
-    socket.emit(GAME_JOIN_EVENT, gameId)
+    emitGameJoin(socket, gameId, playerId)
     notifyListeners(store)
   })
 
@@ -109,31 +116,36 @@ function createStore(gameId: string): GameStore {
       ...store.snapshot,
       isConnected: true,
     }
-    socket.emit(GAME_JOIN_EVENT, gameId)
+    emitGameJoin(socket, gameId, playerId)
   }
 
   return store
 }
 
-function getOrCreateStore(gameId: string): GameStore {
-  let store = stores.get(gameId)
+function getStoreKey(gameId: string, playerId: string | null): string {
+  return playerId ? `${gameId}:${playerId}` : gameId
+}
+
+function getOrCreateStore(gameId: string, playerId: string | null): GameStore {
+  const key = getStoreKey(gameId, playerId)
+  let store = stores.get(key)
   if (!store) {
-    store = createStore(gameId)
-    stores.set(gameId, store)
+    store = createStore(gameId, playerId)
+    stores.set(key, store)
   }
   return store
 }
 
 const DISCONNECT_DELAY_MS = 500
 
-function scheduleDisconnect(store: GameStore, gameId: string): void {
+function scheduleDisconnect(store: GameStore, storeKey: string): void {
   if (store._disconnectTimeout !== undefined)
     clearTimeout(store._disconnectTimeout)
   store._disconnectTimeout = setTimeout(() => {
     store._disconnectTimeout = undefined
     if (store.listeners.size === 0 && store.socket) {
       store.socket.disconnect()
-      stores.delete(gameId)
+      stores.delete(storeKey)
     }
   }, DISCONNECT_DELAY_MS)
 }
@@ -145,28 +157,37 @@ function cancelScheduledDisconnect(store: GameStore): void {
   }
 }
 
-function subscribeToStore(callback: () => void, gameId: string | null, enabled: boolean): () => void {
+function subscribeToStore(
+  callback: () => void,
+  gameId: string | null,
+  playerId: string | null,
+  enabled: boolean,
+): () => void {
   if (!enabled || !gameId) {
     return () => {}
   }
 
-  const store = getOrCreateStore(gameId)
+  const store = getOrCreateStore(gameId, playerId)
   cancelScheduledDisconnect(store)
   store.listeners.add(callback)
 
   return () => {
     store.listeners.delete(callback)
     if (store.listeners.size === 0) {
-      scheduleDisconnect(store, gameId)
+      scheduleDisconnect(store, getStoreKey(gameId, playerId))
     }
   }
 }
 
-function getStoreSnapshot(gameId: string | null, enabled: boolean): GameWebSocketSnapshot {
+function getStoreSnapshot(
+  gameId: string | null,
+  playerId: string | null,
+  enabled: boolean,
+): GameWebSocketSnapshot {
   if (!enabled || !gameId) {
     return EMPTY_SNAPSHOT
   }
-  const store = stores.get(gameId)
+  const store = stores.get(getStoreKey(gameId, playerId))
   if (!store) {
     return EMPTY_SNAPSHOT
   }
@@ -175,6 +196,7 @@ function getStoreSnapshot(gameId: string | null, enabled: boolean): GameWebSocke
 
 export interface UseGameWebSocketOptions {
   gameId: string | null
+  playerId?: string | null
   onGameState?: (state: GameState) => void
   enabled?: boolean
 }
@@ -187,17 +209,18 @@ export interface UseGameWebSocketResult {
 
 export function useGameWebSocket({
   gameId,
+  playerId = null,
   onGameState,
   enabled = true,
 }: UseGameWebSocketOptions): UseGameWebSocketResult {
   const subscribe = useCallback(
-    (callback: () => void) => subscribeToStore(callback, gameId, enabled),
-    [gameId, enabled],
+    (callback: () => void) => subscribeToStore(callback, gameId, playerId ?? null, enabled),
+    [gameId, playerId, enabled],
   )
 
   const getSnapshot = useCallback(
-    () => getStoreSnapshot(gameId, enabled),
-    [gameId, enabled],
+    () => getStoreSnapshot(gameId, playerId ?? null, enabled),
+    [gameId, playerId, enabled],
   )
 
   const getServerSnapshot = useCallback(() => EMPTY_SNAPSHOT, [])

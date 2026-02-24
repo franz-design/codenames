@@ -560,7 +560,6 @@ async function renameProjects(projectName: string, availableApps: AvailableApps)
     { path: 'apps/api/package.json', name: 'api', condition: availableApps.api },
     { path: 'apps/web-spa/package.json', name: 'web-spa', condition: availableApps.webSpa },
     { path: 'apps/web-ssr/package.json', name: 'web-ssr', condition: availableApps.webSsr },
-    { path: 'apps/documentation/package.json', name: 'documentation', condition: true },
   ]
 
   for (const { path, name, condition } of appsToUpdate) {

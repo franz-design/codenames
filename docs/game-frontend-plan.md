@@ -167,4 +167,4 @@ Stocke et expose : `playerId`, `creatorToken`, `gameId`, `playerName`.
 - [game-backend-plan.md](./game-backend-plan.md) — Plan backend (endpoints, events, GameState)
 - [player-identification.md](./player-identification.md) — Flux d'identification
 - [rules.md](./rules.md) — Règles du jeu Codenames
-- [frontend.mdx](../apps/documentation/src/content/docs/guidelines/frontend.mdx) — Conventions frontend
+- [frontend-guidelines.md](./frontend-guidelines.md) — Conventions frontend

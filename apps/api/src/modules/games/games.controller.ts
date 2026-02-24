@@ -73,8 +73,17 @@ export class GamesController {
   }
 
   @TypedRoute.Get(':id/state', gameStateSchema)
-  async getGameState(@TypedParam('id', z.uuid()) id: string) {
-    return await this.gamesService.getGameState(id)
+  async getGameState(
+    @Headers() headers: Record<string, string | string[] | undefined>,
+    @TypedParam('id', z.uuid()) id: string,
+  ) {
+    const playerId = headers['x-player-id']
+    const resolvedPlayerId = typeof playerId === 'string'
+      ? playerId
+      : Array.isArray(playerId) && playerId[0]
+        ? playerId[0]
+        : undefined
+    return await this.gamesService.getGameState(id, resolvedPlayerId)
   }
 
   @TypedRoute.Post(':id/join', joinGameResponseSchema)

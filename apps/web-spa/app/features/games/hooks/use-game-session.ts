@@ -5,7 +5,10 @@ const STORAGE_KEYS = {
   creatorToken: 'codenames_creatorToken',
   gameId: 'codenames_gameId',
   playerName: 'codenames_playerName',
+  pendingRedirect: 'codenames_pendingRedirect',
 } as const
+
+export const PENDING_REDIRECT_KEY = STORAGE_KEYS.pendingRedirect
 
 export interface GameSessionData {
   playerId: string | null

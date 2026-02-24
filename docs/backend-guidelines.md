@@ -1,8 +1,3 @@
----
-title: Backend Guidelines
-description: Guidelines for the backend of the Lonestone project.
----
-
 # API Guidelines
 
 ## Stack
@@ -50,6 +45,7 @@ To create a new module, you can use the following command:
 ```bash
 pnpm generate:module --name=module-name
 ```
+
 It's generated with the following files:
 
 - `__name__.controller.ts`
@@ -63,9 +59,9 @@ If you want to create a new module from scratch without the generator, you shoul
 
 1. Create an entity, using posts.entity.ts (or another existing entity file if not found) as reference;
 2. Create a contract, using posts.contract.ts (or another existing contract file if not found) as reference.
-    a. The contract file should contain the schema for all CRUD actions (GET/POST/PUT/DELETE);
-    b. If related contracts are needed (relations), create the related contract files first;
-    c. When creating a contract, always start from the GET contract (nameOfEntitySchema) and then create the create and update contracts by extending the initial schema (you can use zod pick);
+   a. The contract file should contain the schema for all CRUD actions (GET/POST/PUT/DELETE);
+   b. If related contracts are needed (relations), create the related contract files first;
+   c. When creating a contract, always start from the GET contract (nameOfEntitySchema) and then create the create and update contracts by extending the initial schema (you can use zod pick);
 3. Create a service, using posts.service.ts (or another existing service file if not found) as reference;
 4. Create a controller, using posts.controller.ts (or another existing controller file if not found) as reference;
 5. Create a module, using posts.module.ts (or another existing module file if not found) as reference;
@@ -104,77 +100,6 @@ If you want to create a new module from scratch without the generator, you shoul
 - Export the inferred type for TypeScript usage
 - Use descriptive names that indicate the purpose (e.g., `createUserSchema`, `updateUserSchema`)
 
-Example:
-```typescript
-import { z } from 'zod'
-
-// Basic schema with validation rules
-export const createUserSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Invalid email format'),
-  age: z.number().min(18, 'User must be at least 18 years old').optional(),
-}).meta({
-  title: 'Create User',
-  description: 'Schema for creating a new user account',
-  examples: [
-    {
-      name: 'John Doe',
-      email: 'john.doe@example.com',
-      age: 25
-    }
-  ]
-})
-
-// Export the inferred type for TypeScript usage
-export type CreateUserInput = z.infer<typeof createUserSchema>
-
-// Controller usage
-@TypedController('user')
-export class UserController {
-  @TypedRoute.Post('', createUserSchema)
-  async createUser(@TypedBody(createUserSchema) body: CreateUserInput) {
-    // Implementation
-  }
-}
-```
-
-#### Common Schema Patterns
-
-**Create vs Update Schemas:**
-```typescript
-// Base schema for common fields
-const userBaseSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-})
-
-// Create schema (all fields required)
-export const createUserSchema = userBaseSchema.meta({
-  title: 'Create User',
-  description: 'Create a new user account'
-})
-
-// Update schema (all fields optional)
-export const updateUserSchema = userBaseSchema.partial().meta({
-  title: 'Update User',
-  description: 'Update an existing user account'
-})
-```
-
-**Response Schemas:**
-```typescript
-export const userResponseSchema = z.object({
-  id: z.uuid(),
-  name: z.string(),
-  email: z.string().email(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-}).meta({
-  title: 'User Response',
-  description: 'User data returned by the API'
-})
-```
-
 ### Response Formatting
 
 - Use consistent response formats
@@ -199,25 +124,6 @@ export const userResponseSchema = z.object({
 - Define proper indexes for performance
 - Use appropriate relationships (OneToMany, ManyToOne, etc.)
 
-Example:
-```typescript
-@Entity({ tableName: 'user' })
-export class User {
-  @PrimaryKey({ type: 'uuid', defaultRaw: 'gen_random_uuid()' })
-  id!: string
-
-  @Property()
-  @Index()
-  name!: string
-
-  @Property({ fieldName: 'createdAt' })
-  createdAt: Date = new Date()
-
-  @Property({ fieldName: 'updatedAt', onUpdate: () => new Date() })
-  updatedAt: Date = new Date()
-}
-```
-
 ### Queries
 
 - Use the EntityManager for database operations
@@ -232,15 +138,6 @@ export class User {
 - Use guards for protecting routes
 - Use decorators for role-based access control
 - Validate user permissions in services
-
-Example:
-```typescript
-@Controller('admin/users')
-@UseGuards(AuthGuard)
-export class UserController {
-  // Protected endpoints
-}
-```
 
 ## Documentation
 

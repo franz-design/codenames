@@ -46,6 +46,12 @@ export function WordGrid({
   const revealedMap = getRevealedMap(revealedWords)
   const isInteractive = viewMode === 'operative' && isOperativeInteractive
 
+  const getCardType = (index: number): CardType | null => {
+    if (viewMode === 'spy' && results)
+      return results[index] ?? null
+    return revealedMap.get(index) ?? null
+  }
+
   return (
     <div
       className={`grid w-full min-w-0 grid-cols-5 gap-2 ${className ?? ''}`}
@@ -65,7 +71,7 @@ export function WordGrid({
             key={`${index}-${word}`}
             word={word}
             wordIndex={index}
-            cardType={results[index] ?? null}
+            cardType={getCardType(index)}
             isRevealed={showAsRevealed}
             isGameFinished={isGameFinished}
             viewMode={viewMode}
