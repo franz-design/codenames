@@ -94,15 +94,6 @@ export class GamesController {
     return await this.gamesService.kickPlayer(id, playerId, body)
   }
 
-  @TypedRoute.Patch(':id/players/:playerId/spy', gameStateSchema)
-  async designatePlayerAsSpy(
-    @TypedParam('id', z.uuid()) id: string,
-    @TypedParam('playerId', z.uuid()) targetPlayerId: string,
-    @TypedBody(designatePlayerAsSpySchema) body: DesignatePlayerAsSpyInput,
-  ) {
-    return await this.gamesService.designatePlayerAsSpy(id, targetPlayerId, body)
-  }
-
   @TypedRoute.Delete(':id/leave', gameStateSchema)
   async leaveGame(
     @Headers() headers: Record<string, string | string[] | undefined>,
@@ -129,6 +120,15 @@ export class GamesController {
   ) {
     const playerId = getPlayerId(headers)
     return await this.gamesService.designateSpy(id, playerId)
+  }
+
+  @TypedRoute.Patch(':id/players/:playerId/spy', gameStateSchema)
+  async designatePlayerAsSpy(
+    @TypedParam('id', z.uuid()) id: string,
+    @TypedParam('playerId', z.uuid()) targetPlayerId: string,
+    @TypedBody(designatePlayerAsSpySchema) body: DesignatePlayerAsSpyInput,
+  ) {
+    return await this.gamesService.designatePlayerAsSpy(id, targetPlayerId, body)
   }
 
   @TypedRoute.Post(':id/rounds/start', gameStateSchema)

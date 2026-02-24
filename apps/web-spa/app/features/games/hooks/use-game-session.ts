@@ -58,6 +58,8 @@ export function useGameSession() {
     sessionStorage.setItem(STORAGE_KEYS.playerName, data.playerName)
     if (data.creatorToken)
       sessionStorage.setItem(STORAGE_KEYS.creatorToken, data.creatorToken)
+    else
+      sessionStorage.removeItem(STORAGE_KEYS.creatorToken)
     setSessionState(getSessionSnapshot())
   }, [])
 
