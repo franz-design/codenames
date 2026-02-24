@@ -41,6 +41,16 @@ export default function GamePlayPage() {
     },
   })
 
+  const { mutate: giveClue, isPending: isCluePending } = useMutation({
+    mutationFn: ({ word, number }: { word: string, number: number }) =>
+      api.giveClue(gameId!, word, number),
+    onError: (err) => {
+      toast.error(
+        err instanceof Error ? err.message : 'Impossible d\'envoyer l\'indice',
+      )
+    },
+  })
+
   useEffect(() => {
     if (!gameState || !playerId)
       return
@@ -104,6 +114,8 @@ export default function GamePlayPage() {
       isConnected={isConnected}
       onLeaveGame={() => leaveGame()}
       isLeaving={isLeaving}
+      onGiveClue={(word, number) => giveClue({ word, number })}
+      isCluePending={isCluePending}
     />
   )
 }

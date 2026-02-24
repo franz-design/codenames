@@ -14,7 +14,7 @@ export interface WordCardProps {
 const CARD_TYPE_STYLES: Record<CardType, string> = {
   red: 'bg-red-600 text-white',
   blue: 'bg-blue-600 text-white border-blue-700',
-  neutral: 'bg-grey-400 text-white dark:bg-gray-500 dark:text-white',
+  neutral: 'bg-gray-400 text-white dark:bg-gray-500 dark:text-white',
   black: 'bg-zinc-900 text-white',
 }
 

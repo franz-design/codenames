@@ -1,6 +1,7 @@
 import type { RoundState, Side } from '../types'
 import { Badge } from '@codenames/ui/components/primitives/badge'
 import { cn } from '@codenames/ui/lib/utils'
+import { CLUE_NUMBER_INFINITY } from '../types'
 
 export interface TurnIndicatorProps {
   round: RoundState
@@ -49,7 +50,7 @@ export function TurnIndicator({
             {currentClue.word}
             {' '}
             —
-            {currentClue.number}
+            {currentClue.number === CLUE_NUMBER_INFINITY ? '∞' : currentClue.number}
           </span>
         </div>
       )}
@@ -57,7 +58,9 @@ export function TurnIndicator({
       {currentClue && (
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Devinettes restantes :</span>
-          <span className="font-medium">{guessesRemaining}</span>
+          <span className="font-medium">
+            {guessesRemaining >= 100 ? '∞' : guessesRemaining}
+          </span>
         </div>
       )}
 

@@ -42,9 +42,9 @@ Ce document décrit le plan de mise en place de la partie frontend du jeu Codena
 
 ### Phase 5 : Vue Espion
 
-- [ ] **5.1** Afficher la grille avec les couleurs réelles (rouge, bleu, neutre, noir) pour l'espion
-- [ ] **5.2** Créer le formulaire de saisie d'indice (mot + nombre) avec validation
-- [ ] **5.3** Envoyer l'indice via POST `/games/:id/rounds/current/clue` quand c'est le tour de l'espion
+- [x] **5.1** Afficher la grille avec les couleurs réelles (rouge, bleu, neutre, noir) pour l'espion
+- [x] **5.2** Créer le formulaire de saisie d'indice (mot + nombre) avec validation
+- [x] **5.3** Envoyer l'indice via POST `/games/:id/rounds/current/clue` quand c'est le tour de l'espion
 
 ### Phase 6 : Vue Opératif
 

@@ -2,6 +2,7 @@ import type { GameState, Side } from '../types'
 import { Badge } from '@codenames/ui/components/primitives/badge'
 import { Button } from '@codenames/ui/components/primitives/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@codenames/ui/components/primitives/card'
+import { ClueForm } from './clue-form'
 import { TurnIndicator } from './turn-indicator'
 import { WordGrid } from './word-grid'
 
@@ -17,6 +18,8 @@ export interface GamePlayViewProps {
   isConnected: boolean
   onLeaveGame: () => void
   isLeaving: boolean
+  onGiveClue?: (word: string, number: number) => void
+  isCluePending?: boolean
 }
 
 function getViewMode(
@@ -32,6 +35,8 @@ export function GamePlayView({
   isConnected,
   onLeaveGame,
   isLeaving,
+  onGiveClue,
+  isCluePending = false,
 }: GamePlayViewProps) {
   const currentPlayer = gameState.players.find(p => p.id === playerId)
   const viewMode = getViewMode(currentPlayer)
@@ -46,6 +51,12 @@ export function GamePlayView({
   }
 
   const isFinished = gameState.status === 'FINISHED'
+  const canGiveClue
+    = !isFinished
+      && viewMode === 'spy'
+      && currentPlayer?.side === round.currentTurn
+      && !round.currentClue
+      && Boolean(onGiveClue)
 
   return (
     <main className="flex min-h-screen flex-col items-center p-4">
@@ -93,11 +104,22 @@ export function GamePlayView({
           />
         )}
 
-        <Card>
-          <CardContent className="p-4">
-            <WordGrid round={round} viewMode={viewMode} />
-          </CardContent>
-        </Card>
+        <WordGrid round={round} viewMode={viewMode} />
+
+        {canGiveClue && (
+          <Card className="py-2 px-2">
+            <CardContent className="p-4">
+              <p className="mb-4 text-sm text-muted-foreground">
+                C&apos;est à vous de donner un indice à votre équipe.
+              </p>
+              <ClueForm
+                gridWords={round.words}
+                onSubmit={data => onGiveClue?.(data.word, data.number)}
+                isPending={isCluePending}
+              />
+            </CardContent>
+          </Card>
+        )}
 
         <div className="flex justify-center">
           <Button

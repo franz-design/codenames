@@ -2,6 +2,8 @@ export type Side = 'red' | 'blue'
 
 export type CardType = 'neutral' | 'red' | 'blue' | 'black'
 
+export const CLUE_NUMBER_INFINITY = 999
+
 export interface GameStatePlayer {
   id: string
   name: string
@@ -20,10 +22,10 @@ export interface RoundState {
   results: CardType[]
   order: number
   currentTurn: Side
-  currentClue: { word: string; number: number } | null
+  currentClue: { word: string, number: number } | null
   guessesRemaining: number
   revealedWords: RevealedWord[]
-  highlights: Record<string, { playerId: string; playerName: string }[]>
+  highlights: Record<string, { playerId: string, playerName: string }[]>
 }
 
 export interface GameState {
