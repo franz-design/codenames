@@ -1,5 +1,5 @@
 import type { VariantProps } from 'class-variance-authority'
-import { cn } from '@boilerstone/ui/lib/utils'
+import { cn } from '@codenames/ui/lib/utils'
 import * as SheetPrimitive from '@radix-ui/react-dialog'
 import { cva } from 'class-variance-authority'
 import { X } from 'lucide-react'

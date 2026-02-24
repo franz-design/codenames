@@ -1,8 +1,8 @@
-import { Header } from '@boilerstone/ui/components/layout/Header'
-import { Navigation } from '@boilerstone/ui/components/layout/Navigation'
-import { LayoutDashboard, LogOut, MoonStar, PlusCircle, Settings, Sun, User } from 'lucide-react'
+import { Header } from '@codenames/ui/components/layout/Header'
+import { Navigation } from '@codenames/ui/components/layout/Navigation'
+import { LayoutDashboard, LogOut, MoonStar, Settings, Sun, User } from 'lucide-react'
 import { useEffect } from 'react'
-import { Link, Outlet, useNavigate } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import useTheme from '@/hooks/useTheme'
 import { authClient } from '@/lib/auth-client'
 
@@ -42,11 +42,6 @@ export default function DashboardPage() {
           )}
           sections={[
             {
-              items: [
-                { to: '/dashboard/posts/new', label: 'New Post', icon: <PlusCircle className="h-4 w-4" /> },
-              ],
-            },
-            {
               separator: true,
               dropdown: {
                 icon: <User className="h-4 w-4" />,
@@ -75,7 +70,9 @@ export default function DashboardPage() {
       </Header>
       <main className="container mx-auto py-8 px-4 space-y-6">
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        <Outlet />
+        <p className="text-muted-foreground">
+          <Link to="/">Jouer à Codenames</Link>
+        </p>
       </main>
     </>
   )

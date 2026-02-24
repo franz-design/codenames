@@ -19,10 +19,10 @@ Ce document décrit le plan de mise en place de la partie frontend du jeu Codena
 
 ### Phase 2 : Pages d'entrée et routing
 
-- [ ] **2.1** Créer la page d'accueil Codenames (choix : créer ou rejoindre une partie)
-- [ ] **2.2** Créer la page « Créer une partie » (formulaire pseudo → POST /games)
-- [ ] **2.3** Créer la page « Rejoindre une partie » (input gameId + pseudo → POST /games/:id/join)
-- [ ] **2.4** Configurer les routes : `/`, `/games/new`, `/games/:gameId/join`, `/games/:gameId`
+- [x] **2.1** Créer la page d'accueil Codenames (choix : créer ou rejoindre une partie)
+- [x] **2.2** Créer la page « Créer une partie » (formulaire pseudo → POST /games)
+- [x] **2.3** Créer la page « Rejoindre une partie » (input gameId + pseudo → POST /games/:id/join)
+- [x] **2.4** Configurer les routes : `/`, `/games/new`, `/games/:gameId/join`, `/games/:gameId`
 
 ### Phase 3 : Lobby
 
@@ -67,7 +67,7 @@ Ce document décrit le plan de mise en place de la partie frontend du jeu Codena
 - [ ] **8.1** Adapter le design (couleurs équipes, cartes, thème Codenames)
 - [ ] **8.2** Responsive design (mobile/tablette)
 - [ ] **8.3** Tests unitaires des hooks et composants critiques
-- [ ] **8.4** Nettoyer les features boilerplate non utilisées (auth, user-posts) si souhaité
+- [x] **8.4** Nettoyer les features boilerplate non utilisées (user-posts supprimé)
 
 ---
 

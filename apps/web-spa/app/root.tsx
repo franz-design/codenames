@@ -1,12 +1,12 @@
 import type { Route } from './+types/root'
-import { client } from '@boilerstone/openapi-generator'
+import { client } from '@codenames/openapi-generator'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
 import { queryClient } from '@/lib/query-client'
 import useTheme from './hooks/useTheme'
 import '@fontsource/source-sans-pro'
-import '@boilerstone/ui/globals.css'
+import '@codenames/ui/globals.css'
 
 client.setConfig({
   baseUrl: import.meta.env.VITE_API_URL,

@@ -1,6 +1,6 @@
-import type { Button } from '@boilerstone/ui/components/primitives/button'
-import { buttonVariants } from '@boilerstone/ui/components/primitives/button'
-import { cn } from '@boilerstone/ui/lib/utils'
+import type { Button } from '@codenames/ui/components/primitives/button'
+import { buttonVariants } from '@codenames/ui/components/primitives/button'
+import { cn } from '@codenames/ui/lib/utils'
 
 import { ChevronLeftIcon, ChevronRightIcon, MoreHorizontalIcon } from 'lucide-react'
 import * as React from 'react'
