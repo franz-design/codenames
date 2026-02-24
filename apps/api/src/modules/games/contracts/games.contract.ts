@@ -45,6 +45,15 @@ export const kickPlayerSchema = z.object({
 
 export type KickPlayerInput = z.infer<typeof kickPlayerSchema>
 
+export const designatePlayerAsSpySchema = z.object({
+  creatorToken: z.string().uuid(),
+}).meta({
+  title: 'DesignatePlayerAsSpySchema',
+  description: 'Schema for creator to designate a player as spy',
+})
+
+export type DesignatePlayerAsSpyInput = z.infer<typeof designatePlayerAsSpySchema>
+
 export const gameStatePlayerSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),

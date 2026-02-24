@@ -1,8 +1,4 @@
 import {
-  Headers,
-  UnauthorizedException,
-} from '@nestjs/common'
-import {
   PaginationParams,
   SortingParams,
   TypedBody,
@@ -10,26 +6,32 @@ import {
   TypedParam,
   TypedRoute,
 } from '@lonestone/nzoth/server'
+import {
+  Headers,
+  UnauthorizedException,
+} from '@nestjs/common'
 import { z } from 'zod'
 import {
   chooseSideSchema,
   CreateGameInput,
   createGameResponseSchema,
   createGameSchema,
-  gameSchema,
-  gameStateSchema,
+  DesignatePlayerAsSpyInput,
+  designatePlayerAsSpySchema,
   GamePagination,
   gamePaginationSchema,
+  gameSchema,
   GameSorting,
   gameSortingSchema,
   gamesSchema,
+  gameStateSchema,
   giveClueSchema,
   highlightWordSchema,
   JoinGameInput,
   joinGameResponseSchema,
   joinGameSchema,
-  kickPlayerSchema,
   KickPlayerInput,
+  kickPlayerSchema,
   selectWordSchema,
   startRoundSchema,
 } from './contracts/games.contract'
@@ -92,6 +94,15 @@ export class GamesController {
     return await this.gamesService.kickPlayer(id, playerId, body)
   }
 
+  @TypedRoute.Patch(':id/players/:playerId/spy', gameStateSchema)
+  async designatePlayerAsSpy(
+    @TypedParam('id', z.uuid()) id: string,
+    @TypedParam('playerId', z.uuid()) targetPlayerId: string,
+    @TypedBody(designatePlayerAsSpySchema) body: DesignatePlayerAsSpyInput,
+  ) {
+    return await this.gamesService.designatePlayerAsSpy(id, targetPlayerId, body)
+  }
+
   @TypedRoute.Delete(':id/leave', gameStateSchema)
   async leaveGame(
     @Headers() headers: Record<string, string | string[] | undefined>,
@@ -134,7 +145,7 @@ export class GamesController {
   async giveClue(
     @Headers() headers: Record<string, string | string[] | undefined>,
     @TypedParam('id', z.uuid()) id: string,
-    @TypedBody(giveClueSchema) body: { word: string; number: number },
+    @TypedBody(giveClueSchema) body: { word: string, number: number },
   ) {
     const playerId = getPlayerId(headers)
     return await this.gamesService.giveClue(id, playerId, body)

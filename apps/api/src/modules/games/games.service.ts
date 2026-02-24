@@ -1,3 +1,5 @@
+import type { GameAction, GameEventInput } from './game-core.logic'
+import type { CardType, Side } from './game-event.types'
 import { randomUUID } from 'node:crypto'
 import { EntityManager, FilterQuery } from '@mikro-orm/core'
 import {
@@ -8,6 +10,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
+import { WordsService } from '../words/words.service'
 import {
   ChooseSideInput,
   CreateGameResponse,
@@ -24,19 +27,16 @@ import {
   StartRoundInput,
 } from './contracts/games.contract'
 import { GameEvent } from './entities/game-event.entity'
-import { Game } from './games.entity'
 import { Round } from './entities/round.entity'
 import {
+  canPerformAction,
   checkGameOver,
   computeGameState,
-  type GameAction,
-  type GameEventInput,
+
   generateGridResults,
-  canPerformAction,
 } from './game-core.logic'
 import { GameEventType } from './game-event.types'
-import type { CardType, Side } from './game-event.types'
-import { WordsService } from '../words/words.service'
+import { Game } from './games.entity'
 import { GamesGateway } from './games.gateway'
 
 @Injectable()
@@ -135,8 +135,6 @@ export class GamesService {
       throw new NotFoundException('Game not found')
 
     const playerId = randomUUID()
-    const events = await this.loadGameEvents(gameId)
-    const state = computeGameState(events)
 
     const gameEvent = new GameEvent()
     gameEvent.game = game
@@ -255,6 +253,41 @@ export class GamesService {
       side: player.side,
     }
     gameEvent.triggeredBy = playerId
+    await this.em.persistAndFlush(gameEvent)
+
+    await this.emitGameState(gameId)
+    return this.getGameState(gameId)
+  }
+
+  async designatePlayerAsSpy(
+    gameId: string,
+    targetPlayerId: string,
+    input: { creatorToken: string },
+  ): Promise<GameStateResponse> {
+    const game = await this.em.findOne(Game, { id: gameId })
+    if (!game)
+      throw new NotFoundException('Game not found')
+    if (game.creatorToken !== input.creatorToken)
+      throw new ForbiddenException('Only the game creator can designate spies')
+
+    const events = await this.loadGameEvents(gameId)
+    const state = computeGameState(events)
+
+    const player = state.players.find(p => p.id === targetPlayerId)
+    if (!player)
+      throw new BadRequestException('Player not in game')
+    if (!player.side)
+      throw new BadRequestException('Player must choose a side first')
+
+    const gameEvent = new GameEvent()
+    gameEvent.game = game
+    gameEvent.eventType = GameEventType.PLAYER_DESIGNATED_SPY
+    gameEvent.payload = {
+      playerId: targetPlayerId,
+      playerName: player.name,
+      side: player.side,
+    }
+    gameEvent.triggeredBy = targetPlayerId
     await this.em.persistAndFlush(gameEvent)
 
     await this.emitGameState(gameId)
@@ -561,7 +594,7 @@ export class GamesService {
   }
 
   private mapStateToResponse(state: ReturnType<typeof computeGameState>): GameStateResponse {
-    const highlights: Record<string, { playerId: string; playerName: string }[]> = {}
+    const highlights: Record<string, { playerId: string, playerName: string }[]> = {}
     if (state.currentRound) {
       for (const [key, value] of Object.entries(state.currentRound.highlights)) {
         highlights[String(key)] = value

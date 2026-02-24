@@ -3,6 +3,7 @@ import { Badge } from '@codenames/ui/components/primitives/badge'
 import { Button } from '@codenames/ui/components/primitives/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@codenames/ui/components/primitives/card'
 import { ClueForm } from './clue-form'
+import { TeamPlayersCard } from './team-players-card'
 import { TurnIndicator } from './turn-indicator'
 import { WordGrid } from './word-grid'
 
@@ -16,10 +17,18 @@ export interface GamePlayViewProps {
   playerId: string
   playerName: string | null
   isConnected: boolean
+  isCreator: boolean
   onLeaveGame: () => void
   isLeaving: boolean
   onGiveClue?: (word: string, number: number) => void
   isCluePending?: boolean
+  onHighlight?: (wordIndex: number) => void
+  onUnhighlight?: (wordIndex: number) => void
+  onSelect?: (wordIndex: number) => void
+  onPass?: () => void
+  onRestart?: () => void
+  isOperativeActionPending?: boolean
+  isRestartPending?: boolean
 }
 
 function getViewMode(
@@ -33,10 +42,18 @@ export function GamePlayView({
   playerId,
   playerName,
   isConnected,
+  isCreator,
   onLeaveGame,
   isLeaving,
   onGiveClue,
   isCluePending = false,
+  onHighlight,
+  onUnhighlight,
+  onSelect,
+  onPass,
+  onRestart,
+  isOperativeActionPending = false,
+  isRestartPending = false,
 }: GamePlayViewProps) {
   const currentPlayer = gameState.players.find(p => p.id === playerId)
   const viewMode = getViewMode(currentPlayer)
@@ -58,9 +75,16 @@ export function GamePlayView({
       && !round.currentClue
       && Boolean(onGiveClue)
 
+  const canOperativeInteract
+    = !isFinished
+      && viewMode === 'operative'
+      && currentPlayer?.side === round.currentTurn
+      && Boolean(round.currentClue)
+      && round.guessesRemaining > 0
+
   return (
     <main className="flex min-h-screen flex-col items-center p-4">
-      <div className="flex w-full max-w-2xl flex-col gap-6">
+      <div className="flex w-full max-w-5xl flex-col gap-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold">Codenames</h1>
@@ -84,9 +108,25 @@ export function GamePlayView({
         </div>
 
         {isFinished && (
-          <Card className="border-primary">
+          <Card
+            className={
+              gameState.winningSide
+                ? 'border-green-500 bg-green-50 dark:bg-green-950/30'
+                : gameState.losingSide
+                  ? 'border-destructive bg-destructive/5'
+                  : 'border-primary'
+            }
+          >
             <CardHeader>
-              <CardTitle>
+              <CardTitle
+                className={
+                  gameState.winningSide
+                    ? 'text-green-700 dark:text-green-400'
+                    : gameState.losingSide
+                      ? 'text-destructive'
+                      : ''
+                }
+              >
                 {gameState.winningSide
                   ? `Victoire de l'équipe ${SIDE_LABELS[gameState.winningSide]} !`
                   : gameState.losingSide
@@ -94,6 +134,16 @@ export function GamePlayView({
                     : 'Partie terminée'}
               </CardTitle>
             </CardHeader>
+            {isCreator && onRestart && (
+              <CardContent className="pt-0">
+                <Button
+                  onClick={onRestart}
+                  disabled={isRestartPending}
+                >
+                  {isRestartPending ? 'Chargement...' : 'Nouvelle partie'}
+                </Button>
+              </CardContent>
+            )}
           </Card>
         )}
 
@@ -104,7 +154,45 @@ export function GamePlayView({
           />
         )}
 
-        <WordGrid round={round} viewMode={viewMode} />
+        <div className="flex w-full items-stretch gap-3">
+          <TeamPlayersCard
+            side="red"
+            players={gameState.players.filter(p => p.side === 'red')}
+            className="w-32 shrink-0"
+          />
+          <div className="flex min-w-0 flex-1 flex-col">
+            <WordGrid
+              round={round}
+              viewMode={viewMode}
+              playerId={playerId}
+              isOperativeInteractive={canOperativeInteract}
+              isGameFinished={isFinished}
+              onHighlight={onHighlight}
+              onUnhighlight={onUnhighlight}
+              onSelect={onSelect}
+              isActionPending={isOperativeActionPending}
+            />
+          </div>
+          <TeamPlayersCard
+            side="blue"
+            players={gameState.players.filter(p => p.side === 'blue')}
+            className="w-32 shrink-0"
+          />
+        </div>
+
+        {canOperativeInteract && onPass && (
+          <Card className="py-2 px-2">
+            <CardContent className="flex justify-center p-4">
+              <Button
+                variant="outline"
+                onClick={onPass}
+                disabled={isOperativeActionPending}
+              >
+                Fini de deviner
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {canGiveClue && (
           <Card className="py-2 px-2">

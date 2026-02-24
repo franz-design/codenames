@@ -35,6 +35,9 @@ async function handleResponse<T>(response: Response): Promise<T> {
     catch {
       error = { message: text }
     }
+    if (typeof error === 'object' && error !== null) {
+      (error as Record<string, unknown>).status = response.status
+    }
     throw error
   }
   if (response.status === 204)
@@ -48,6 +51,7 @@ export interface GamesApiClient {
   getGameState: (gameId: string) => Promise<GameState>
   joinGame: (gameId: string, pseudo: string) => Promise<JoinGameResponse>
   kickPlayer: (gameId: string, playerId: string, creatorToken: string) => Promise<GameState>
+  designatePlayerAsSpy: (gameId: string, playerId: string, creatorToken: string) => Promise<GameState>
   leaveGame: (gameId: string) => Promise<GameState>
   chooseSide: (gameId: string, side: 'red' | 'blue') => Promise<GameState>
   designateSpy: (gameId: string) => Promise<GameState>
@@ -109,6 +113,19 @@ export function createGamesApiClient(playerId: string): GamesApiClient {
         `${baseUrl}/api/games/${gameId}/players/${targetPlayerId}`,
         {
           method: 'DELETE',
+          headers: headers({}),
+          body: JSON.stringify({ creatorToken }),
+          credentials: 'include',
+        },
+      )
+      return handleResponse<GameState>(response)
+    },
+
+    async designatePlayerAsSpy(gameId: string, targetPlayerId: string, creatorToken: string) {
+      const response = await fetch(
+        `${baseUrl}/api/games/${gameId}/players/${targetPlayerId}/spy`,
+        {
+          method: 'PATCH',
           headers: headers({}),
           body: JSON.stringify({ creatorToken }),
           credentials: 'include',

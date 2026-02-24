@@ -1,3 +1,4 @@
+import type { GameState, Side } from '../types'
 import { Button } from '@codenames/ui/components/primitives/button'
 import {
   Card,
@@ -9,7 +10,6 @@ import {
 import { toast } from '@codenames/ui/components/primitives/sonner'
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from 'react-router'
-import type { GameState, Side } from '../types'
 import {
   createGamesApiClient,
   useGameSession,
@@ -63,6 +63,14 @@ export function GameLobbyView({ gameId, gameState }: GameLobbyViewProps) {
     },
   })
 
+  const { mutate: designatePlayerAsSpy, isPending: isDesignatingPlayerSpy } = useMutation({
+    mutationFn: (targetPlayerId: string) => {
+      if (!creatorToken)
+        throw new Error('Creator token required')
+      return api.designatePlayerAsSpy(gameId, targetPlayerId, creatorToken)
+    },
+  })
+
   const { mutate: leaveGame, isPending: isLeaving } = useMutation({
     mutationFn: () => api.leaveGame(gameId),
     onSuccess: () => {
@@ -96,7 +104,9 @@ export function GameLobbyView({ gameId, gameState }: GameLobbyViewProps) {
               Copier le lien d&apos;invitation
             </Button>
             <span className="text-sm text-muted-foreground">
-              {gameState.players.length} joueur(s)
+              {gameState.players.length}
+              {' '}
+              joueur(s)
             </span>
           </div>
         </div>
@@ -115,7 +125,9 @@ export function GameLobbyView({ gameId, gameState }: GameLobbyViewProps) {
               isCreator={isCreator}
               creatorToken={creatorToken}
               onKickPlayer={targetId => kickPlayer(targetId)}
+              onDesignateSpy={targetId => designatePlayerAsSpy(targetId)}
               isKicking={isKicking}
+              isDesignatingSpy={isDesignatingPlayerSpy}
             />
 
             {currentPlayer && (
@@ -158,8 +170,8 @@ export function GameLobbyView({ gameId, gameState }: GameLobbyViewProps) {
                   {isStartingRound
                     ? 'Démarrage...'
                     : !readyToStart
-                      ? 'En attente des équipes et espions'
-                      : 'Démarrer la partie'}
+                        ? 'En attente des équipes et espions'
+                        : 'Démarrer la partie'}
                 </Button>
                 {!readyToStart && (
                   <p className="mt-2 text-center text-sm text-muted-foreground">

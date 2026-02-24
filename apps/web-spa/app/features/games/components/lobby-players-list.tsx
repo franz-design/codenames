@@ -1,13 +1,13 @@
+import type { GameStatePlayer } from '../types'
+import { Badge } from '@codenames/ui/components/primitives/badge'
+import { Button } from '@codenames/ui/components/primitives/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@codenames/ui/components/primitives/dropdown-menu'
-import { Button } from '@codenames/ui/components/primitives/button'
-import { Badge } from '@codenames/ui/components/primitives/badge'
-import { MoreVerticalIcon, UserXIcon } from 'lucide-react'
-import type { GameStatePlayer } from '../types'
+import { EyeIcon, MoreVerticalIcon, UserXIcon } from 'lucide-react'
 
 interface LobbyPlayersListProps {
   players: GameStatePlayer[]
@@ -15,7 +15,9 @@ interface LobbyPlayersListProps {
   isCreator: boolean
   creatorToken: string | null
   onKickPlayer: (playerId: string) => void
+  onDesignateSpy?: (playerId: string) => void
   isKicking?: boolean
+  isDesignatingSpy?: boolean
 }
 
 export function LobbyPlayersList({
@@ -24,9 +26,12 @@ export function LobbyPlayersList({
   isCreator,
   creatorToken,
   onKickPlayer,
+  onDesignateSpy,
   isKicking = false,
+  isDesignatingSpy = false,
 }: LobbyPlayersListProps) {
   const canKick = isCreator && Boolean(creatorToken)
+  const canDesignateSpy = isCreator && Boolean(creatorToken) && Boolean(onDesignateSpy)
   const redPlayers = players.filter(p => p.side === 'red')
   const bluePlayers = players.filter(p => p.side === 'blue')
   const unassignedPlayers = players.filter(p => !p.side)
@@ -43,8 +48,11 @@ export function LobbyPlayersList({
                 player={player}
                 isCurrentPlayer={player.id === currentPlayerId}
                 canKick={canKick}
+                canDesignateSpy={canDesignateSpy}
                 onKick={() => onKickPlayer(player.id)}
+                onDesignateSpy={onDesignateSpy ? () => onDesignateSpy(player.id) : undefined}
                 isKicking={isKicking}
+                isDesignatingSpy={isDesignatingSpy}
               />
             ))}
           </ul>
@@ -61,8 +69,11 @@ export function LobbyPlayersList({
                 player={player}
                 isCurrentPlayer={player.id === currentPlayerId}
                 canKick={canKick}
+                canDesignateSpy={canDesignateSpy}
                 onKick={() => onKickPlayer(player.id)}
+                onDesignateSpy={onDesignateSpy ? () => onDesignateSpy(player.id) : undefined}
                 isKicking={isKicking}
+                isDesignatingSpy={isDesignatingSpy}
               />
             ))}
           </ul>
@@ -81,8 +92,10 @@ export function LobbyPlayersList({
                 player={player}
                 isCurrentPlayer={player.id === currentPlayerId}
                 canKick={canKick}
+                canDesignateSpy={false}
                 onKick={() => onKickPlayer(player.id)}
                 isKicking={isKicking}
+                isDesignatingSpy={isDesignatingSpy}
               />
             ))}
           </ul>
@@ -100,18 +113,26 @@ interface PlayerRowProps {
   player: GameStatePlayer
   isCurrentPlayer: boolean
   canKick: boolean
+  canDesignateSpy: boolean
   onKick: () => void
+  onDesignateSpy?: () => void
   isKicking: boolean
+  isDesignatingSpy: boolean
 }
 
 function PlayerRow({
   player,
   isCurrentPlayer,
   canKick,
+  canDesignateSpy,
   onKick,
+  onDesignateSpy,
   isKicking,
+  isDesignatingSpy,
 }: PlayerRowProps) {
-  const canKickThisPlayer = canKick && !isCurrentPlayer
+  const showDropdown
+    = (canKick && !isCurrentPlayer)
+      || (canDesignateSpy && Boolean(player.side))
 
   return (
     <li className="flex items-center justify-between rounded-lg border px-3 py-2">
@@ -128,7 +149,7 @@ function PlayerRow({
           </Badge>
         )}
       </div>
-      {canKickThisPlayer && (
+      {showDropdown && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="size-8">
@@ -137,14 +158,25 @@ function PlayerRow({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              variant="destructive"
-              onClick={onKick}
-              disabled={isKicking}
-            >
-              <UserXIcon className="size-4" />
-              Éjecter
-            </DropdownMenuItem>
+            {canDesignateSpy && player.side && onDesignateSpy && (
+              <DropdownMenuItem
+                onClick={onDesignateSpy}
+                disabled={isDesignatingSpy}
+              >
+                <EyeIcon className="size-4" />
+                Désigner espion
+              </DropdownMenuItem>
+            )}
+            {canKick && !isCurrentPlayer && (
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={onKick}
+                disabled={isKicking}
+              >
+                <UserXIcon className="size-4" />
+                Éjecter
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       )}

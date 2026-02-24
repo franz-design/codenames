@@ -169,7 +169,7 @@ export function applyEvent(
     return {
       ...state,
       status: 'LOBBY',
-      players: state.players.map(p => ({ ...p, side: undefined, isSpy: false })),
+      players: state.players.map(p => ({ ...p, isSpy: false })),
       currentRound: undefined,
       winningSide: undefined,
       losingSide: undefined,
@@ -293,8 +293,10 @@ export function computeGameState(events: GameEventInput[]): GameState {
         },
       }
     }
-    else if (event.roundId === currentRoundId || (event.roundId == null && currentRoundId == null)) {
+    else if (event.roundId == null || event.roundId === currentRoundId) {
       state = applyEvent(state, event)
+      if (event.eventType === GameEventType.GAME_RESTARTED)
+        currentRoundId = null
     }
   }
 

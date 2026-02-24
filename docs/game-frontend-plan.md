@@ -48,19 +48,19 @@ Ce document décrit le plan de mise en place de la partie frontend du jeu Codena
 
 ### Phase 6 : Vue Opératif
 
-- [ ] **6.1** Afficher la grille avec mots masqués (cartes face cachée)
-- [ ] **6.2** Implémenter le highlight (hover ou clic) pour proposer un mot → POST highlight
-- [ ] **6.3** Implémenter l'unhighlight → DELETE highlight
-- [ ] **6.4** Afficher les pseudos des joueurs qui ont highlighté chaque mot
-- [ ] **6.5** Implémenter la sélection de mot (confirmation) → POST select
-- [ ] **6.6** Implémenter « Fini de deviner » → POST pass
+- [x] **6.1** Afficher la grille avec mots masqués (cartes face cachée)
+- [x] **6.2** Implémenter le highlight (hover ou clic) pour proposer un mot → POST highlight
+- [x] **6.3** Implémenter l'unhighlight → DELETE highlight
+- [x] **6.4** Afficher les pseudos des joueurs qui ont highlighté chaque mot
+- [x] **6.5** Implémenter la sélection de mot (confirmation) → POST select
+- [x] **6.6** Implémenter « Fini de deviner » → POST pass
 
 ### Phase 7 : États de fin et UX
 
-- [ ] **7.1** Afficher l'écran de victoire/défaite (winningSide, losingSide)
-- [ ] **7.2** Implémenter le bouton « Nouvelle partie » (GAME_RESTARTED) pour le créateur
-- [ ] **7.3** Gérer les états de chargement et les erreurs (401, 404, erreurs réseau)
-- [ ] **7.4** Gérer la reconnexion WebSocket et la récupération d'état (GET /games/:id/state)
+- [x] **7.1** Afficher l'écran de victoire/défaite (winningSide, losingSide)
+- [x] **7.2** Implémenter le bouton « Nouvelle partie » (GAME_RESTARTED) pour le créateur
+- [x] **7.3** Gérer les états de chargement et les erreurs (401, 404, erreurs réseau)
+- [x] **7.4** Gérer la reconnexion WebSocket et la récupération d'état (GET /games/:id/state)
 
 ### Phase 8 : Polish et tests
 
