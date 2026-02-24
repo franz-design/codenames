@@ -4,6 +4,7 @@
 // These helpers are for app setup/teardown and request helpers only.
 // Arrange-Act-Assert pattern should be followed in all test files.
 
+import type { TestingModule } from '@nestjs/testing'
 import { ZodSerializationExceptionFilter, ZodValidationExceptionFilter } from '@lonestone/nzoth/server'
 import { MikroORM } from '@mikro-orm/core'
 import { MikroOrmModule } from '@mikro-orm/nestjs'
@@ -20,7 +21,7 @@ let postgresContainer: StartedPostgreSqlContainer
 export interface TestAppContext {
   app: INestApplication
   orm: MikroORM
-  moduleFixture: Awaited<ReturnType<typeof Test.createTestingModule>>
+  moduleFixture: TestingModule
 }
 
 /**

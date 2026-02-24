@@ -6,6 +6,7 @@ export default antfu(
   {
     react: true,
     ignores: [
+      '**/*.md',
       '**/.react-router/**',
       '**/*.gen.ts',
       '**/dist/',

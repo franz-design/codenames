@@ -8,7 +8,6 @@ import { GamesModule } from '../games.module'
 
 describe('GamesController (e2e)', () => {
   let context: Awaited<ReturnType<typeof initializeTestApp>>
-  let creatorPlayerId: string
   let creatorToken: string
   let gameId: string
 
@@ -50,7 +49,6 @@ describe('GamesController (e2e)', () => {
     expect(res.body.gameState.players).toHaveLength(1)
     expect(res.body.gameState.players[0].name).toBe('Alice')
 
-    creatorPlayerId = res.body.playerId
     creatorToken = res.body.creatorToken
     gameId = res.body.game.id
   })
