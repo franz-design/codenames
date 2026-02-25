@@ -52,7 +52,7 @@ export function TeamPlayersCard({
         )}
         <div>
           <p className="mb-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-            Opératifs
+            Agents
           </p>
           <ul className="flex flex-col gap-0.5">
             {operatives.length > 0

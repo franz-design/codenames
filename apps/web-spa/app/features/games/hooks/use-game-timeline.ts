@@ -12,16 +12,28 @@ function sortByCreatedAt(items: TimelineItem[]): TimelineItem[] {
   )
 }
 
+const ROUND_EVENT_TYPES = new Set([
+  'ROUND_STARTED',
+  'CLUE_GIVEN',
+  'WORD_SELECTED',
+  'WORD_HIGHLIGHTED',
+  'WORD_UNHIGHLIGHTED',
+  'TURN_PASSED',
+  'GAME_FINISHED',
+  'CHAT_MESSAGE',
+])
+
 function isRelevantItem(item: TimelineItem): boolean {
   if (item.type === 'chat')
     return true
-  return item.eventType === 'CLUE_GIVEN' || item.eventType === 'WORD_SELECTED'
+  return item.eventType !== undefined && ROUND_EVENT_TYPES.has(item.eventType)
 }
 
 export interface UseGameTimelineOptions {
   gameId: string | null
   playerId: string | null
   playerName?: string | null
+  currentRoundId: string | null
   enabled?: boolean
 }
 
@@ -36,28 +48,47 @@ export function useGameTimeline({
   gameId,
   playerId,
   playerName = null,
+  currentRoundId,
   enabled = true,
 }: UseGameTimelineOptions): UseGameTimelineResult {
   const queryClient = useQueryClient()
   const [wsItems, setWsItems] = useState<TimelineItem[]>([])
   const seenIdsRef = useRef<Set<string>>(new Set())
+  const prevRoundIdRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (prevRoundIdRef.current !== currentRoundId) {
+      prevRoundIdRef.current = currentRoundId
+      setWsItems([])
+      seenIdsRef.current.clear()
+    }
+  }, [currentRoundId])
 
   const { data: timelineData } = useQuery({
-    queryKey: ['gameTimeline', gameId],
+    queryKey: ['gameTimeline', gameId, currentRoundId],
     queryFn: () => {
       if (!gameId)
         throw new Error('Missing gameId')
-      return createGamesApiClient(playerId ?? '').getTimeline(gameId, TIMELINE_PAGE_SIZE, 0)
+      return createGamesApiClient(playerId ?? '').getTimeline(
+        gameId,
+        TIMELINE_PAGE_SIZE,
+        0,
+        currentRoundId ?? undefined,
+      )
     },
-    enabled: Boolean(enabled && gameId && playerId),
+    enabled: Boolean(enabled && gameId && playerId && currentRoundId),
   })
 
   const handleTimelineItem = useCallback((item: TimelineItem) => {
+    if (!currentRoundId)
+      return
+    if (item.roundId !== undefined && item.roundId !== null && item.roundId !== currentRoundId)
+      return
     if (seenIdsRef.current.has(item.id))
       return
     seenIdsRef.current.add(item.id)
     setWsItems(prev => [...prev, item])
-  }, [])
+  }, [currentRoundId])
 
   useGameWebSocket({
     gameId,
@@ -99,12 +130,13 @@ export function useGameTimeline({
         playerName: playerName ?? undefined,
         triggeredBy: playerId,
         createdAt: new Date().toISOString(),
+        roundId: currentRoundId,
       }
       setWsItems(prev => [...prev, optimisticItem])
       return { optimisticItem }
     },
     onSuccess: async (_, __, context) => {
-      await queryClient.refetchQueries({ queryKey: ['gameTimeline', gameId] })
+      await queryClient.refetchQueries({ queryKey: ['gameTimeline', gameId, currentRoundId] })
       if (context?.optimisticItem)
         setWsItems(prev => prev.filter(i => i.id !== context.optimisticItem.id))
     },

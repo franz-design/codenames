@@ -58,6 +58,8 @@ export interface PlayerDesignatedSpyPayload {
 export interface GameFinishedPayload {
   winningSide?: Side
   losingSide?: Side
+  words?: string[]
+  results?: CardType[]
 }
 
 export interface GameRestartedPayload {

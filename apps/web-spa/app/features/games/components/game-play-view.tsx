@@ -102,7 +102,7 @@ export function GamePlayView({
                 {currentPlayer?.side ? SIDE_LABELS[currentPlayer.side] : 'Sans équipe'}
               </Badge>
               <Badge variant="secondary">
-                {viewMode === 'spy' ? 'Espion' : 'Opératif'}
+                {viewMode === 'spy' ? 'Espion' : 'Agent'}
               </Badge>
             </div>
             <div className="flex items-center gap-2">
@@ -131,7 +131,7 @@ export function GamePlayView({
                 <CardTitle
                   className={
                     gameState.winningSide
-                      ? 'text-green-700 dark:text-green-400'
+                      ? 'text-green-700 dark:text-green-400 text-center'
                       : gameState.losingSide
                         ? 'text-destructive'
                         : ''

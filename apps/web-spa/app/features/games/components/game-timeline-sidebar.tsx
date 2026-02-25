@@ -25,7 +25,7 @@ export function GameTimelineSidebar({
 
   return (
     <aside
-      className={`hidden h-full max-h-[90vh] min-h-0 min-w-64 flex-[1] shrink-0 flex-col border-1 rounded-lg mr-4 mt-4 bg-muted/20 lg:flex ${className ?? ''}`}
+      className={`hidden h-full min-h-[90vh] max-h-[90vh] min-w-64 flex-[1] shrink-0 flex-col border-1 rounded-lg mr-4 mt-4 bg-muted/20 lg:flex ${className ?? ''}`}
       aria-label="Historique et chat"
     >
       <div className="border-b px-3 py-2">

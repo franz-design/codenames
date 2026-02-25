@@ -1,6 +1,5 @@
 import {
   PaginationParams,
-  SortingParams,
   TypedBody,
   TypedController,
   TypedParam,
@@ -8,6 +7,7 @@ import {
 } from '@lonestone/nzoth/server'
 import {
   Headers,
+  Query,
   UnauthorizedException,
 } from '@nestjs/common'
 import { z } from 'zod'
@@ -18,12 +18,6 @@ import {
   createGameSchema,
   DesignatePlayerAsSpyInput,
   designatePlayerAsSpySchema,
-  GamePagination,
-  gamePaginationSchema,
-  gameSchema,
-  GameSorting,
-  gameSortingSchema,
-  gamesSchema,
   gameStateSchema,
   giveClueSchema,
   highlightWordSchema,
@@ -36,8 +30,8 @@ import {
   sendChatSchema,
   startRoundSchema,
   TimelinePagination,
-  timelineResponseSchema,
   timelinePaginationSchema,
+  timelineResponseSchema,
 } from './contracts/games.contract'
 import { GamesService } from './games.service'
 
@@ -61,19 +55,6 @@ export class GamesController {
   @TypedRoute.Post('', createGameResponseSchema)
   async createGame(@TypedBody(createGameSchema) body: CreateGameInput) {
     return await this.gamesService.createGame(body.pseudo)
-  }
-
-  @TypedRoute.Get('', gamesSchema)
-  async getGames(
-    @PaginationParams(gamePaginationSchema) pagination: GamePagination,
-    @SortingParams(gameSortingSchema) sort?: GameSorting,
-  ) {
-    return await this.gamesService.getGames(pagination, sort)
-  }
-
-  @TypedRoute.Get(':id', gameSchema)
-  async getGame(@TypedParam('id', z.uuid()) id: string) {
-    return await this.gamesService.getGame(id)
   }
 
   @TypedRoute.Get(':id/state', gameStateSchema)
@@ -226,7 +207,8 @@ export class GamesController {
   async getTimeline(
     @TypedParam('id', z.uuid()) id: string,
     @PaginationParams(timelinePaginationSchema) pagination: TimelinePagination,
+    @Query('roundId') roundId?: string,
   ) {
-    return await this.gamesService.getTimeline(id, pagination)
+    return await this.gamesService.getTimeline(id, { ...pagination, roundId })
   }
 }

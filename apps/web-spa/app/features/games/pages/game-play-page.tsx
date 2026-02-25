@@ -33,13 +33,6 @@ export default function GamePlayPage() {
     enabled: Boolean(gameId) && hasSession,
   })
 
-  const timeline = useGameTimeline({
-    gameId: gameId ?? null,
-    playerId: playerId ?? null,
-    playerName,
-    enabled: Boolean(gameId && playerId && hasSession),
-  })
-
   const shouldFetchState = Boolean(gameId) && hasSession && Boolean(playerId)
   const { data: fetchedState, isFetching, error: fetchError } = useQuery({
     queryKey: ['gameState', gameId, playerId],
@@ -60,6 +53,14 @@ export default function GamePlayPage() {
   const gameState = wsGameState ?? fetchedState ?? null
   const isLoading = !gameState && (isFetching || (isConnected && !wsError))
   const error = wsError ?? fetchError
+
+  const timeline = useGameTimeline({
+    gameId: gameId ?? null,
+    playerId: playerId ?? null,
+    playerName,
+    currentRoundId: gameState?.currentRound?.id ?? null,
+    enabled: Boolean(gameId && playerId && hasSession && gameState?.currentRound),
+  })
 
   useEffect(() => {
     if (gameId)

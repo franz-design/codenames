@@ -1,9 +1,4 @@
-import {
-  createFilterQueryStringSchema,
-  createPaginationQuerySchema,
-  createSortingQueryStringSchema,
-  paginatedSchema,
-} from '@lonestone/nzoth/server'
+import { createPaginationQuerySchema } from '@lonestone/nzoth/server'
 import { z } from 'zod'
 
 export const sideSchema = z.enum(['red', 'blue']).meta({
@@ -142,33 +137,6 @@ export const joinGameResponseSchema = z.object({
 
 export type JoinGameResponse = z.infer<typeof joinGameResponseSchema>
 
-export const gamesSchema = paginatedSchema(gameSchema).meta({
-  title: 'GamesSchema',
-  description: 'Schema for a paginated list of games',
-})
-
-export type GamesResponse = z.infer<typeof gamesSchema>
-
-export const enabledGameSortingKey = ['createdAt'] as const
-
-export const gameSortingSchema = createSortingQueryStringSchema(
-  enabledGameSortingKey,
-)
-
-export type GameSorting = z.infer<typeof gameSortingSchema>
-
-export const enabledGameFilteringKeys = ['createdAt'] as const
-
-export const gameFilteringSchema = createFilterQueryStringSchema(
-  enabledGameFilteringKeys,
-)
-
-export type GameFiltering = z.infer<typeof gameFilteringSchema>
-
-export const gamePaginationSchema = createPaginationQuerySchema()
-
-export type GamePagination = z.infer<typeof gamePaginationSchema>
-
 export const chooseSideSchema = z.object({
   side: sideSchema,
 }).meta({
@@ -232,6 +200,7 @@ export const timelineItemSchema = z.object({
   triggeredBy: z.string().uuid().nullable(),
   playerName: z.string().optional(),
   createdAt: z.string(),
+  roundId: z.string().uuid().nullable().optional(),
 }).meta({
   title: 'TimelineItemSchema',
   description: 'Timeline item (event or chat message)',

@@ -62,6 +62,7 @@ export interface TimelineItem {
   triggeredBy: string | null
   playerName?: string
   createdAt: string
+  roundId?: string | null
 }
 
 export interface TimelineResponse {

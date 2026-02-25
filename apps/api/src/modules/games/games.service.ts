@@ -1,7 +1,7 @@
 import type { GameAction, GameEventInput } from './game-core.logic'
 import type { CardType, Side } from './game-event.types'
 import { randomUUID } from 'node:crypto'
-import { EntityManager, FilterQuery } from '@mikro-orm/core'
+import { EntityManager } from '@mikro-orm/core'
 import {
   BadRequestException,
   ForbiddenException,
@@ -14,10 +14,7 @@ import { WordsService } from '../words/words.service'
 import {
   ChooseSideInput,
   CreateGameResponse,
-  GamePagination,
   GameResponse,
-  GameSorting,
-  GamesResponse,
   GameStateResponse,
   GiveClueInput,
   HighlightWordInput,
@@ -48,6 +45,7 @@ export class GamesService {
   constructor(
     private readonly em: EntityManager,
     private readonly wordsService: WordsService,
+    // eslint-disable-next-line react/no-forward-ref, react/no-useless-forward-ref
     @Inject(forwardRef(() => GamesGateway))
     private readonly gamesGateway: GamesGateway,
   ) {}
@@ -94,36 +92,6 @@ export class GamesService {
     return this.mapGameToResponse(game)
   }
 
-  async getGames(
-    pagination: GamePagination,
-    sort?: GameSorting,
-  ): Promise<GamesResponse> {
-    const where: FilterQuery<Game> = {}
-    const orderBy: Record<string, 'ASC' | 'DESC'> = { createdAt: 'DESC' }
-
-    if (sort?.length) {
-      sort.forEach((sortItem) => {
-        orderBy[sortItem.property] = sortItem.direction.toUpperCase() as 'ASC' | 'DESC'
-      })
-    }
-
-    const [games, total] = await this.em.findAndCount(Game, where, {
-      orderBy,
-      limit: pagination.pageSize,
-      offset: pagination.offset,
-    })
-
-    return {
-      data: games.map(game => this.mapGameToResponse(game)),
-      meta: {
-        itemCount: total,
-        pageSize: pagination.pageSize,
-        offset: pagination.offset,
-        hasMore: pagination.offset + pagination.pageSize < total,
-      },
-    }
-  }
-
   async getGameState(gameId: string, playerId?: string): Promise<GameStateResponse> {
     const game = await this.em.findOne(Game, { id: gameId })
     if (!game)
@@ -142,6 +110,8 @@ export class GamesService {
   ): boolean {
     if (!playerId)
       return true
+    if (state.status === 'FINISHED')
+      return false
     const player = state.players.find(p => p.id === playerId)
     if (!player)
       return true
@@ -450,6 +420,8 @@ export class GamesService {
       finishEvent.payload = {
         winningSide: gameOver.winningSide ?? undefined,
         losingSide: gameOver.losingSide ?? undefined,
+        words: newRound.words,
+        results: newRound.results,
       }
       finishEvent.triggeredBy = playerId
       await this.em.persistAndFlush(finishEvent)
@@ -621,6 +593,11 @@ export class GamesService {
 
     const gameEvent = new GameEvent()
     gameEvent.game = game
+    if (state.currentRound) {
+      const roundEntity = await this.em.findOne(Round, { id: state.currentRound.id })
+      if (roundEntity)
+        gameEvent.round = roundEntity
+    }
     gameEvent.eventType = GameEventType.CHAT_MESSAGE
     gameEvent.payload = {
       playerId,
@@ -635,15 +612,31 @@ export class GamesService {
 
   async getTimeline(
     gameId: string,
-    pagination: TimelinePagination,
+    pagination: TimelinePagination & { roundId?: string },
   ): Promise<TimelineResponse> {
     const game = await this.em.findOne(Game, { id: gameId })
     if (!game)
       throw new NotFoundException('Game not found')
 
+    const filter: { game: string, round?: { id: string } } = { game: gameId }
+    if (pagination.roundId) {
+      filter.round = { id: pagination.roundId }
+    }
+    else {
+      return {
+        data: [],
+        meta: {
+          itemCount: 0,
+          pageSize: pagination.pageSize,
+          offset: pagination.offset,
+          hasMore: false,
+        },
+      }
+    }
+
     const [events, total] = await this.em.findAndCount(
       GameEvent,
-      { game: gameId },
+      filter,
       {
         orderBy: { createdAt: 'ASC' },
         populate: ['round'],
@@ -677,6 +670,7 @@ export class GamesService {
       triggeredBy: event.triggeredBy ?? null,
       playerName: payload.playerName as string | undefined,
       createdAt: event.createdAt.toISOString(),
+      roundId: event.round?.id ?? null,
     }
   }
 

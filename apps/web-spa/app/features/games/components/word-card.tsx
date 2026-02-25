@@ -78,11 +78,11 @@ export function WordCard({
   }
 
   const getMainFaceStyles = () => {
-    if (!isRevealed) {
-      return viewMode === 'spy' ? faceUpStyles : faceDownStyles
-    }
     if (isGameFinished) {
       return faceUpStyles
+    }
+    if (!isRevealed) {
+      return viewMode === 'spy' ? faceUpStyles : faceDownStyles
     }
     return effectiveCardType ? CARD_BACK_STYLES[effectiveCardType] : 'bg-muted border border-muted-foreground/20'
   }
@@ -161,5 +161,5 @@ export function WordCard({
         </>
       )}
     </div>
-  );
+  )
 }

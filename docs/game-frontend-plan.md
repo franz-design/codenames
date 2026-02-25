@@ -2,7 +2,7 @@
 
 Ce document décrit le plan de mise en place de la partie frontend du jeu Codenames, aligné sur le [backend plan](./game-backend-plan.md).
 
-**Règles du jeu** : Consulter [rules.md](./rules.md) pour les règles officielles. L'UI doit refléter ces règles (grille 5×5, rôles Espion/Opératif, tours, indices, victoire/défaite).
+**Règles du jeu** : Consulter [rules.md](./rules.md) pour les règles officielles. L'UI doit refléter ces règles (grille 5×5, rôles Espion/Agent, tours, indices, victoire/défaite).
 
 **Identification** : Consulter [player-identification.md](./player-identification.md) pour le flux d'identification (pseudo, playerId, creatorToken, header X-Player-Id).
 
@@ -38,7 +38,7 @@ Ce document décrit le plan de mise en place de la partie frontend du jeu Codena
 - [x] **4.2** Créer le composant `WordGrid` (grille 5×5 de cartes)
 - [x] **4.3** Créer le composant `WordCard` (mot révélé/non révélé, type de carte, highlights)
 - [x] **4.4** Afficher l'indicateur de tour (équipe courante, indice en cours, guessesRemaining)
-- [x] **4.5** Gérer l'affichage selon le rôle (Espion vs Opératif) et l'équipe
+- [x] **4.5** Gérer l'affichage selon le rôle (Espion vs Agent) et l'équipe
 
 ### Phase 5 : Vue Espion
 
@@ -46,7 +46,7 @@ Ce document décrit le plan de mise en place de la partie frontend du jeu Codena
 - [x] **5.2** Créer le formulaire de saisie d'indice (mot + nombre) avec validation
 - [x] **5.3** Envoyer l'indice via POST `/games/:id/rounds/current/clue` quand c'est le tour de l'espion
 
-### Phase 6 : Vue Opératif
+### Phase 6 : Vue Agent
 
 - [x] **6.1** Afficher la grille avec mots masqués (cartes face cachée)
 - [x] **6.2** Implémenter le highlight (hover ou clic) pour proposer un mot → POST highlight
@@ -149,7 +149,7 @@ Stocke et expose : `playerId`, `creatorToken`, `gameId`, `playerName`.
 ### WordGrid / WordCard
 
 - **WordCard** : affiche le mot, la couleur (si révélé), les highlights (pseudos)
-- **Vue Opératif** : mot visible, carte « face cachée » jusqu'à révélation
+- **Vue Agent** : mot visible, carte « face cachée » jusqu'à révélation
 - **Vue Espion** : couleur visible (rouge, bleu, neutre, noir)
 - **Highlights** : `highlights[wordIndex]` = liste `{ playerId, playerName }[]` → afficher les pseudos
 
@@ -158,7 +158,7 @@ Stocke et expose : `playerId`, `creatorToken`, `gameId`, `playerName`.
 | Rôle      | Grille visible                    | Actions disponibles                          |
 |-----------|------------------------------------|----------------------------------------------|
 | Espion    | Couleurs réelles                   | Donner indice (quand c'est son tour)         |
-| Opératif  | Mots masqués, révélés au fur et à mesure | Highlight, unhighlight, select, pass (quand c'est le tour de son équipe) |
+| Agent  | Mots masqués, révélés au fur et à mesure | Highlight, unhighlight, select, pass (quand c'est le tour de son équipe) |
 
 ---
 

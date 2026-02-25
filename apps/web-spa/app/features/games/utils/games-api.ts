@@ -1,6 +1,5 @@
 import type {
   CreateGameResponse,
-  Game,
   GameState,
   JoinGameResponse,
   TimelineResponse,
@@ -48,7 +47,6 @@ async function handleResponse<T>(response: Response): Promise<T> {
 
 export interface GamesApiClient {
   createGame: (pseudo: string) => Promise<CreateGameResponse>
-  getGame: (gameId: string) => Promise<Game>
   getGameState: (gameId: string) => Promise<GameState>
   joinGame: (gameId: string, pseudo: string) => Promise<JoinGameResponse>
   kickPlayer: (gameId: string, playerId: string, creatorToken: string) => Promise<GameState>
@@ -64,7 +62,7 @@ export interface GamesApiClient {
   passTurn: (gameId: string) => Promise<GameState>
   restartGame: (gameId: string) => Promise<GameState>
   sendChatMessage: (gameId: string, content: string) => Promise<void>
-  getTimeline: (gameId: string, pageSize?: number, offset?: number) => Promise<TimelineResponse>
+  getTimeline: (gameId: string, pageSize?: number, offset?: number, roundId?: string | null) => Promise<TimelineResponse>
 }
 
 export function createGamesApiClient(playerId: string): GamesApiClient {
@@ -81,15 +79,6 @@ export function createGamesApiClient(playerId: string): GamesApiClient {
         credentials: 'include',
       })
       return handleResponse<CreateGameResponse>(response)
-    },
-
-    async getGame(gameId: string) {
-      const response = await fetch(`${baseUrl}/api/games/${gameId}`, {
-        method: 'GET',
-        headers: headers({}),
-        credentials: 'include',
-      })
-      return handleResponse<Game>(response)
     },
 
     async getGameState(gameId: string) {
@@ -263,8 +252,10 @@ export function createGamesApiClient(playerId: string): GamesApiClient {
       return handleResponse<void>(response)
     },
 
-    async getTimeline(gameId: string, pageSize = 100, offset = 0) {
+    async getTimeline(gameId: string, pageSize = 100, offset = 0, roundId?: string | null) {
       const params = new URLSearchParams({ pageSize: String(pageSize), offset: String(offset) })
+      if (roundId)
+        params.set('roundId', roundId)
       const response = await fetch(`${baseUrl}/api/games/${gameId}/timeline?${params}`, {
         method: 'GET',
         headers: headers({}),

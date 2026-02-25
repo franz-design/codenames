@@ -7,17 +7,17 @@ Codenames est un jeu d'association de mots et de travail d'équipe pour deux éq
 ## Mise en place et rôles
 
 - Les joueurs se répartissent en deux équipes : **Bleu** et **Rouge**.
-- Chaque équipe a au moins un **Espion** (Spymaster) et des **Opératifs** (Operatives).
+- Chaque équipe a au moins un **Espion** (Spymaster) et des **Agents** (Operatives).
 - Une grille de 25 cartes de mots est affichée sur la table (5×5).
 
-### Opératifs
+### Agents
 
 - Ne connaissent pas quelles cartes appartiennent à quelle équipe.
 - Travaillent ensemble pour deviner les bonnes cartes à partir des indices de l'Espion.
 
 ### Espions
 
-- Voient quelles cartes appartiennent à chaque équipe — ces informations sont secrètes pour les Opératifs.
+- Voient quelles cartes appartiennent à chaque équipe — ces informations sont secrètes pour les Agents.
 - Donnent des indices d'un mot et un nombre pour aider leurs coéquipiers à deviner les cartes de leur équipe.
 
 ---
@@ -28,7 +28,7 @@ Quand c'est ton tour (en tant qu'Espion) :
 
 1. Trouve un indice d'un seul mot qui relie au moins une, idéalement plusieurs, des cartes de ton équipe.
 2. Ajoute un nombre qui indique combien de cartes de ton équipe sont concernées par l'indice.
-3. Partage ton indice avec tes Opératifs.
+3. Partage ton indice avec tes Agents.
 
 ### Règles pour les Espions
 
@@ -56,7 +56,7 @@ Quand c'est ton tour (en tant qu'Espion) :
 **Indice 0**
 
 - Signifie qu'aucune des cartes de ton équipe ne correspond à l'indice.
-- Les Opératifs peuvent deviner autant de fois qu'ils veulent.
+- Les Agents peuvent deviner autant de fois qu'ils veulent.
 - Utile pour éloigner l'équipe des mots dangereux (comme l'Assassin).
 
 **Indice ∞**
@@ -69,7 +69,7 @@ Quand c'est ton tour (en tant qu'Espion) :
 
 ## Deviner
 
-Après avoir reçu un indice, les Opératifs :
+Après avoir reçu un indice, les Agents :
 
 1. Discutent de l'indice et des cartes qui pourraient correspondre.
 2. Proposent des devinettes en sélectionnant une carte.

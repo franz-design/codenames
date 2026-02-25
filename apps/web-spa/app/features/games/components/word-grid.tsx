@@ -47,7 +47,7 @@ export function WordGrid({
   const isInteractive = viewMode === 'operative' && isOperativeInteractive
 
   const getCardType = (index: number): CardType | null => {
-    if (viewMode === 'spy' && results)
+    if (results && (viewMode === 'spy' || isGameFinished))
       return results[index] ?? null
     return revealedMap.get(index) ?? null
   }

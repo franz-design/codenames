@@ -1,12 +1,12 @@
 import { createOpenApiDocument, ZodSerializationExceptionFilter, ZodValidationExceptionFilter } from '@lonestone/nzoth/server'
 import { NestFactory } from '@nestjs/core'
-import { SocketIoAdapter } from './socket-io.adapter'
 import { DocumentBuilder } from '@nestjs/swagger'
 import { apiReference } from '@scalar/nestjs-api-reference'
 import * as express from 'express'
 import { Logger, LoggerErrorInterceptor } from 'nestjs-pino'
 import { AppModule } from './app.module'
 import { config } from './config/env.config'
+import { SocketIoAdapter } from './socket-io.adapter'
 
 const PREFIX = '/api'
 
