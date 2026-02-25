@@ -1,4 +1,5 @@
 import type { TimelineItem } from '../types'
+import { cn } from '@codenames/ui/lib/utils'
 
 const SIDE_LABELS: Record<string, string> = {
   red: 'rouge',
@@ -10,7 +11,7 @@ function formatEventText(item: TimelineItem): string {
   const playerName = item.playerName ?? (payload.playerName as string | undefined)
 
   if (type === 'chat') {
-    return `${playerName ?? 'Joueur'} : ${(payload.content as string) ?? ''}`
+    return `${(payload.content as string) ?? ''}`
   }
 
   switch (eventType) {
@@ -73,20 +74,31 @@ export function GameTimelineItem({ item }: GameTimelineItemProps) {
     return null
 
   const isChat = item.type === 'chat'
+  const playerName = item.playerName
 
   return (
     <div
-      className={`rounded-md px-2 py-1.5 text-sm ${isChat ? 'bg-muted/50' : 'text-muted-foreground'}`}
+      className="flex w-full justify-between gap-8 px-2 py-1.5 text-sm"
       data-testid={isChat ? 'timeline-chat' : 'timeline-event'}
     >
-      <span className="text-xs text-muted-foreground/70">
+      <div className="flex gap-3 items-end">
+        {isChat && playerName && (
+          <div className="flex-shrink-0 max-w-[30px] truncate">{playerName}</div>
+        )}
+        <div className={cn('text-sm', {
+          'bg-white/10 rounded-md rounded-bl-none mb-1 px-2 py-1': isChat,
+          'italic text-muted-foreground/70': !isChat,
+        })}
+        >
+          {text}
+        </div>
+      </div>
+      <div className="text-xs text-muted-foreground/50">
         {new Date(item.createdAt).toLocaleTimeString('fr-FR', {
           hour: '2-digit',
           minute: '2-digit',
         })}
-        {' · '}
-      </span>
-      {text}
+      </div>
     </div>
   )
 }

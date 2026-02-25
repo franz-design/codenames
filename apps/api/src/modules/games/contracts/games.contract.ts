@@ -32,7 +32,7 @@ export const joinGameSchema = z.object({
 export type JoinGameInput = z.infer<typeof joinGameSchema>
 
 export const kickPlayerSchema = z.object({
-  creatorToken: z.string().uuid(),
+  creatorToken: z.uuid(),
 }).meta({
   title: 'KickPlayerSchema',
   description: 'Schema for kicking a player (creator only)',
@@ -41,7 +41,7 @@ export const kickPlayerSchema = z.object({
 export type KickPlayerInput = z.infer<typeof kickPlayerSchema>
 
 export const designatePlayerAsSpySchema = z.object({
-  creatorToken: z.string().uuid(),
+  creatorToken: z.uuid(),
 }).meta({
   title: 'DesignatePlayerAsSpySchema',
   description: 'Schema for creator to designate a player as spy',
@@ -50,7 +50,7 @@ export const designatePlayerAsSpySchema = z.object({
 export type DesignatePlayerAsSpyInput = z.infer<typeof designatePlayerAsSpySchema>
 
 export const gameStatePlayerSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   name: z.string(),
   side: sideSchema.nullable(),
   isSpy: z.boolean().optional(),
@@ -68,7 +68,7 @@ export const revealedWordSchema = z.object({
 })
 
 export const roundStateSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   words: z.array(z.string()),
   results: z.array(cardTypeSchema).optional(),
   order: z.number().int().positive(),
@@ -82,7 +82,7 @@ export const roundStateSchema = z.object({
   highlights: z.record(
     z.string(),
     z.array(z.object({
-      playerId: z.string().uuid(),
+      playerId: z.uuid(),
       playerName: z.string(),
     })),
   ),
@@ -117,8 +117,8 @@ export type GameResponse = z.infer<typeof gameSchema>
 
 export const createGameResponseSchema = z.object({
   game: gameSchema,
-  creatorToken: z.string().uuid(),
-  playerId: z.string().uuid(),
+  creatorToken: z.uuid(),
+  playerId: z.uuid(),
   gameState: gameStateSchema,
 }).meta({
   title: 'CreateGameResponseSchema',
@@ -129,7 +129,7 @@ export type CreateGameResponse = z.infer<typeof createGameResponseSchema>
 
 export const joinGameResponseSchema = z.object({
   gameState: gameStateSchema,
-  playerId: z.string().uuid(),
+  playerId: z.uuid(),
 }).meta({
   title: 'JoinGameResponseSchema',
   description: 'Response when joining a game',
@@ -193,14 +193,14 @@ export const sendChatSchema = z.object({
 export type SendChatInput = z.infer<typeof sendChatSchema>
 
 export const timelineItemSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   type: z.enum(['event', 'chat']),
   eventType: z.string().optional(),
   payload: z.record(z.string(), z.unknown()),
-  triggeredBy: z.string().uuid().nullable(),
+  triggeredBy: z.uuid().nullable(),
   playerName: z.string().optional(),
   createdAt: z.string(),
-  roundId: z.string().uuid().nullable().optional(),
+  roundId: z.uuid().nullable().optional(),
 }).meta({
   title: 'TimelineItemSchema',
   description: 'Timeline item (event or chat message)',

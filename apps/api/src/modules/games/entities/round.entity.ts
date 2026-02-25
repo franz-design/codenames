@@ -1,6 +1,6 @@
+import type { CardType } from '../game-event.types'
 import { Entity, Index, ManyToOne, PrimaryKey, Property } from '@mikro-orm/core'
 import { Game } from '../games.entity'
-import type { CardType } from '../game-event.types'
 
 @Entity({ tableName: 'round' })
 export class Round {

@@ -35,7 +35,7 @@ import {
 } from './contracts/games.contract'
 import { GamesService } from './games.service'
 
-const playerIdHeaderSchema = z.string().uuid()
+const playerIdHeaderSchema = z.uuid()
 
 function getPlayerId(headers: Record<string, string | string[] | undefined>): string {
   const value = headers['x-player-id']

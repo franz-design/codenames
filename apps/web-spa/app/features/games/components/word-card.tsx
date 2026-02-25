@@ -57,7 +57,6 @@ export function WordCard({
   const faceUpStyles = effectiveCardType ? CARD_TYPE_STYLES[effectiveCardType] : faceDownStyles
 
   const hasHighlights = highlights.length > 0
-  const highlightBorder = hasHighlights ? 'ring-2 ring-primary' : ''
 
   const showRevealedBack = isRevealed && !isGameFinished
 
@@ -101,7 +100,6 @@ export function WordCard({
       className={cn(
         baseStyles,
         getMainFaceStyles(),
-        highlightBorder,
         isInteractive && !isRevealed && 'cursor-pointer hover:opacity-90',
         showRevealedBack && 'cursor-default',
         className,
