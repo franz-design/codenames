@@ -18,6 +18,7 @@ import { GamesService } from './games.service'
 
 const GAME_STATE_EVENT = 'game:state'
 const GAME_JOIN_EVENT = 'game:join'
+const GAME_TIMELINE_ITEM_EVENT = 'game:timeline-item'
 
 function getGameRoomId(gameId: string): string {
   return `game:${gameId}`
@@ -100,5 +101,17 @@ export class GamesGateway implements OnGatewayConnection, OnGatewayDisconnect {
       socket.emit(GAME_STATE_EVENT, state)
     }
     this.logger.log(`[WS] Broadcast game:state to room ${roomId}, ${sockets.length} socket(s) received personalized state`)
+  }
+
+  async broadcastTimelineItem(
+    gameId: string,
+    item: { id: string, type: 'event' | 'chat', eventType?: string, payload: Record<string, unknown>, triggeredBy: string | null, playerName?: string, createdAt: string },
+  ): Promise<void> {
+    const roomId = getGameRoomId(gameId)
+    const sockets = await this.server.in(roomId).fetchSockets()
+    for (const socket of sockets) {
+      socket.emit(GAME_TIMELINE_ITEM_EVENT, item)
+    }
+    this.logger.log(`[WS] Broadcast game:timeline-item to room ${roomId}, ${sockets.length} socket(s)`)
   }
 }

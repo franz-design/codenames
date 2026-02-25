@@ -226,7 +226,8 @@
             "WORD_HIGHLIGHTED",
             "WORD_UNHIGHLIGHTED",
             "TURN_PASSED",
-            "PLAYER_KICKED"
+            "PLAYER_KICKED",
+            "CHAT_MESSAGE"
           ],
           "mappedType": "enum"
         },

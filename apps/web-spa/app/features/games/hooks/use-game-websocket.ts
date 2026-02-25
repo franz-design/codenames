@@ -1,10 +1,11 @@
 import type { Socket } from 'socket.io-client'
-import type { GameState } from '../types'
-import { useCallback, useEffect, useRef, useSyncExternalStore } from 'react'
+import type { GameState, TimelineItem } from '../types'
+import { useCallback, useEffect, useLayoutEffect, useRef, useSyncExternalStore } from 'react'
 import { io } from 'socket.io-client'
 
 const GAME_JOIN_EVENT = 'game:join'
 const GAME_STATE_EVENT = 'game:state'
+const GAME_TIMELINE_ITEM_EVENT = 'game:timeline-item'
 
 export interface GameWebSocketSnapshot {
   gameState: GameState | null
@@ -34,6 +35,7 @@ interface GameStore {
   socket: Socket | null
   snapshot: GameWebSocketSnapshot
   listeners: Set<() => void>
+  timelineItemCallbacks: Set<(item: TimelineItem) => void>
   _disconnectTimeout?: ReturnType<typeof setTimeout>
 }
 
@@ -67,14 +69,26 @@ function createStore(gameId: string, playerId: string | null): GameStore {
   }
   catch (err) {
     snapshot.error = err instanceof Error ? err : new Error(String(err))
-    return { socket: null, snapshot, listeners }
+    return {
+      socket: null,
+      snapshot,
+      listeners,
+      timelineItemCallbacks: new Set(),
+    }
   }
+
+  const timelineItemCallbacks = new Set<(item: TimelineItem) => void>()
 
   const store: GameStore = {
     socket,
     snapshot,
     listeners,
+    timelineItemCallbacks,
   }
+
+  socket.on(GAME_TIMELINE_ITEM_EVENT, (item: TimelineItem) => {
+    timelineItemCallbacks.forEach(cb => cb(item))
+  })
 
   socket.on('connect', () => {
     store.snapshot = {
@@ -134,6 +148,22 @@ function getOrCreateStore(gameId: string, playerId: string | null): GameStore {
     stores.set(key, store)
   }
   return store
+}
+
+function subscribeToTimelineItem(
+  gameId: string | null,
+  playerId: string | null,
+  callback: (item: TimelineItem) => void,
+  enabled: boolean,
+): () => void {
+  if (!enabled || !gameId) {
+    return () => {}
+  }
+  const store = getOrCreateStore(gameId, playerId)
+  store.timelineItemCallbacks.add(callback)
+  return () => {
+    store.timelineItemCallbacks.delete(callback)
+  }
 }
 
 const DISCONNECT_DELAY_MS = 500
@@ -198,6 +228,7 @@ export interface UseGameWebSocketOptions {
   gameId: string | null
   playerId?: string | null
   onGameState?: (state: GameState) => void
+  onTimelineItem?: (item: TimelineItem) => void
   enabled?: boolean
 }
 
@@ -211,6 +242,7 @@ export function useGameWebSocket({
   gameId,
   playerId = null,
   onGameState,
+  onTimelineItem,
   enabled = true,
 }: UseGameWebSocketOptions): UseGameWebSocketResult {
   const subscribe = useCallback(
@@ -230,11 +262,22 @@ export function useGameWebSocket({
   const onGameStateRef = useRef(onGameState)
   onGameStateRef.current = onGameState
 
+  const onTimelineItemRef = useRef(onTimelineItem)
+  onTimelineItemRef.current = onTimelineItem
+
   useEffect(() => {
     if (snapshot.gameState) {
       onGameStateRef.current?.(snapshot.gameState)
     }
   }, [snapshot.gameState])
+
+  useLayoutEffect(() => {
+    if (!onTimelineItemRef.current || !enabled || !gameId)
+      return () => {}
+    return subscribeToTimelineItem(gameId, playerId ?? null, (item) => {
+      onTimelineItemRef.current?.(item)
+    }, enabled)
+  }, [gameId, playerId, enabled])
 
   return {
     gameState: snapshot.gameState,

@@ -33,7 +33,11 @@ import {
   KickPlayerInput,
   kickPlayerSchema,
   selectWordSchema,
+  sendChatSchema,
   startRoundSchema,
+  TimelinePagination,
+  timelineResponseSchema,
+  timelinePaginationSchema,
 } from './contracts/games.contract'
 import { GamesService } from './games.service'
 
@@ -206,5 +210,23 @@ export class GamesController {
   ) {
     const playerId = getPlayerId(headers)
     return await this.gamesService.restartGame(id, playerId)
+  }
+
+  @TypedRoute.Post(':id/chat')
+  async sendChat(
+    @Headers() headers: Record<string, string | string[] | undefined>,
+    @TypedParam('id', z.uuid()) id: string,
+    @TypedBody(sendChatSchema) body: { content: string },
+  ) {
+    const playerId = getPlayerId(headers)
+    await this.gamesService.sendChatMessage(id, playerId, body)
+  }
+
+  @TypedRoute.Get(':id/timeline', timelineResponseSchema)
+  async getTimeline(
+    @TypedParam('id', z.uuid()) id: string,
+    @PaginationParams(timelinePaginationSchema) pagination: TimelinePagination,
+  ) {
+    return await this.gamesService.getTimeline(id, pagination)
   }
 }

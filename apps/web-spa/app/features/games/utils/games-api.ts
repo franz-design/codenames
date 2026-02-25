@@ -3,6 +3,7 @@ import type {
   Game,
   GameState,
   JoinGameResponse,
+  TimelineResponse,
 } from '../types'
 
 function getBaseUrl(): string {
@@ -62,6 +63,8 @@ export interface GamesApiClient {
   unhighlightWord: (gameId: string, wordIndex: number) => Promise<GameState>
   passTurn: (gameId: string) => Promise<GameState>
   restartGame: (gameId: string) => Promise<GameState>
+  sendChatMessage: (gameId: string, content: string) => Promise<void>
+  getTimeline: (gameId: string, pageSize?: number, offset?: number) => Promise<TimelineResponse>
 }
 
 export function createGamesApiClient(playerId: string): GamesApiClient {
@@ -248,6 +251,26 @@ export function createGamesApiClient(playerId: string): GamesApiClient {
         credentials: 'include',
       })
       return handleResponse<GameState>(response)
+    },
+
+    async sendChatMessage(gameId: string, content: string) {
+      const response = await fetch(`${baseUrl}/api/games/${gameId}/chat`, {
+        method: 'POST',
+        headers: headers({}),
+        body: JSON.stringify({ content }),
+        credentials: 'include',
+      })
+      return handleResponse<void>(response)
+    },
+
+    async getTimeline(gameId: string, pageSize = 100, offset = 0) {
+      const params = new URLSearchParams({ pageSize: String(pageSize), offset: String(offset) })
+      const response = await fetch(`${baseUrl}/api/games/${gameId}/timeline?${params}`, {
+        method: 'GET',
+        headers: headers({}),
+        credentials: 'include',
+      })
+      return handleResponse<TimelineResponse>(response)
     },
   }
 }

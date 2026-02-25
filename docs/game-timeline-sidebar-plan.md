@@ -18,19 +18,19 @@ La sidebar doit contenir :
 
 ### Phase Backend
 
-- [ ] **B.1** Ajouter le type `CHAT_MESSAGE` dans `game-event.types.ts` avec payload `{ playerId, playerName, content }`
-- [ ] **B.2** Implémenter `POST /games/:id/chat` dans le controller et le service
-- [ ] **B.3** Implémenter `GET /games/:id/timeline` (events + chat, pagination optionnelle)
-- [ ] **B.4** Émettre `game:timeline-item` via WebSocket pour chaque nouvel event (y compris chat)
+- [x] **B.1** Ajouter le type `CHAT_MESSAGE` dans `game-event.types.ts` avec payload `{ playerId, playerName, content }`
+- [x] **B.2** Implémenter `POST /games/:id/chat` dans le controller et le service
+- [x] **B.3** Implémenter `GET /games/:id/timeline` (events + chat, pagination optionnelle)
+- [x] **B.4** Émettre `game:timeline-item` via WebSocket pour chaque nouvel event (y compris chat)
 
 ### Phase Frontend
 
-- [ ] **F.1** Régénérer le client OpenAPI (`pnpm generate`)
-- [ ] **F.2** Créer le hook `useGameTimeline` (fetch initial + écoute WebSocket `game:timeline-item`)
-- [ ] **F.3** Créer le composant `GameTimelineItem` (formatage event vs chat)
-- [ ] **F.4** Créer le composant `GameChatInput`
-- [ ] **F.5** Créer le composant `GameTimelineSidebar`
-- [ ] **F.6** Intégrer la sidebar dans `GamePlayView` (layout avec zone principale + sidebar)
+- [x] **F.1** Régénérer le client OpenAPI (`pnpm generate`) — non nécessaire (client API personnalisé)
+- [x] **F.2** Créer le hook `useGameTimeline` (fetch initial + écoute WebSocket `game:timeline-item`)
+- [x] **F.3** Créer le composant `GameTimelineItem` (formatage event vs chat)
+- [x] **F.4** Créer le composant `GameChatInput`
+- [x] **F.5** Créer le composant `GameTimelineSidebar`
+- [x] **F.6** Intégrer la sidebar dans `GamePlayView` (layout avec zone principale + sidebar)
 
 ---
 

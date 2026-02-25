@@ -18,6 +18,7 @@ export enum GameEventType {
   WORD_UNHIGHLIGHTED = 'WORD_UNHIGHLIGHTED',
   TURN_PASSED = 'TURN_PASSED',
   PLAYER_KICKED = 'PLAYER_KICKED',
+  CHAT_MESSAGE = 'CHAT_MESSAGE',
 }
 
 export type Side = 'red' | 'blue'
@@ -92,7 +93,13 @@ export interface WordUnhighlightedPayload {
 }
 
 export interface TurnPassedPayload {
-  // Empty - no additional data
+  nextTurn?: Side
+}
+
+export interface ChatMessagePayload {
+  playerId: string
+  playerName: string
+  content: string
 }
 
 export type GameEventPayload =
@@ -109,3 +116,4 @@ export type GameEventPayload =
   | WordHighlightedPayload
   | WordUnhighlightedPayload
   | TurnPassedPayload
+  | ChatMessagePayload

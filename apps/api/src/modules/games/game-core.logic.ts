@@ -224,6 +224,10 @@ export function applyEvent(
     return { ...state, currentRound: round }
   }
 
+  if (eventType === GameEventType.CHAT_MESSAGE) {
+    return state
+  }
+
   return state
 }
 

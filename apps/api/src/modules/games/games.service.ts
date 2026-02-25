@@ -24,7 +24,11 @@ import {
   JoinGameResponse,
   KickPlayerInput,
   SelectWordInput,
+  SendChatInput,
   StartRoundInput,
+  TimelineItemResponse,
+  TimelinePagination,
+  TimelineResponse,
 } from './contracts/games.contract'
 import { GameEvent } from './entities/game-event.entity'
 import { Round } from './entities/round.entity'
@@ -62,6 +66,7 @@ export class GamesService {
     gameEvent.eventType = GameEventType.GAME_CREATED
     gameEvent.payload = { creatorPseudo: pseudo.trim(), creatorToken }
     await this.em.persistAndFlush(gameEvent)
+    await this.emitTimelineItem(game.id, gameEvent)
 
     const joinEvent = new GameEvent()
     joinEvent.game = game
@@ -69,6 +74,7 @@ export class GamesService {
     joinEvent.payload = { playerId, playerName: pseudo.trim() }
     joinEvent.triggeredBy = playerId
     await this.em.persistAndFlush(joinEvent)
+    await this.emitTimelineItem(game.id, joinEvent)
 
     await this.emitGameState(game.id)
     const gameState = await this.getGameState(game.id, playerId)
@@ -185,6 +191,7 @@ export class GamesService {
     gameEvent.payload = { playerId: playerIdToKick }
     gameEvent.triggeredBy = null
     await this.em.persistAndFlush(gameEvent)
+    await this.emitTimelineItem(gameId, gameEvent)
 
     await this.emitGameState(gameId)
     return this.getGameState(gameId)
@@ -207,6 +214,7 @@ export class GamesService {
     gameEvent.payload = { playerId }
     gameEvent.triggeredBy = playerId
     await this.em.persistAndFlush(gameEvent)
+    await this.emitTimelineItem(gameId, gameEvent)
 
     await this.emitGameState(gameId)
     return this.getGameState(gameId, playerId)
@@ -238,6 +246,7 @@ export class GamesService {
     }
     gameEvent.triggeredBy = playerId
     await this.em.persistAndFlush(gameEvent)
+    await this.emitTimelineItem(gameId, gameEvent)
 
     await this.emitGameState(gameId)
     return this.getGameState(gameId, playerId)
@@ -267,6 +276,7 @@ export class GamesService {
     }
     gameEvent.triggeredBy = playerId
     await this.em.persistAndFlush(gameEvent)
+    await this.emitTimelineItem(gameId, gameEvent)
 
     await this.emitGameState(gameId)
     return this.getGameState(gameId, playerId)
@@ -302,6 +312,7 @@ export class GamesService {
     }
     gameEvent.triggeredBy = targetPlayerId
     await this.em.persistAndFlush(gameEvent)
+    await this.emitTimelineItem(gameId, gameEvent)
 
     await this.emitGameState(gameId)
     return this.getGameState(gameId)
@@ -348,6 +359,7 @@ export class GamesService {
     }
     gameEvent.triggeredBy = playerId
     await this.em.persistAndFlush(gameEvent)
+    await this.emitTimelineItem(gameId, gameEvent)
 
     await this.emitGameState(gameId)
     return this.getGameState(gameId, playerId)
@@ -377,10 +389,12 @@ export class GamesService {
     const gameEvent = new GameEvent()
     gameEvent.game = game
     gameEvent.round = roundEntity
+    const player = state.players.find(p => p.id === playerId)!
     gameEvent.eventType = GameEventType.CLUE_GIVEN
-    gameEvent.payload = { word: data.word, number: data.number }
+    gameEvent.payload = { word: data.word, number: data.number, playerName: player.name }
     gameEvent.triggeredBy = playerId
     await this.em.persistAndFlush(gameEvent)
+    await this.emitTimelineItem(gameId, gameEvent)
 
     await this.emitGameState(gameId)
     return this.getGameState(gameId, playerId)
@@ -408,13 +422,16 @@ export class GamesService {
     if (!roundEntity)
       throw new NotFoundException('Round not found')
 
+    const player = state.players.find(p => p.id === playerId)!
+    const word = round.words[data.wordIndex]
     const gameEvent = new GameEvent()
     gameEvent.game = game
     gameEvent.round = roundEntity
     gameEvent.eventType = GameEventType.WORD_SELECTED
-    gameEvent.payload = { wordIndex: data.wordIndex, cardType }
+    gameEvent.payload = { wordIndex: data.wordIndex, cardType, word, playerName: player.name }
     gameEvent.triggeredBy = playerId
     await this.em.persistAndFlush(gameEvent)
+    await this.emitTimelineItem(gameId, gameEvent)
 
     const newEvents = await this.loadGameEvents(gameId)
     const newState = computeGameState(newEvents)
@@ -436,15 +453,18 @@ export class GamesService {
       }
       finishEvent.triggeredBy = playerId
       await this.em.persistAndFlush(finishEvent)
+      await this.emitTimelineItem(gameId, finishEvent)
     }
     else if (cardType !== round.currentTurn || newRound.guessesRemaining <= 0) {
+      const nextTurn = round.currentTurn === 'red' ? 'blue' : 'red'
       const passEvent = new GameEvent()
       passEvent.game = game
       passEvent.round = roundEntity
       passEvent.eventType = GameEventType.TURN_PASSED
-      passEvent.payload = {}
+      passEvent.payload = { nextTurn }
       passEvent.triggeredBy = playerId
       await this.em.persistAndFlush(passEvent)
+      await this.emitTimelineItem(gameId, passEvent)
     }
 
     await this.emitGameState(gameId)
@@ -480,13 +500,16 @@ export class GamesService {
     gameEvent.game = game
     gameEvent.round = roundEntity
     gameEvent.eventType = GameEventType.WORD_HIGHLIGHTED
+    const word = round.words[data.wordIndex]
     gameEvent.payload = {
       wordIndex: data.wordIndex,
       playerId,
       playerName: player.name,
+      word,
     }
     gameEvent.triggeredBy = playerId
     await this.em.persistAndFlush(gameEvent)
+    await this.emitTimelineItem(gameId, gameEvent)
 
     await this.emitGameState(gameId)
     return this.getGameState(gameId, playerId)
@@ -516,10 +539,13 @@ export class GamesService {
     const gameEvent = new GameEvent()
     gameEvent.game = game
     gameEvent.round = roundEntity
+    const word = round.words[wordIndex]
+    const player = state.players.find(p => p.id === playerId)!
     gameEvent.eventType = GameEventType.WORD_UNHIGHLIGHTED
-    gameEvent.payload = { wordIndex, playerId }
+    gameEvent.payload = { wordIndex, playerId, word, playerName: player.name }
     gameEvent.triggeredBy = playerId
     await this.em.persistAndFlush(gameEvent)
+    await this.emitTimelineItem(gameId, gameEvent)
 
     await this.emitGameState(gameId)
     return this.getGameState(gameId, playerId)
@@ -542,13 +568,15 @@ export class GamesService {
     if (!roundEntity)
       throw new NotFoundException('Round not found')
 
+    const nextTurn = round.currentTurn === 'red' ? 'blue' : 'red'
     const gameEvent = new GameEvent()
     gameEvent.game = game
     gameEvent.round = roundEntity
     gameEvent.eventType = GameEventType.TURN_PASSED
-    gameEvent.payload = {}
+    gameEvent.payload = { nextTurn }
     gameEvent.triggeredBy = playerId
     await this.em.persistAndFlush(gameEvent)
+    await this.emitTimelineItem(gameId, gameEvent)
 
     await this.emitGameState(gameId)
     return this.getGameState(gameId, playerId)
@@ -565,9 +593,101 @@ export class GamesService {
     gameEvent.payload = {}
     gameEvent.triggeredBy = playerId
     await this.em.persistAndFlush(gameEvent)
+    await this.emitTimelineItem(gameId, gameEvent)
 
     await this.emitGameState(gameId)
     return this.getGameState(gameId, playerId)
+  }
+
+  async sendChatMessage(
+    gameId: string,
+    playerId: string,
+    data: SendChatInput,
+  ): Promise<void> {
+    const game = await this.em.findOne(Game, { id: gameId })
+    if (!game)
+      throw new NotFoundException('Game not found')
+
+    const events = await this.loadGameEvents(gameId)
+    const state = computeGameState(events)
+
+    const player = state.players.find(p => p.id === playerId)
+    if (!player)
+      throw new BadRequestException('Player not in game')
+
+    const content = data.content.trim()
+    if (!content)
+      throw new BadRequestException('Chat message cannot be empty')
+
+    const gameEvent = new GameEvent()
+    gameEvent.game = game
+    gameEvent.eventType = GameEventType.CHAT_MESSAGE
+    gameEvent.payload = {
+      playerId,
+      playerName: player.name,
+      content,
+    }
+    gameEvent.triggeredBy = playerId
+    await this.em.persistAndFlush(gameEvent)
+
+    await this.emitTimelineItem(gameId, gameEvent)
+  }
+
+  async getTimeline(
+    gameId: string,
+    pagination: TimelinePagination,
+  ): Promise<TimelineResponse> {
+    const game = await this.em.findOne(Game, { id: gameId })
+    if (!game)
+      throw new NotFoundException('Game not found')
+
+    const [events, total] = await this.em.findAndCount(
+      GameEvent,
+      { game: gameId },
+      {
+        orderBy: { createdAt: 'ASC' },
+        populate: ['round'],
+        limit: pagination.pageSize,
+        offset: pagination.offset,
+      },
+    )
+
+    const data: TimelineItemResponse[] = events.map(e => this.mapEventToTimelineItem(e))
+
+    return {
+      data,
+      meta: {
+        itemCount: data.length,
+        pageSize: pagination.pageSize,
+        offset: pagination.offset,
+        hasMore: pagination.offset + data.length < total,
+      },
+    }
+  }
+
+  private mapEventToTimelineItem(event: GameEvent): TimelineItemResponse {
+    const type = event.eventType === GameEventType.CHAT_MESSAGE ? 'chat' : 'event'
+    const payload = event.payload as Record<string, unknown>
+
+    return {
+      id: event.id,
+      type,
+      eventType: type === 'event' ? event.eventType : undefined,
+      payload,
+      triggeredBy: event.triggeredBy ?? null,
+      playerName: payload.playerName as string | undefined,
+      createdAt: event.createdAt.toISOString(),
+    }
+  }
+
+  private async emitTimelineItem(gameId: string, event: GameEvent): Promise<void> {
+    try {
+      const item = this.mapEventToTimelineItem(event)
+      await this.gamesGateway.broadcastTimelineItem(gameId, item)
+    }
+    catch {
+      // Ignore emit errors
+    }
   }
 
   private async loadGameEvents(gameId: string): Promise<GameEventInput[]> {

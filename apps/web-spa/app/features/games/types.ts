@@ -53,3 +53,23 @@ export interface JoinGameResponse {
   gameState: GameState
   playerId: string
 }
+
+export interface TimelineItem {
+  id: string
+  type: 'event' | 'chat'
+  eventType?: string
+  payload: Record<string, unknown>
+  triggeredBy: string | null
+  playerName?: string
+  createdAt: string
+}
+
+export interface TimelineResponse {
+  data: TimelineItem[]
+  meta: {
+    itemCount: number
+    pageSize: number
+    offset: number
+    hasMore: boolean
+  }
+}

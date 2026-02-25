@@ -8,6 +8,7 @@ import {
   createGamesApiClient,
   PENDING_REDIRECT_KEY,
   useGameSession,
+  useGameTimeline,
   useGameWebSocket,
 } from '../index'
 
@@ -30,6 +31,13 @@ export default function GamePlayPage() {
     gameId: gameId ?? null,
     playerId: playerId ?? null,
     enabled: Boolean(gameId) && hasSession,
+  })
+
+  const timeline = useGameTimeline({
+    gameId: gameId ?? null,
+    playerId: playerId ?? null,
+    playerName,
+    enabled: Boolean(gameId && playerId && hasSession),
   })
 
   const shouldFetchState = Boolean(gameId) && hasSession && Boolean(playerId)
@@ -200,6 +208,7 @@ export default function GamePlayPage() {
 
   return (
     <GamePlayView
+      gameId={gameId}
       gameState={gameState}
       playerId={playerId ?? ''}
       playerName={playerName}
@@ -216,6 +225,10 @@ export default function GamePlayPage() {
       onRestart={() => restartGame()}
       isOperativeActionPending={isOperativeActionPending}
       isRestartPending={isRestartPending}
+      timelineItems={timeline.items}
+      timelineIsLoading={timeline.isLoading}
+      onSendChatMessage={timeline.sendMessage}
+      isSendingChat={timeline.isSending}
     />
   )
 }

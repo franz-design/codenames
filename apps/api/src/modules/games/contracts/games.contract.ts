@@ -214,3 +214,46 @@ export const startRoundSchema = z.object({
 })
 
 export type StartRoundInput = z.infer<typeof startRoundSchema>
+
+export const sendChatSchema = z.object({
+  content: z.string().min(1).max(500),
+}).meta({
+  title: 'SendChatSchema',
+  description: 'Schema for sending a chat message',
+})
+
+export type SendChatInput = z.infer<typeof sendChatSchema>
+
+export const timelineItemSchema = z.object({
+  id: z.string().uuid(),
+  type: z.enum(['event', 'chat']),
+  eventType: z.string().optional(),
+  payload: z.record(z.string(), z.unknown()),
+  triggeredBy: z.string().uuid().nullable(),
+  playerName: z.string().optional(),
+  createdAt: z.string(),
+}).meta({
+  title: 'TimelineItemSchema',
+  description: 'Timeline item (event or chat message)',
+})
+
+export type TimelineItemResponse = z.infer<typeof timelineItemSchema>
+
+export const timelineResponseSchema = z.object({
+  data: z.array(timelineItemSchema),
+  meta: z.object({
+    itemCount: z.number(),
+    pageSize: z.number(),
+    offset: z.number(),
+    hasMore: z.boolean(),
+  }),
+}).meta({
+  title: 'TimelineResponseSchema',
+  description: 'Paginated timeline response',
+})
+
+export type TimelineResponse = z.infer<typeof timelineResponseSchema>
+
+export const timelinePaginationSchema = createPaginationQuerySchema()
+
+export type TimelinePagination = z.infer<typeof timelinePaginationSchema>

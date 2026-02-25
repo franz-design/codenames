@@ -1,5 +1,5 @@
 import type { RouteConfig } from '@react-router/dev/routes'
-import { index, layout, route } from '@react-router/dev/routes'
+import { index, route } from '@react-router/dev/routes'
 
 export default [
   index('features/games/pages/game-home-page.tsx'),
@@ -7,12 +7,4 @@ export default [
   route('games/join', 'features/games/pages/game-join-page.tsx'),
   route('games/:gameId/join', 'features/games/pages/game-join-by-link-page.tsx'),
   route('games/:gameId', 'features/games/pages/game-play-page.tsx'),
-  route('dashboard', 'features/dashboard/dashboard-page.tsx'),
-  layout('features/auth/components/auth-layout.tsx', [
-    route('login', 'features/auth/pages/auth-login-page.tsx'),
-    route('register', 'features/auth/pages/auth-register-page.tsx'),
-    route('verify-email', 'features/auth/pages/auth-verify-email-page.tsx'),
-    route('forgot-password', 'features/auth/pages/auth-forgot-password-page.tsx'),
-    route('reset-password', 'features/auth/pages/auth-reset-password-page.tsx'),
-  ]),
 ] satisfies RouteConfig
