@@ -2,6 +2,8 @@ import { toast } from '@codenames/ui/components/primitives/sonner'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
+import { useHeaderRight } from '@/contexts/header-right-context'
+import { GameHeaderLeaveButton } from '../components/game-header-leave-button'
 import { GameLobbyView } from '../components/game-lobby-view'
 import { GamePlayView } from '../components/game-play-view'
 import {
@@ -26,6 +28,7 @@ function getErrorStatus(err: unknown): number | undefined {
 export default function GamePlayPage() {
   const { gameId } = useParams<{ gameId: string }>()
   const navigate = useNavigate()
+  const { setRight } = useHeaderRight()
   const { playerName, hasSession, playerId, clearSession, isCreator } = useGameSession()
   const { gameState: wsGameState, isConnected, error: wsError } = useGameWebSocket({
     gameId: gameId ?? null,
@@ -75,6 +78,18 @@ export default function GamePlayPage() {
       navigate('/')
     },
   })
+
+  useEffect(() => {
+    if (gameId) {
+      setRight(
+        <GameHeaderLeaveButton
+          onLeave={() => leaveGame()}
+          isLeaving={isLeaving}
+        />,
+      )
+    }
+    return () => setRight(null)
+  }, [gameId, leaveGame, isLeaving, setRight])
 
   const { mutate: giveClue, isPending: isCluePending } = useMutation({
     mutationFn: ({ word, number }: { word: string, number: number }) =>
@@ -209,14 +224,11 @@ export default function GamePlayPage() {
 
   return (
     <GamePlayView
-      gameId={gameId}
       gameState={gameState}
       playerId={playerId ?? ''}
       playerName={playerName}
       isConnected={isConnected}
       isCreator={isCreator}
-      onLeaveGame={() => leaveGame()}
-      isLeaving={isLeaving}
       onGiveClue={(word, number) => giveClue({ word, number })}
       isCluePending={isCluePending}
       onHighlight={wordIndex => highlightWord(wordIndex)}

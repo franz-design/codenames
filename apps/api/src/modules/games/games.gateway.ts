@@ -92,6 +92,7 @@ export class GamesGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return { gameId: undefined, playerId: undefined }
   }
 
+  // TODO : on peut probablement optimiser en passant directement le nouveau state de la game
   async broadcastGameState(gameId: string): Promise<void> {
     const roomId = getGameRoomId(gameId)
     const sockets = await this.server.in(roomId).fetchSockets()

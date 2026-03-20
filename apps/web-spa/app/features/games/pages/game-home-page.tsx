@@ -35,7 +35,7 @@ export default function GameHomePage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button asChild variant="outline" className="w-full" size="lg">
+            <Button asChild className="w-full" size="lg">
               <Link to="/games/join">Rejoindre une partie</Link>
             </Button>
           </CardContent>

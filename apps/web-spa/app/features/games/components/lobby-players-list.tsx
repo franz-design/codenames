@@ -40,10 +40,10 @@ export function LobbyPlayersList({
     <div className="space-y-4">
       {redPlayers.length > 0 && (
         <div>
-          <h3 className="mb-2 text-sm font-medium text-red-700">Équipe rouge</h3>
-          <ul className="space-y-2">
+          <h3 className="mb-2 text-sm font-bold text-red">Équipe rouge</h3>
+          <div className="flex gap-2 flex-wrap">
             {redPlayers.map(player => (
-              <PlayerRow
+              <PlayerBlock
                 key={player.id}
                 player={player}
                 isCurrentPlayer={player.id === currentPlayerId}
@@ -55,16 +55,16 @@ export function LobbyPlayersList({
                 isDesignatingSpy={isDesignatingSpy}
               />
             ))}
-          </ul>
+          </div>
         </div>
       )}
 
       {bluePlayers.length > 0 && (
         <div>
-          <h3 className="mb-2 text-sm font-medium text-blue-700">Équipe bleue</h3>
-          <ul className="space-y-2">
+          <h3 className="mb-2 text-sm font-bold text-blue">Équipe bleue</h3>
+          <div className="flex gap-2 flex-wrap">
             {bluePlayers.map(player => (
-              <PlayerRow
+              <PlayerBlock
                 key={player.id}
                 player={player}
                 isCurrentPlayer={player.id === currentPlayerId}
@@ -76,18 +76,18 @@ export function LobbyPlayersList({
                 isDesignatingSpy={isDesignatingSpy}
               />
             ))}
-          </ul>
+          </div>
         </div>
       )}
 
       {unassignedPlayers.length > 0 && (
         <div>
-          <h3 className="mb-2 text-sm font-medium text-muted-foreground">
+          <h3 className="mb-2 text-sm font-bold text-muted-foreground">
             Sans équipe
           </h3>
-          <ul className="space-y-2">
+          <div className="flex gap-2 flex-wrap">
             {unassignedPlayers.map(player => (
-              <PlayerRow
+              <PlayerBlock
                 key={player.id}
                 player={player}
                 isCurrentPlayer={player.id === currentPlayerId}
@@ -98,7 +98,7 @@ export function LobbyPlayersList({
                 isDesignatingSpy={isDesignatingSpy}
               />
             ))}
-          </ul>
+          </div>
         </div>
       )}
 
@@ -109,7 +109,7 @@ export function LobbyPlayersList({
   )
 }
 
-interface PlayerRowProps {
+interface PlayerBlockProps {
   player: GameStatePlayer
   isCurrentPlayer: boolean
   canKick: boolean
@@ -120,7 +120,7 @@ interface PlayerRowProps {
   isDesignatingSpy: boolean
 }
 
-function PlayerRow({
+function PlayerBlock({
   player,
   isCurrentPlayer,
   canKick,
@@ -129,22 +129,22 @@ function PlayerRow({
   onDesignateSpy,
   isKicking,
   isDesignatingSpy,
-}: PlayerRowProps) {
+}: PlayerBlockProps) {
   const showDropdown
     = (canKick && !isCurrentPlayer)
       || (canDesignateSpy && Boolean(player.side))
 
   return (
-    <li className="flex items-center justify-between rounded-lg border px-3 py-2">
+    <li className="flex items-center justify-between rounded-lg border px-3 py-1.5">
       <div className="flex items-center gap-2">
-        <span className="font-medium">{player.name}</span>
+        <span className="text-sm font-medium">{player.name}</span>
         {isCurrentPlayer && (
-          <Badge variant="secondary" className="text-xs">
+          <Badge variant="secondary" className="text-xs relative -right-[6px] bg-primary-foreground text-primary">
             Vous
           </Badge>
         )}
         {player.isSpy && (
-          <Badge variant="outline" className="text-xs">
+          <Badge variant="outline" className="text-xs relative -right-[6px]">
             Espion
           </Badge>
         )}
@@ -152,7 +152,7 @@ function PlayerRow({
       {showDropdown && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="size-8">
+            <Button variant="ghost" size="icon" className="size-6 relative -right-[6px]">
               <MoreVerticalIcon className="size-4" />
               <span className="sr-only">Options</span>
             </Button>

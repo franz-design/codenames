@@ -9,7 +9,6 @@ import {
 } from '@codenames/ui/components/primitives/card'
 import { toast } from '@codenames/ui/components/primitives/sonner'
 import { useMutation } from '@tanstack/react-query'
-import { useNavigate } from 'react-router'
 import {
   createGamesApiClient,
   useGameSession,
@@ -38,8 +37,7 @@ function canStartGame(gameState: GameState): boolean {
 }
 
 export function GameLobbyView({ gameId, gameState }: GameLobbyViewProps) {
-  const navigate = useNavigate()
-  const { playerId, creatorToken, isCreator, clearSession } = useGameSession()
+  const { playerId, creatorToken, isCreator } = useGameSession()
   const currentPlayer = gameState.players.find(p => p.id === playerId)
   const api = createGamesApiClient(playerId ?? '')
 
@@ -68,14 +66,6 @@ export function GameLobbyView({ gameId, gameState }: GameLobbyViewProps) {
       if (!creatorToken)
         throw new Error('Creator token required')
       return api.designatePlayerAsSpy(gameId, targetPlayerId, creatorToken)
-    },
-  })
-
-  const { mutate: leaveGame, isPending: isLeaving } = useMutation({
-    mutationFn: () => api.leaveGame(gameId),
-    onSuccess: () => {
-      clearSession()
-      navigate('/')
     },
   })
 
@@ -139,7 +129,6 @@ export function GameLobbyView({ gameId, gameState }: GameLobbyViewProps) {
                       Choisir une équipe
                     </span>
                     <TeamSelector
-                      currentSide={currentPlayer.side ?? null}
                       onSelectSide={side => chooseSide(side)}
                       disabled={isChoosingSide}
                     />
@@ -182,16 +171,6 @@ export function GameLobbyView({ gameId, gameState }: GameLobbyViewProps) {
             )}
           </CardContent>
         </Card>
-
-        <div className="flex justify-center">
-          <Button
-            variant="outline"
-            onClick={() => leaveGame()}
-            disabled={isLeaving}
-          >
-            {isLeaving ? 'Déconnexion...' : 'Quitter la partie'}
-          </Button>
-        </div>
       </div>
     </div>
   )

@@ -3,13 +3,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@codenames/ui/componen
 import { cn } from '@codenames/ui/lib/utils'
 
 const SIDE_LABELS: Record<Side, string> = {
-  red: 'Rouge',
-  blue: 'Bleu',
+  red: 'rouge',
+  blue: 'bleue',
 }
 
 const SIDE_STYLES: Record<Side, string> = {
-  red: 'border-red-500 bg-red-50/50 dark:bg-red-950/20',
-  blue: 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/20',
+  red: 'bg-red border-red-dark text-white shadow-[4px_4px_0px_0px_#A11734]',
+  blue: 'bg-blue border-blue-dark text-white shadow-[4px_4px_0px_0px_#42689F]',
+}
+
+const HEADER_STYLES: Record<Side, string> = {
+  red: 'border-b-2 border-red-dark bg-red-dark/60',
+  blue: 'border-b-2 border-blue-dark bg-blue-dark/60',
 }
 
 export interface TeamPlayersCardProps {
@@ -35,23 +40,25 @@ export function TeamPlayersCard({
   const operatives = getOperatives(players)
 
   return (
-    <Card className={cn('flex flex-col', SIDE_STYLES[side], className)}>
-      <CardHeader className="px-3 py-2">
-        <CardTitle className="text-sm">
-          Équipe {SIDE_LABELS[side]}
+    <Card className={cn('flex flex-col py-0 gap-0 overflow-hidden h-auto', SIDE_STYLES[side], className)}>
+      <CardHeader className={cn('px-3 py-3 w-full border-b border-primary-border', HEADER_STYLES[side])}>
+        <CardTitle className={cn('text-sm w-full text-center font-bold')}>
+          Équipe
+          {' '}
+          {SIDE_LABELS[side]}
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col gap-2 px-3 py-2 pt-0">
+      <CardContent className="flex flex-col gap-2 px-4 pt-4 pb-6">
         {spy && (
           <div>
-            <p className="mb-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+            <p className="mb-0.5 text-[10px] font-medium uppercase tracking-wide text-destructive">
               Espion
             </p>
             <p className="truncate text-xs font-medium">{spy.name}</p>
           </div>
         )}
         <div>
-          <p className="mb-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          <p className="mb-0.5 text-[10px] font-medium uppercase tracking-wide text-destructive">
             Agents
           </p>
           <ul className="flex flex-col gap-0.5">

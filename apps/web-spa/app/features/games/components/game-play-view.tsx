@@ -9,8 +9,8 @@ import { TurnIndicator } from './turn-indicator'
 import { WordGrid } from './word-grid'
 
 const SIDE_LABELS: Record<Side, string> = {
-  red: 'Rouge',
-  blue: 'Bleu',
+  red: 'rouge',
+  blue: 'bleue',
 }
 
 export interface GamePlayViewProps {
@@ -19,8 +19,6 @@ export interface GamePlayViewProps {
   playerName: string | null
   isConnected: boolean
   isCreator: boolean
-  onLeaveGame: () => void
-  isLeaving: boolean
   onGiveClue?: (word: string, number: number) => void
   isCluePending?: boolean
   onHighlight?: (wordIndex: number) => void
@@ -48,8 +46,6 @@ export function GamePlayView({
   playerName,
   isConnected,
   isCreator,
-  onLeaveGame,
-  isLeaving,
   onGiveClue,
   isCluePending = false,
   onHighlight,
@@ -97,24 +93,26 @@ export function GamePlayView({
         <div className="flex w-full max-w-5xl flex-col gap-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold">Codenames</h1>
-              <Badge variant="outline">
-                {currentPlayer?.side ? SIDE_LABELS[currentPlayer.side] : 'Sans équipe'}
-              </Badge>
-              <Badge variant="secondary">
-                {viewMode === 'spy' ? 'Espion' : 'Agent'}
-              </Badge>
-            </div>
-            <div className="flex items-center gap-2">
               <span
                 className={`text-sm ${isConnected ? 'text-green-600' : 'text-muted-foreground'}`}
               >
-                {isConnected ? 'Connecté' : 'Connexion...'}
+                {isConnected ? 'Connecté en tant que' : 'Connexion...'}
               </span>
               <span className="text-sm text-muted-foreground">
                 {playerName ?? 'Joueur'}
               </span>
+              <Badge variant={currentPlayer?.side ? 'red' : 'blue'}>
+                {SIDE_LABELS[currentPlayer?.side ?? 'blue']}
+              </Badge>
+              <Badge variant={viewMode === 'spy' ? 'black' : 'outline'}>
+                {viewMode === 'spy' ? 'Espion' : 'Agent'}
+              </Badge>
             </div>
+            {currentPlayer?.side === round.currentTurn && (
+              <Badge variant="outline" className="ml-auto">
+                C&apos;est le tour de votre équipe
+              </Badge>
+            )}
           </div>
 
           {isFinished && (
@@ -160,15 +158,14 @@ export function GamePlayView({
           {!isFinished && (
             <TurnIndicator
               round={round}
-              currentPlayerSide={currentPlayer?.side ?? null}
             />
           )}
 
-          <div className="flex w-full items-stretch gap-3">
+          <div className="flex w-full items-start gap-6">
             <TeamPlayersCard
               side="red"
               players={gameState.players.filter(p => p.side === 'red')}
-              className="w-32 shrink-0"
+              className="w-32"
             />
             <div className="flex min-w-0 flex-1 flex-col">
               <WordGrid
@@ -218,16 +215,6 @@ export function GamePlayView({
               </CardContent>
             </Card>
           )}
-
-          <div className="flex justify-center">
-            <Button
-              variant="outline"
-              onClick={onLeaveGame}
-              disabled={isLeaving}
-            >
-              {isLeaving ? 'Déconnexion...' : 'Quitter la partie'}
-            </Button>
-          </div>
         </div>
       </div>
       <GameTimelineSidebar

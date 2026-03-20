@@ -59,6 +59,8 @@ export class GamesController {
 
   @TypedRoute.Get(':id/state', gameStateSchema)
   async getGameState(
+    // TODO: add playerId as decorator à la place de @Headers https://docs.nestjs.com/custom-decorators
+    // @PlayerId() playerId: string,
     @Headers() headers: Record<string, string | string[] | undefined>,
     @TypedParam('id', z.uuid()) id: string,
   ) {
@@ -116,6 +118,7 @@ export class GamesController {
     return await this.gamesService.designateSpy(id, playerId)
   }
 
+  // TODO : avoir un creatorAuthGuard qui vérifie que le creator token est le creator du game plutôt que dans le service
   @TypedRoute.Patch(':id/players/:playerId/spy', gameStateSchema)
   async designatePlayerAsSpy(
     @TypedParam('id', z.uuid()) id: string,

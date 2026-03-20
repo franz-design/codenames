@@ -11,7 +11,9 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          'bg-primary text-primary-foreground shadow-xs hover:bg-primary/90',
+          'bg-primary text-primary-foreground border border-primary-border font-bold hover:bg-primary/90 shadow-[4px_4px_0px_0px_#AEC0E0] relative -top-[2px] -left-[2px] hover:top-0 hover:left-0 hover:shadow-[2px_2px_0px_0px_#AEC0E0] transition-all duration-100',
+        red: 'bg-[#DB1C45] text-white border border-[#A11734] font-bold shadow-[4px_4px_0px_0px_#A11734] relative -top-[2px] -left-[2px] hover:top-0 hover:left-0 hover:shadow-[2px_2px_0px_0px_#A11734] transition-all duration-100',
+        blue: 'bg-[#6687B7] text-white border border-[#42689F] font-bold shadow-[4px_4px_0px_0px_#42689F] relative -top-[2px] -left-[2px] hover:top-0 hover:left-0 hover:shadow-[2px_2px_0px_0px_#42689F] transition-all duration-100',
         destructive:
           'bg-destructive text-white shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40',
         outline:
@@ -23,8 +25,8 @@ const buttonVariants = cva(
       },
       size: {
         default: 'h-9 px-4 py-2 has-[>svg]:px-3',
-        sm: 'h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5',
-        lg: 'h-10 rounded-md px-6 has-[>svg]:px-4',
+        sm: 'h-8 rounded-[10px] gap-1.5 px-3 has-[>svg]:px-2.5',
+        lg: 'h-10 rounded-[10px] px-6 has-[>svg]:px-4',
         icon: 'size-9',
       },
     },

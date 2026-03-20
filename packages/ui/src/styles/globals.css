@@ -10,24 +10,25 @@
 :root {
   --header-height: 3rem;
 
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --background: #f8f9fc;
+  --foreground: #536782;
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(94.03% 0.1688 103.72);
-  --primary-foreground: oklch(0.985 0 0);
+  --primary: #F0F3F9;
+  --primary-foreground: #536782;
+  --primary-border: #AEC0E0;
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
+  --muted-foreground: #849cbb;
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
+  --destructive: rgba(0,0,0,0.7);
   --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
+  --border: #AEC0E0;
+  --input: #AEC0E0;
   --ring: oklch(0.708 0 0);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
@@ -43,6 +44,15 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --red: #DB1C45;
+  --red-dark: #A11734;
+  --blue: #6687B7;
+  --blue-dark: #42689F;
+  --neutral: #F5F1E9;
+  --neutral-dark: #DFD3BB;
+  --neutral-foreground: #978664;
+  --black: #243449;
+  --black-dark: #080F19;
 }
 
 .dark {
@@ -81,7 +91,7 @@
 }
 
 @theme inline {
-  --font-display: 'Source Sans Pro', sans-serif;
+  --font-display: 'Inter', sans-serif;
   --font-display--font-feature-settings: "cv02", "cv03", "cv04", "cv11"; 
   --font-display--font-variation-settings: "opsz" 32; 
 
@@ -101,6 +111,15 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-red: var(--red);
+  --color-red-dark: var(--red-dark);
+  --color-blue: var(--blue);
+  --color-blue-dark: var(--blue-dark);
+  --color-neutral: var(--neutral);
+  --color-neutral-dark: var(--neutral-dark);
+  --color-neutral-foreground: var(--neutral-foreground);
+  --color-black: var(--black);
+  --color-black-dark: var(--black-dark);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);

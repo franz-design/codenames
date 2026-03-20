@@ -1,6 +1,7 @@
 import type { CardType } from '../types'
 import { Pin } from '@codenames/ui/icons'
 import { cn } from '@codenames/ui/lib/utils'
+import { CardHighlights } from './card-highlights'
 
 export interface WordCardProps {
   word: string
@@ -20,17 +21,27 @@ export interface WordCardProps {
 }
 
 const CARD_TYPE_STYLES: Record<CardType, string> = {
-  red: 'bg-red-600 text-white',
-  blue: 'bg-blue-600 text-white border-blue-700',
-  neutral: 'bg-gray-400 text-white dark:bg-gray-500 dark:text-white',
-  black: 'bg-zinc-900 text-white',
+  red: 'bg-red text-white border border-red-dark font-bold shadow-[4px_4px_0px_0px_#A11734]',
+  blue: 'bg-blue text-white border border-blue-dark font-bold shadow-[4px_4px_0px_0px_#42689F]',
+  neutral:
+    'bg-neutral text-neutral-foreground border border-neutral-dark font-bold shadow-[4px_4px_0px_0px_var(--color-neutral-dark)]',
+  black:
+    'bg-black text-white border border-black-dark font-bold shadow-[4px_4px_0px_0px_var(--color-black-dark)]',
 }
 
 const CARD_BACK_STYLES: Record<CardType, string> = {
-  red: 'bg-red-600/25 border-red-700/30',
-  blue: 'bg-blue-600/25 border-blue-700/30',
-  neutral: 'bg-gray-400/25 border-gray-500/30 dark:bg-gray-500/25 dark:border-gray-600/30',
-  black: 'bg-zinc-900/25 border-zinc-800/30',
+  red: 'bg-red/25 border border-red-dark shadow-[4px_4px_0px_0px_#A11734]',
+  blue: 'bg-blue/25 border border-blue-dark shadow-[4px_4px_0px_0px_#42689F]',
+  neutral:
+    'bg-neutral/25 border border-neutral-dark shadow-[4px_4px_0px_0px_var(--color-neutral-dark)]',
+  black: 'bg-black/25 border border-black-dark shadow-[4px_4px_0px_0px_var(--color-black-dark)]',
+}
+
+const CARD_DARK_COLORS: Record<CardType, string> = {
+  red: 'var(--color-red-dark)',
+  blue: 'var(--color-blue-dark)',
+  neutral: 'var(--color-neutral-dark)',
+  black: 'var(--color-black-dark)',
 }
 
 export function WordCard({
@@ -52,8 +63,10 @@ export function WordCard({
   const showColorOnReveal = viewMode === 'spy' || viewMode === 'operative'
   const effectiveCardType = showColorOnReveal && cardType ? cardType : null
 
-  const baseStyles = 'group relative flex min-h-[3.5rem] flex-col items-center justify-center rounded-sm p-3 text-center text-sm font-medium transition-all duration-200'
-  const faceDownStyles = 'bg-muted text-muted-foreground border-muted-foreground/20'
+  const baseStyles
+    = 'group relative flex h-20 -top-[2px] -left-[2px] flex-col items-center justify-center rounded-lg border p-3 text-center text-sm font-medium transition-all duration-100'
+  const faceDownStyles
+    = 'bg-primary text-primary-foreground border-primary-border font-bold shadow-[4px_4px_0px_0px_#AEC0E0]'
   const faceUpStyles = effectiveCardType ? CARD_TYPE_STYLES[effectiveCardType] : faceDownStyles
 
   const hasHighlights = highlights.length > 0
@@ -83,7 +96,9 @@ export function WordCard({
     if (!isRevealed) {
       return viewMode === 'spy' ? faceUpStyles : faceDownStyles
     }
-    return effectiveCardType ? CARD_BACK_STYLES[effectiveCardType] : 'bg-muted border border-muted-foreground/20'
+    return effectiveCardType
+      ? CARD_BACK_STYLES[effectiveCardType]
+      : 'bg-muted border-primary-border font-bold shadow-[4px_4px_0px_0px_#AEC0E0] text-muted-foreground'
   }
 
   return (
@@ -100,17 +115,34 @@ export function WordCard({
       className={cn(
         baseStyles,
         getMainFaceStyles(),
-        isInteractive && !isRevealed && 'cursor-pointer hover:opacity-90',
+        isInteractive
+        && !isRevealed
+        && 'cursor-pointer hover:top-0 hover:left-0 hover:shadow-[2px_2px_0px_0px_#AEC0E0] hover:bg-primary/90',
         showRevealedBack && 'cursor-default',
         className,
       )}
       data-word-index={wordIndex}
     >
+      {showRevealedBack && effectiveCardType && (
+        <div
+          className="pointer-events-none absolute inset-0 rounded-md"
+          style={{
+            background: `repeating-linear-gradient(
+              45deg,
+              transparent 0,
+              transparent 3px,
+              color-mix(in srgb, ${CARD_DARK_COLORS[effectiveCardType]} 30%, transparent) 3px,
+              color-mix(in srgb, ${CARD_DARK_COLORS[effectiveCardType]} 30%, transparent) 5px
+            )`,
+          }}
+          aria-hidden
+        />
+      )}
       {showRevealedBack && (
         <>
           <div
             className={cn(
-              'absolute inset-0 flex flex-col items-center justify-center rounded-sm opacity-0 transition-opacity duration-200 group-hover:opacity-100',
+              'absolute inset-0 flex flex-col items-center justify-center rounded-md opacity-0 transition-opacity duration-200 group-hover:opacity-100',
               faceUpStyles,
             )}
           >
@@ -144,18 +176,7 @@ export function WordCard({
             </button>
           )}
           <span className="line-clamp-2 break-words">{word}</span>
-          {hasHighlights && (
-            <div className="mt-1 flex flex-wrap justify-center gap-1">
-              {highlights.map(h => (
-                <span
-                  key={h.playerId}
-                  className="rounded bg-black/20 px-1.5 py-0.5 text-xs"
-                >
-                  {h.playerName}
-                </span>
-              ))}
-            </div>
-          )}
+          {hasHighlights && <CardHighlights highlights={highlights} isSpy={viewMode === 'spy'} />}
         </>
       )}
     </div>

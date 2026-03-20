@@ -28,14 +28,6 @@ function formatEventText(item: TimelineItem): string {
       const word = (payload.word as string) ?? (payload.wordIndex !== undefined ? `mot #${payload.wordIndex}` : '?')
       return `${playerName ?? 'Un joueur'} a cliqué sur « ${word} »`
     }
-    case 'WORD_HIGHLIGHTED': {
-      const word = (payload.word as string) ?? (payload.wordIndex !== undefined ? `mot #${payload.wordIndex}` : '?')
-      return `${playerName ?? 'Un joueur'} a mis en avant « ${word} »`
-    }
-    case 'WORD_UNHIGHLIGHTED': {
-      const word = (payload.word as string) ?? (payload.wordIndex !== undefined ? `mot #${payload.wordIndex}` : '?')
-      return `${playerName ?? 'Un joueur'} a retiré « ${word} »`
-    }
     case 'TURN_PASSED': {
       const nextTurn = (payload.nextTurn as string) ?? 'blue'
       return `Tour de l'équipe ${SIDE_LABELS[nextTurn] ?? nextTurn}`
@@ -83,10 +75,10 @@ export function GameTimelineItem({ item }: GameTimelineItemProps) {
     >
       <div className="flex gap-3 items-end">
         {isChat && playerName && (
-          <div className="flex-shrink-0 max-w-[30px] truncate">{playerName}</div>
+          <div className="flex-shrink-0 max-w-[60px] word-break-keep-all font-bold">{playerName}</div>
         )}
         <div className={cn('text-sm', {
-          'bg-white/10 rounded-md rounded-bl-none mb-1 px-2 py-1': isChat,
+          'bg-blue text-white rounded-md rounded-bl-none mb-1 px-2 py-1': isChat,
           'italic text-muted-foreground/70': !isChat,
         })}
         >

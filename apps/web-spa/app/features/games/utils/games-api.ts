@@ -119,6 +119,7 @@ export function createGamesApiClient(playerId: string): GamesApiClient {
         {
           method: 'PATCH',
           headers: headers({}),
+          // creatorToken peut être useless, à voir si en recoupant juste avec playerId ça suffit
           body: JSON.stringify({ creatorToken }),
           credentials: 'include',
         },
