@@ -102,83 +102,85 @@ export function WordCard({
   }
 
   return (
-    <div
-      role={isInteractive && !isRevealed ? 'button' : undefined}
-      tabIndex={isInteractive && !isRevealed ? 0 : undefined}
-      onClick={handleCardClick}
-      onKeyDown={(e) => {
-        if (isInteractive && !isRevealed && (e.key === 'Enter' || e.key === ' ')) {
-          e.preventDefault()
-          handleCardClick()
-        }
-      }}
-      className={cn(
-        baseStyles,
-        getMainFaceStyles(),
-        isInteractive
-        && !isRevealed
-        && 'cursor-pointer hover:top-0 hover:left-0 hover:shadow-[2px_2px_0px_0px_#AEC0E0] hover:bg-primary/90',
-        showRevealedBack && 'cursor-default',
-        className,
-      )}
-      data-word-index={wordIndex}
-    >
-      {showRevealedBack && effectiveCardType && (
-        <div
-          className="pointer-events-none absolute inset-0 rounded-md"
-          style={{
-            background: `repeating-linear-gradient(
+    <div className="relative">
+      <div
+        role={isInteractive && !isRevealed ? 'button' : undefined}
+        tabIndex={isInteractive && !isRevealed ? 0 : undefined}
+        onClick={handleCardClick}
+        onKeyDown={(e) => {
+          if (isInteractive && !isRevealed && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault()
+            handleCardClick()
+          }
+        }}
+        className={cn(
+          baseStyles,
+          getMainFaceStyles(),
+          isInteractive
+          && !isRevealed
+          && 'cursor-pointer hover:top-0 hover:left-0 hover:shadow-[2px_2px_0px_0px_#AEC0E0] hover:bg-primary/90',
+          showRevealedBack && 'cursor-default',
+          className,
+        )}
+        data-word-index={wordIndex}
+      >
+        {showRevealedBack && effectiveCardType && (
+          <div
+            className="pointer-events-none absolute inset-0 rounded-md"
+            style={{
+              background: `repeating-linear-gradient(
               45deg,
               transparent 0,
               transparent 3px,
               color-mix(in srgb, ${CARD_DARK_COLORS[effectiveCardType]} 30%, transparent) 3px,
               color-mix(in srgb, ${CARD_DARK_COLORS[effectiveCardType]} 30%, transparent) 5px
             )`,
-          }}
-          aria-hidden
-        />
-      )}
-      {showRevealedBack && (
-        <>
-          <div
-            className={cn(
-              'absolute inset-0 flex flex-col items-center justify-center rounded-md opacity-0 transition-opacity duration-200 group-hover:opacity-100',
-              faceUpStyles,
-            )}
-          >
-            <span className="line-clamp-2 break-words px-2">{word}</span>
-          </div>
-          <span className="invisible" aria-hidden>
-            {word}
-          </span>
-        </>
-      )}
-      {!showRevealedBack && (
-        <>
-          {isInteractive && (onHighlight || onUnhighlight) && (
-            <button
-              type="button"
-              onClick={handlePinClick}
-              disabled={isActionPending}
-              aria-label={hasMyHighlight ? 'Retirer la mise en avant' : 'Mettre en avant'}
+            }}
+            aria-hidden
+          />
+        )}
+        {showRevealedBack && (
+          <>
+            <div
               className={cn(
-                'absolute right-1 top-1 rounded p-1 opacity-0 transition-opacity group-hover:opacity-100',
-                'hover:bg-black/10 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-primary',
-                hasMyHighlight && 'opacity-100',
+                'absolute inset-0 flex flex-col items-center justify-center rounded-md opacity-0 transition-opacity duration-200 group-hover:opacity-100',
+                faceUpStyles,
               )}
             >
-              <Pin
+              <span className="line-clamp-2 break-words px-2">{word}</span>
+            </div>
+            <span className="invisible" aria-hidden>
+              {word}
+            </span>
+          </>
+        )}
+        {!showRevealedBack && (
+          <>
+            {isInteractive && (onHighlight || onUnhighlight) && (
+              <button
+                type="button"
+                onClick={handlePinClick}
+                disabled={isActionPending}
+                aria-label={hasMyHighlight ? 'Retirer la mise en avant' : 'Mettre en avant'}
                 className={cn(
-                  'h-4 w-4',
-                  hasMyHighlight ? 'fill-current' : '',
+                  'absolute right-1 top-1 rounded p-1 opacity-0 transition-opacity group-hover:opacity-100',
+                  'hover:bg-black/10 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-primary',
+                  hasMyHighlight && 'opacity-100',
                 )}
-              />
-            </button>
-          )}
-          <span className="line-clamp-2 break-words">{word}</span>
-          {hasHighlights && <CardHighlights highlights={highlights} isSpy={viewMode === 'spy'} />}
-        </>
-      )}
+              >
+                <Pin
+                  className={cn(
+                    'h-4 w-4',
+                    hasMyHighlight ? 'fill-current' : '',
+                  )}
+                />
+              </button>
+            )}
+            <span className="line-clamp-2 break-words">{word}</span>
+            {hasHighlights && <CardHighlights highlights={highlights} isSpy={viewMode === 'spy'} />}
+          </>
+        )}
+      </div>
     </div>
   )
 }

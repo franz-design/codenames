@@ -19,7 +19,7 @@ import {
 } from '../index'
 
 const joinGameSchema = z.object({
-  gameId: z.string().uuid('Code de partie invalide'),
+  gameId: z.uuid('Code de partie invalide'),
   pseudo: z.string().min(1, 'Le pseudo est requis').max(100, 'Maximum 100 caractères'),
 })
 
@@ -55,8 +55,8 @@ export default function GameJoinPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
+    <div className="flex flex-grow w-full min-h-full flex-col items-center justify-center p-4">
+      <div className="flex flex-col gap-6 max-w-md items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold tracking-tight">Rejoindre une partie</h1>
           <p className="mt-2 text-muted-foreground">
@@ -65,7 +65,7 @@ export default function GameJoinPage() {
         </div>
 
         <Form {...form}>
-          <form className="space-y-6" onSubmit={form.handleSubmit(handleSubmit)}>
+          <form className="flex flex-col gap-6 w-md" onSubmit={form.handleSubmit(handleSubmit)}>
             <FormField
               control={form.control}
               name="gameId"
@@ -118,6 +118,6 @@ export default function GameJoinPage() {
           </form>
         </Form>
       </div>
-    </main>
+    </div>
   )
 }

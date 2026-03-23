@@ -56,7 +56,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body className="dark bg-gradient-bg">
+      <body className="h-full flex flex-col">
         {children}
         <Toaster richColors position="top-center" />
         <ScrollRestoration />
@@ -69,7 +69,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 function AppHeader() {
   const headerRight = useHeaderRightContent()
   return (
-    <Header className="px-4" right={headerRight}>
+    <Header right={headerRight}>
       <Link
         to="/"
         className="text-xl font-bold tracking-tight transition-colors"
@@ -85,12 +85,10 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <HeaderRightProvider>
-          <div className="flex min-h-screen flex-col">
-            <AppHeader />
-            <main className="flex-1">
-              <Outlet />
-            </main>
-          </div>
+          <AppHeader />
+          <main className="h-full flex flex-grow">
+            <Outlet />
+          </main>
         </HeaderRightProvider>
       </TooltipProvider>
     </QueryClientProvider>

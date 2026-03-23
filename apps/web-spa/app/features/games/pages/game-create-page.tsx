@@ -66,8 +66,8 @@ export default function GameCreatePage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
+    <div className="flex flex-grow w-full min-h-full flex-col items-center justify-center p-4">
+      <div className="flex flex-col gap-6 max-w-md items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold tracking-tight">Créer une partie</h1>
           <p className="mt-2 text-muted-foreground">
@@ -76,7 +76,7 @@ export default function GameCreatePage() {
         </div>
 
         <Form {...form}>
-          <form className="space-y-6" onSubmit={form.handleSubmit(handleSubmit)}>
+          <form className="flex flex-col gap-6 w-md" onSubmit={form.handleSubmit(handleSubmit)}>
             <FormField
               control={form.control}
               name="pseudo"
@@ -109,6 +109,6 @@ export default function GameCreatePage() {
           </form>
         </Form>
       </div>
-    </main>
+    </div>
   )
 }

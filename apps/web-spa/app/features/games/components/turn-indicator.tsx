@@ -46,14 +46,18 @@ export function TurnIndicator({
         </div>
       )}
 
-      {currentClue && (
-        <div className="flex items-center gap-2">
-          <span className="text-sm">Tentatives restantes :</span>
-          <span className="font-medium">
-            {guessesRemaining >= 100 ? '∞' : guessesRemaining}
-          </span>
-        </div>
-      )}
+      {currentClue
+        ? (
+            <div className="flex items-center gap-2">
+              <span className="text-sm">Tentatives restantes :</span>
+              <span className="font-medium">
+                {guessesRemaining >= 100 ? '∞' : guessesRemaining}
+              </span>
+            </div>
+          )
+        : (
+            <span className="text-sm">L'espion réfléchit...</span>
+          )}
     </div>
   )
 }
