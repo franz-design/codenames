@@ -47,14 +47,14 @@ const CARD_REVEALED_BACK_FACE: Record<CardType, string> = {
 const CARD_SHADOW_LAYER_HOVER: Record<CardType, string> = {
   red: 'bg-black group-hover:bg-red-dark',
   blue: 'bg-black group-hover:bg-blue-dark',
-  neutral: 'bg-black group-hover:bg-neutral-dark',
+  neutral: 'bg-neutral-foreground group-hover:bg-neutral-dark',
   black: 'bg-black group-hover:bg-black-dark',
 }
 
 const CARD_REVEALED_HOVER_TEXT: Record<CardType, string> = {
   red: 'group-hover:text-white group-hover:bg-red',
   blue: 'group-hover:text-white group-hover:bg-blue',
-  neutral: 'group-hover:text-primary-foreground',
+  neutral: 'group-hover:text-neutral-foreground group-hover:bg-neutral',
   black: 'group-hover:text-primary-foreground',
 }
 

@@ -21,6 +21,7 @@ export function TurnIndicator({
   className,
 }: TurnIndicatorProps) {
   const { currentTurn, currentClue, guessesRemaining } = round
+  const isUserTurn = currentTurn === round.currentTurn
 
   return (
     <div
@@ -32,9 +33,7 @@ export function TurnIndicator({
     >
       <div className="flex items-center gap-2">
         <span className="text-sm">
-          Au tour de l'équipe
-          {' '}
-          {SIDE_LABELS[currentTurn]}
+          {isUserTurn ? 'C\'est votre tour !' : `Au tour de l'équipe ${SIDE_LABELS[currentTurn]}`}
         </span>
       </div>
 

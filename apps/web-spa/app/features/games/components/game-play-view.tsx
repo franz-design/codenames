@@ -1,8 +1,6 @@
 import type { GameState, Side, TimelineItem } from '../types'
-import { Badge } from '@codenames/ui/components/primitives/badge'
 import { Button } from '@codenames/ui/components/primitives/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@codenames/ui/components/primitives/card'
-import { User2, User2Icon, UserIcon } from '@codenames/ui/icons'
 import { ClueForm } from './clue-form'
 import { GameTimelineSidebar } from './game-timeline-sidebar'
 import { TeamPlayersCard } from './team-players-card'
@@ -44,8 +42,6 @@ function getViewMode(
 export function GamePlayView({
   gameState,
   playerId,
-  playerName,
-  isConnected,
   isCreator,
   onGiveClue,
   isCluePending = false,
@@ -92,34 +88,6 @@ export function GamePlayView({
     <div className="flex w-full">
       <div className="flex min-h-0 min-w-0 flex-[3] flex-col items-center overflow-auto p-4">
         <div className="flex w-full max-w-5xl flex-col gap-6">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <span
-                  className="text-sm"
-                >
-                  {isConnected ? <User2Icon className="size-4" /> : 'Connexion...'}
-                </span>
-                <span className="text-sm">
-                  {playerName ?? 'Joueur'}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant={currentPlayer?.side ? 'red' : 'blue'}>
-                  {SIDE_LABELS[currentPlayer?.side ?? 'blue']}
-                </Badge>
-                <Badge variant={viewMode === 'spy' ? 'black' : 'outline'}>
-                  {viewMode === 'spy' ? 'Espion' : 'Agent'}
-                </Badge>
-              </div>
-            </div>
-            {currentPlayer?.side === round.currentTurn && (
-              <Badge variant="outline" className="ml-auto">
-                C&apos;est le tour de votre équipe
-              </Badge>
-            )}
-          </div>
-
           {isFinished && (
             <Card
               className={
