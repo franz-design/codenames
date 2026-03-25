@@ -84,6 +84,12 @@ export function GamePlayView({
       && Boolean(round.currentClue)
       && round.guessesRemaining > 0
 
+  const isWaitingForClueOnMyTeam
+    = !isFinished
+      && viewMode === 'operative'
+      && currentPlayer?.side === round.currentTurn
+      && !round.currentClue
+
   return (
     <div className="flex w-full">
       <div className="flex min-h-0 min-w-0 flex-[3] flex-col items-center overflow-auto p-4">
@@ -131,6 +137,8 @@ export function GamePlayView({
           {!isFinished && (
             <TurnIndicator
               round={round}
+              isUserTurn={canGiveClue || canOperativeInteract}
+              isWaitingForClueOnMyTeam={isWaitingForClueOnMyTeam}
             />
           )}
 
@@ -171,18 +179,11 @@ export function GamePlayView({
           )}
 
           {canGiveClue && (
-            <Card className="py-2 px-2">
-              <CardContent className="p-4">
-                <p className="mb-4 text-sm text-muted-foreground">
-                  C&apos;est à vous de donner un indice à votre équipe.
-                </p>
-                <ClueForm
-                  gridWords={round.words}
-                  onSubmit={data => onGiveClue?.(data.word, data.number)}
-                  isPending={isCluePending}
-                />
-              </CardContent>
-            </Card>
+            <ClueForm
+              gridWords={round.words}
+              onSubmit={data => onGiveClue?.(data.word, data.number)}
+              isPending={isCluePending}
+            />
           )}
         </div>
       </div>

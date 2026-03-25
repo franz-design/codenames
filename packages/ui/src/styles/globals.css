@@ -170,4 +170,15 @@
       border-color 200ms ease-in-out,
       color 200ms ease-in-out;
   }
+  .scaleIn {
+    animation: scaleIn 750ms linear(0, 0.009 0.8%, 0.033 1.6%, 0.14 3.5%, 0.718 10.2%, 0.937 13.3%, 1.079 16.4%, 1.121 18%, 1.147 19.7%, 1.156 21.6%, 1.147 23.8%, 1.015 34.4%, 0.99 37.6%, 0.977 41%, 0.977 45.4%, 1.003 62%, 1);
+  }
+  @keyframes scaleIn {
+    from {
+      transform: scale(0);
+    }
+    to {
+      transform: scale(1);
+    }
+  }
 }

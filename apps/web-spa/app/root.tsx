@@ -2,10 +2,13 @@ import type { Route } from './+types/root'
 import { client } from '@codenames/openapi-generator'
 import { Header } from '@codenames/ui/components/layout/Header'
 import { TooltipProvider } from '@codenames/ui/components/primitives/tooltip'
+import { User } from '@codenames/ui/icons'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { isRouteErrorResponse, Link, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
 import { Toaster } from 'sonner'
+import { useGameSession } from '@/features/games/hooks/use-game-session'
+import { authClient } from '@/lib/auth-client'
 import { queryClient } from '@/lib/query-client'
 import { HeaderRightProvider, useHeaderRightContent } from './contexts/header-right-context'
 import useTheme from './hooks/useTheme'
@@ -68,8 +71,35 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 function AppHeader() {
   const headerRight = useHeaderRightContent()
+  const { data: session } = authClient.useSession()
+  const { playerName } = useGameSession()
+
+  const displayName = useMemo(() => {
+    const authName = session?.user?.name?.trim()
+    if (authName)
+      return authName
+    const email = session?.user?.email?.trim()
+    if (email)
+      return email
+    const fromGame = playerName?.trim()
+    if (fromGame)
+      return fromGame
+    return null
+  }, [playerName, session?.user?.email, session?.user?.name])
+
+  const headerLeft = displayName
+    ? (
+        <span className="flex max-w-[min(14rem,calc(100vw-12rem))] items-center gap-2 text-sm font-medium text-foreground">
+          <User className="size-4 shrink-0 opacity-80" aria-hidden />
+          <span className="truncate" title={displayName}>
+            {displayName}
+          </span>
+        </span>
+      )
+    : null
+
   return (
-    <Header right={headerRight}>
+    <Header left={headerLeft} right={headerRight}>
       <Link
         to="/"
         className="text-xl font-bold tracking-tight transition-colors"
