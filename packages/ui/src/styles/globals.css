@@ -9,6 +9,7 @@
 
 :root {
   --header-height: 3rem;
+  --ease-card-flip: linear(0, 0.002 0.4%, 0.007 0.8%, 0.016 1.2%, 0.031 1.7%, 0.051 2.2%, 0.074 2.7%, 0.131 3.7%, 0.191 4.6%, 0.264 5.6%, 0.567 9.4%, 0.696 11.1%, 0.81 12.8%, 0.907 14.5%, 0.951 15.4%, 0.986 16.2%, 1.017 17%, 1.046 17.9%, 1.071 18.8%, 1.09 19.7%, 1.106 20.6%, 1.118 21.6%, 1.127 22.7%, 1.13 23.8%, 1.13 25%, 1.124 26.4%, 1.116 27.6%, 1.105 28.9%, 1.044 34.9%, 1.017 38.1%, 1.005 39.9%, 0.996 41.7%, 0.989 43.6%, 0.985 45.5%, 0.983 47.9%, 0.984 50.6%, 0.998 62.1%, 1.002 68.9%, 1);
 
   --background: #f8f9fc;
   --foreground: #536782;
@@ -46,8 +47,10 @@
   --sidebar-ring: oklch(0.708 0 0);
   --red: #DB1C45;
   --red-dark: #A11734;
+  --red-light: #dc3458;
   --blue: #6687B7;
   --blue-dark: #42689F;
+  --blue-light: #779fd6;
   --neutral: #F5F1E9;
   --neutral-dark: #DFD3BB;
   --neutral-foreground: #978664;
@@ -113,8 +116,10 @@
   --color-destructive-foreground: var(--destructive-foreground);
   --color-red: var(--red);
   --color-red-dark: var(--red-dark);
+  --color-red-light: var(--red-light);
   --color-blue: var(--blue);
   --color-blue-dark: var(--blue-dark);
+  --color-blue-light: var(--blue-light);
   --color-neutral: var(--neutral);
   --color-neutral-dark: var(--neutral-dark);
   --color-neutral-foreground: var(--neutral-foreground);
@@ -154,5 +159,15 @@
     background-image:
       radial-gradient(at 61% 77%, hsla(56,100%,66%,0.07) 0px, transparent 50%),
       radial-gradient(at 10% 3%, hsla(56,100%,66%,0.08) 0px, transparent 50%);  
+  }
+}
+
+@layer utilities {
+  .transition-card-flip {
+    transition:
+      transform 1100ms var(--ease-card-flip),
+      background-color 200ms ease-in-out,
+      border-color 200ms ease-in-out,
+      color 200ms ease-in-out;
   }
 }

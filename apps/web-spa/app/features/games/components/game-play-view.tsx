@@ -67,9 +67,9 @@ export function GamePlayView({
 
   if (!round) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-4">
+      <div className="flex flex-grow w-full min-h-full flex-col items-center justify-center p-4">
         <p className="text-muted-foreground">Aucun round en cours</p>
-      </main>
+      </div>
     )
   }
 
@@ -89,7 +89,7 @@ export function GamePlayView({
       && round.guessesRemaining > 0
 
   return (
-    <main className="flex w-full">
+    <div className="flex w-full">
       <div className="flex min-h-0 min-w-0 flex-[3] flex-col items-center overflow-auto p-4">
         <div className="flex w-full max-w-5xl flex-col gap-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -224,6 +224,6 @@ export function GamePlayView({
         onSendMessage={onSendChatMessage}
         isSending={isSendingChat}
       />
-    </main>
+    </div>
   )
 }

@@ -75,7 +75,7 @@ export function GameTimelineItem({ item }: GameTimelineItemProps) {
     >
       <div className="flex gap-3 items-end">
         {isChat && playerName && (
-          <div className="flex-shrink-0 max-w-[60px] word-break-keep-all font-bold">{playerName}</div>
+          <div className="flex-shrink-0 max-w-[100px] word-break keep-all font-bold truncate" title={playerName}>{playerName}</div>
         )}
         <div className={cn('text-sm', {
           'bg-blue text-white rounded-md rounded-bl-none mb-1 px-2 py-1': isChat,

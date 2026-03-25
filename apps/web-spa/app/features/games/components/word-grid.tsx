@@ -54,8 +54,7 @@ export function WordGrid({
 
   return (
     <div
-      className={`grid w-full min-w-0 grid-cols-5 gap-2 
-  perspective-800 ${className ?? ''}`}
+      className={`grid w-full min-w-0 grid-cols-5 gap-2 ${className ?? ''}`}
       role="grid"
       aria-label="Grille de mots Codenames"
     >

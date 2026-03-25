@@ -74,7 +74,9 @@ function AppHeader() {
         to="/"
         className="text-xl font-bold tracking-tight transition-colors"
       >
-        codenames
+        <div className="flex items-center justify-between gap-4 py-2 px-6 bg-white border rounded-xl shadow-[4px_4px_0px_0px_#AEC0E0] -rotate-2">
+          <span className="rotate-2">codenames</span>
+        </div>
       </Link>
     </Header>
   )

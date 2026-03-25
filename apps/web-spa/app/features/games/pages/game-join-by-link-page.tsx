@@ -58,14 +58,14 @@ export default function GameJoinByLinkPage() {
 
   if (!gameId) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-4">
+      <div className="flex flex-grow w-full min-h-full flex-col items-center justify-center p-4">
         <p className="text-muted-foreground">Partie introuvable</p>
-      </main>
+      </div>
     )
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4">
+    <div className="flex flex-grow w-full min-h-full flex-col items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
           <h1 className="text-2xl font-bold tracking-tight">Rejoindre la partie</h1>
@@ -108,6 +108,6 @@ export default function GameJoinByLinkPage() {
           </form>
         </Form>
       </div>
-    </main>
+    </div>
   )
 }

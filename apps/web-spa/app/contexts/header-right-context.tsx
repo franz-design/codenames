@@ -16,14 +16,14 @@ export function HeaderRightProvider({ children }: { children: React.ReactNode })
     [right],
   )
   return (
-    <HeaderRightContext.Provider value={value}>
+    <HeaderRightContext value={value}>
       {children}
-    </HeaderRightContext.Provider>
+    </HeaderRightContext>
   )
 }
 
 export function useHeaderRight(): HeaderRightContextValue {
-  const ctx = React.useContext(HeaderRightContext)
+  const ctx = React.use(HeaderRightContext)
   if (!ctx) {
     throw new Error('useHeaderRight must be used within HeaderRightProvider')
   }
@@ -31,6 +31,6 @@ export function useHeaderRight(): HeaderRightContextValue {
 }
 
 export function useHeaderRightContent(): React.ReactNode {
-  const ctx = React.useContext(HeaderRightContext)
+  const ctx = React.use(HeaderRightContext)
   return ctx?.right ?? null
 }

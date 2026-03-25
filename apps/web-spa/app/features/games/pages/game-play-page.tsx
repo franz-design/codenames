@@ -1,3 +1,4 @@
+import { Button } from '@codenames/ui/components/primitives/button'
 import { toast } from '@codenames/ui/components/primitives/sonner'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useEffect } from 'react'
@@ -172,27 +173,27 @@ export default function GamePlayPage() {
 
   if (!gameId) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-4">
+      <div className="w-full flex flex-col items-center justify-center p-4">
         <p className="text-muted-foreground">Partie introuvable</p>
-      </main>
+      </div>
     )
   }
 
   if (!hasSession) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-4">
+      <div className="w-full flex flex-col items-center justify-center p-4">
         <p className="text-muted-foreground">Vous devez rejoindre cette partie</p>
         <Link to={`/games/${gameId}/join`} className="mt-4 text-sm underline hover:no-underline">
-          Rejoindre la partie
+          <Button>Rejoindre la partie</Button>
         </Link>
-      </main>
+      </div>
     )
   }
 
   if (error && !gameState) {
     const is404 = getErrorStatus(error) === 404
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-4">
+      <div className="w-full flex flex-col items-center justify-center p-4">
         <p className="text-muted-foreground text-center">
           {is404
             ? 'Partie introuvable.'
@@ -204,22 +205,26 @@ export default function GamePlayPage() {
         >
           Retour à l&apos;accueil
         </Link>
-      </main>
+      </div>
     )
   }
 
   if (!gameState) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-4">
+      <div className="w-full flex flex-col items-center justify-center p-4">
         <p className="text-muted-foreground">
           {isLoading ? 'Chargement...' : 'Connexion en cours...'}
         </p>
-      </main>
+      </div>
     )
   }
 
   if (gameState.status === 'LOBBY') {
-    return <GameLobbyView gameId={gameId} gameState={gameState} />
+    return (
+      <div className="flex flex-grow w-full min-h-full flex-col items-center justify-center p-4">
+        <GameLobbyView gameId={gameId} gameState={gameState} />
+      </div>
+    )
   }
 
   return (

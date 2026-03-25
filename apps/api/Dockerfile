@@ -35,7 +35,7 @@ COPY --from=builder /app/api/dist ./dist
 COPY --from=builder /app/api/package.json ./package.json
 
 # Expose port
-EXPOSE 3001
+EXPOSE 3004
 
 ENV MIKRO_ORM_CLI_USE_TS_NODE=false
 ENV MIKRO_ORM_CLI_CONFIG=dist/config/mikro-orm.config.js

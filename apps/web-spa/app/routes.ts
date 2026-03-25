@@ -7,4 +7,5 @@ export default [
   route('games/join', 'features/games/pages/game-join-page.tsx'),
   route('games/:gameId/join', 'features/games/pages/game-join-by-link-page.tsx'),
   route('games/:gameId', 'features/games/pages/game-play-page.tsx'),
+  route('test', 'features/games/pages/test-page.tsx'),
 ] satisfies RouteConfig

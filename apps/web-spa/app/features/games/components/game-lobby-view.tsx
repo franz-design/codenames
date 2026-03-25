@@ -81,7 +81,7 @@ export function GameLobbyView({ gameId, gameState }: GameLobbyViewProps) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-4">
+    <div className="flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-2xl space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h1 className="text-2xl font-bold">Lobby</h1>
@@ -121,18 +121,13 @@ export function GameLobbyView({ gameId, gameState }: GameLobbyViewProps) {
             />
 
             {currentPlayer && (
-              <div className="space-y-4 border-t pt-6">
-                <h3 className="font-medium">Vos actions</h3>
-                <div className="flex flex-wrap gap-4">
-                  <div className="flex flex-col gap-2">
-                    <span className="text-sm text-muted-foreground">
-                      Choisir une équipe
-                    </span>
-                    <TeamSelector
-                      onSelectSide={side => chooseSide(side)}
-                      disabled={isChoosingSide}
-                    />
-                  </div>
+              <div className="flex flex-col gap-2 border-t pt-6">
+                <h3 className="font-semibold">Choisissez une équipe</h3>
+                <div className="flex flex-col gap-4">
+                  <TeamSelector
+                    onSelectSide={side => chooseSide(side)}
+                    disabled={isChoosingSide}
+                  />
                   {currentPlayer.side && (
                     <div className="flex flex-col gap-2">
                       <span className="text-sm text-muted-foreground">
