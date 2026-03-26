@@ -18,6 +18,11 @@ const SIDE_BG_CLASSES: Record<Side, string> = {
   blue: 'bg-blue',
 }
 
+const CLUE_BG_COLORS: Record<Side, string> = {
+  red: 'bg-red-dark',
+  blue: 'bg-blue-dark',
+}
+
 export function TurnIndicator({
   round,
   isUserTurn,
@@ -36,6 +41,8 @@ export function TurnIndicator({
     return `Au tour de l'équipe ${SIDE_LABELS[currentTurn]}`
   })()
 
+  const clueBgColor = CLUE_BG_COLORS[currentTurn]
+
   return (
     <div
       className={cn(
@@ -52,7 +59,7 @@ export function TurnIndicator({
 
       {currentClue && (
         <div className="absolute flex w-full items-center justify-center">
-          <div className="gap-2 bg-red-dark p-16 rounded-full scaleIn">
+          <div className={cn('gap-2 p-16 rounded-full scaleIn', clueBgColor)}>
             <span className="font-bold text-lg">
               {currentClue.word}
             </span>

@@ -1,6 +1,6 @@
 import type { KeyboardEvent, MouseEvent } from 'react'
 import type { CardType } from '../types'
-import { Pin } from '@codenames/ui/icons'
+import { Bookmark, Pin } from '@codenames/ui/icons'
 import { cn } from '@codenames/ui/lib/utils'
 import { CardHighlights } from './card-highlights'
 
@@ -212,14 +212,14 @@ export function WordCard({
                   disabled={isActionPending}
                   aria-label={hasMyHighlight ? 'Retirer la mise en avant' : 'Mettre en avant'}
                   className={cn(
-                    'absolute right-1 top-1 rounded p-1 opacity-0 transition-opacity group-hover:opacity-100',
-                    'hover:bg-black/10 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-primary',
-                    hasMyHighlight && 'opacity-100',
+                    'absolute right-1 -top-2 cursor-pointer rounded p-1 opacity-0 transition-opacity group-hover:opacity-50',
+                    'hover:opacity-100 focus:opacity-100 focus:outline-none',
+                    hasMyHighlight && 'group-hover:opacity-100 opacity-100 hover:opacity-50',
                   )}
                 >
-                  <Pin
+                  <Bookmark
                     className={cn(
-                      'h-4 w-4',
+                      'h-5 w-5',
                       hasMyHighlight ? 'fill-current' : '',
                     )}
                   />
