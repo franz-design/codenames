@@ -1,4 +1,4 @@
-import type { TimelineItem } from '../types'
+import type { Side, TimelineItem } from '../types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createGamesApiClient } from '../utils/games-api'
@@ -31,6 +31,8 @@ export interface UseGameTimelineOptions {
   gameId: string | null
   playerId: string | null
   playerName?: string | null
+  /** Équipe du joueur courant (pour le style du pseudo en optimistic chat) */
+  playerSide?: Side | null
   currentRoundId: string | null
   enabled?: boolean
 }
@@ -46,6 +48,7 @@ export function useGameTimeline({
   gameId,
   playerId,
   playerName = null,
+  playerSide = null,
   currentRoundId,
   enabled = true,
 }: UseGameTimelineOptions): UseGameTimelineResult {
@@ -124,7 +127,11 @@ export function useGameTimeline({
       const optimisticItem: TimelineItem = {
         id: `optimistic-${Date.now()}`,
         type: 'chat',
-        payload: { content, playerName: playerName ?? undefined },
+        payload: {
+          content,
+          playerName: playerName ?? undefined,
+          ...(playerSide ? { side: playerSide } : {}),
+        },
         playerName: playerName ?? undefined,
         triggeredBy: playerId,
         createdAt: new Date().toISOString(),

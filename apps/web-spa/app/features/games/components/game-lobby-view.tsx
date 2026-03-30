@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from '@codenames/ui/components/primitives/card'
 import { toast } from '@codenames/ui/components/primitives/sonner'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   createGamesApiClient,
   useGameSession,
@@ -37,12 +37,16 @@ function canStartGame(gameState: GameState): boolean {
 }
 
 export function GameLobbyView({ gameId, gameState }: GameLobbyViewProps) {
+  const queryClient = useQueryClient()
   const { playerId, creatorToken, isCreator } = useGameSession()
   const currentPlayer = gameState.players.find(p => p.id === playerId)
   const api = createGamesApiClient(playerId ?? '')
 
   const { mutate: chooseSide, isPending: isChoosingSide } = useMutation({
     mutationFn: (side: Side) => api.chooseSide(gameId, side),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['gameState', gameId, playerId] })
+    },
   })
 
   const { mutate: designateSpy, isPending: isDesignatingSpy } = useMutation({

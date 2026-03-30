@@ -45,6 +45,18 @@ export const zChooseSideSchema = z.object({
 });
 
 /**
+ * DesignatePlayerAsSpySchema
+ * Schema for creator to designate a player as spy
+ */
+export const zDesignatePlayerAsSpySchema = z.object({
+  creatorToken: z
+    .uuid()
+    .regex(
+      /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+    ),
+});
+
+/**
  * StartRoundSchema
  * Schema for starting a round
  */
@@ -75,6 +87,14 @@ export const zSelectWordSchema = z.object({
  */
 export const zHighlightWordSchema = z.object({
   wordIndex: z.int().gte(0).lte(9007199254740991),
+});
+
+/**
+ * SendChatSchema
+ * Schema for sending a chat message
+ */
+export const zSendChatSchema = z.object({
+  content: z.string().min(1).max(500),
 });
 
 /**
@@ -140,7 +160,7 @@ export const zGameStateSchema = z.object({
           /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
         ),
       words: z.array(z.string()),
-      results: z.array(z.enum(["neutral", "red", "blue", "black"])),
+      results: z.optional(z.array(z.enum(["neutral", "red", "blue", "black"]))),
       order: z.int().gt(0).lte(9007199254740991),
       currentTurn: z.enum(["red", "blue"]),
       currentClue: z.union([
@@ -157,6 +177,14 @@ export const zGameStateSchema = z.object({
           cardType: z.enum(["neutral", "red", "blue", "black"]),
         }),
       ),
+      wordsTotalBySide: z.object({
+        red: z.int().gte(0).lte(9007199254740991),
+        blue: z.int().gte(0).lte(9007199254740991),
+      }),
+      wordsRemainingBySide: z.object({
+        red: z.int().gte(0).lte(9007199254740991),
+        blue: z.int().gte(0).lte(9007199254740991),
+      }),
       highlights: z.record(
         z.string(),
         z.array(
@@ -197,20 +225,6 @@ export const zCreateGameResponseSchema = z.object({
 });
 
 /**
- * GamesSchema
- * Schema for a paginated list of games
- */
-export const zGamesSchema = z.object({
-  data: z.array(zGameSchema),
-  meta: z.object({
-    offset: z.number(),
-    pageSize: z.number(),
-    itemCount: z.number(),
-    hasMore: z.boolean(),
-  }),
-});
-
-/**
  * JoinGameResponseSchema
  * Response when joining a game
  */
@@ -224,6 +238,55 @@ export const zJoinGameResponseSchema = z.object({
 });
 
 /**
+ * TimelineItemSchema
+ * Timeline item (event or chat message)
+ */
+export const zTimelineItemSchema = z.object({
+  id: z
+    .uuid()
+    .regex(
+      /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+    ),
+  type: z.enum(["event", "chat"]),
+  eventType: z.optional(z.string()),
+  payload: z.record(z.string(), z.unknown()),
+  triggeredBy: z.union([
+    z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      ),
+    z.null(),
+  ]),
+  playerName: z.optional(z.string()),
+  createdAt: z.string(),
+  roundId: z.optional(
+    z.union([
+      z
+        .uuid()
+        .regex(
+          /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+        ),
+      z.null(),
+    ]),
+  ),
+});
+
+/**
+ * TimelineResponseSchema
+ * Paginated timeline response
+ */
+export const zTimelineResponseSchema = z.object({
+  data: z.array(zTimelineItemSchema),
+  meta: z.object({
+    itemCount: z.number(),
+    pageSize: z.number(),
+    offset: z.number(),
+    hasMore: z.boolean(),
+  }),
+});
+
+/**
  * PaginationQuerySchema
  * Schema for pagination query
  */
@@ -232,32 +295,11 @@ export const zPaginationQuerySchema = z.object({
   pageSize: z.int().gte(1).lte(100).default(20),
 });
 
-/**
- * SortingQueryStringSchema
- * Schema for sorting items
- */
-export const zSortingQueryStringSchema = z.string();
-
 export const zAppControllerGetHelloData = z.object({
   body: z.optional(z.never()),
   path: z.optional(z.never()),
   query: z.optional(z.never()),
 });
-
-export const zGamesControllerGetGamesData = z.object({
-  body: z.optional(z.never()),
-  path: z.optional(z.never()),
-  query: z.object({
-    sort: z.optional(z.string()),
-    offset: z.int().gte(0).lte(9007199254740991).default(0),
-    pageSize: z.int().gte(1).lte(100).default(20),
-  }),
-});
-
-/**
- * Schema for a paginated list of games
- */
-export const zGamesControllerGetGamesResponse = zGamesSchema;
 
 export const zGamesControllerCreateGameData = z.object({
   body: z.object({
@@ -271,23 +313,6 @@ export const zGamesControllerCreateGameData = z.object({
  * Response when creating a game
  */
 export const zGamesControllerCreateGameResponse = zCreateGameResponseSchema;
-
-export const zGamesControllerGetGameData = z.object({
-  body: z.optional(z.never()),
-  path: z.object({
-    id: z
-      .uuid()
-      .regex(
-        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
-      ),
-  }),
-  query: z.optional(z.never()),
-});
-
-/**
- * Schema for a game (basic info)
- */
-export const zGamesControllerGetGameResponse = zGameSchema;
 
 export const zGamesControllerGetGameStateData = z.object({
   body: z.optional(z.never()),
@@ -405,6 +430,34 @@ export const zGamesControllerDesignateSpyData = z.object({
  * Full game state computed from events
  */
 export const zGamesControllerDesignateSpyResponse = zGameStateSchema;
+
+export const zGamesControllerDesignatePlayerAsSpyData = z.object({
+  body: z.object({
+    creatorToken: z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      ),
+  }),
+  path: z.object({
+    playerId: z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      ),
+    id: z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      ),
+  }),
+  query: z.optional(z.never()),
+});
+
+/**
+ * Full game state computed from events
+ */
+export const zGamesControllerDesignatePlayerAsSpyResponse = zGameStateSchema;
 
 export const zGamesControllerStartRoundData = z.object({
   body: z.object({
@@ -534,6 +587,41 @@ export const zGamesControllerRestartGameData = z.object({
  * Full game state computed from events
  */
 export const zGamesControllerRestartGameResponse = zGameStateSchema;
+
+export const zGamesControllerSendChatData = z.object({
+  body: z.object({
+    content: z.string().min(1).max(500),
+  }),
+  path: z.object({
+    id: z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      ),
+  }),
+  query: z.optional(z.never()),
+});
+
+export const zGamesControllerGetTimelineData = z.object({
+  body: z.optional(z.never()),
+  path: z.object({
+    id: z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      ),
+  }),
+  query: z.object({
+    roundId: z.string(),
+    offset: z.int().gte(0).lte(9007199254740991).default(0),
+    pageSize: z.int().gte(1).lte(100).default(20),
+  }),
+});
+
+/**
+ * Paginated timeline response
+ */
+export const zGamesControllerGetTimelineResponse = zTimelineResponseSchema;
 
 export const zWordsControllerGetRandomWordsData = z.object({
   body: z.optional(z.never()),

@@ -25,7 +25,7 @@ export function GameTimelineSidebar({
 
   return (
     <aside
-      className={`hidden h-[calc(100%-90px)] min-w-64 flex-[1] shrink-0 flex-col border-1 rounded-lg mr-4 mt-4 bg-muted/20 lg:flex ${className ?? ''}`}
+      className={`hidden h-[calc(100%-34px)] min-w-64 flex-[1] flex-col border-1 rounded-lg mr-4 mt-4 bg-muted/20 lg:flex ${className ?? ''}`}
       aria-label="Historique et chat"
     >
       <div className="border-b px-3 py-2">
@@ -33,7 +33,7 @@ export function GameTimelineSidebar({
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div ref={scrollRef} className="flex-1 overflow-y-auto p-2">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto p-2 bg-white">
           {isLoading
             ? (
                 <p className="text-muted-foreground text-sm">Chargement...</p>

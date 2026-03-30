@@ -1,4 +1,4 @@
-import type { GameStatePlayer, Side } from '../types'
+import type { GameStatePlayer, RoundState, Side } from '../types'
 import { Card, CardContent, CardHeader, CardTitle } from '@codenames/ui/components/primitives/card'
 import { cn } from '@codenames/ui/lib/utils'
 
@@ -20,6 +20,7 @@ const HEADER_STYLES: Record<Side, string> = {
 export interface TeamPlayersCardProps {
   side: Side
   players: GameStatePlayer[]
+  round: RoundState
   className?: string
 }
 
@@ -34,10 +35,15 @@ function getOperatives(players: GameStatePlayer[]): GameStatePlayer[] {
 export function TeamPlayersCard({
   side,
   players,
+  round,
   className,
 }: TeamPlayersCardProps) {
   const spy = getSpy(players)
   const operatives = getOperatives(players)
+  const total = round.wordsTotalBySide[side]
+  const remaining = round.wordsRemainingBySide[side]
+  const found = total - remaining
+  const progressRatio = total > 0 ? found / total : 0
 
   return (
     <Card className={cn('flex flex-col py-0 gap-0 overflow-hidden h-auto', SIDE_STYLES[side], className)}>
@@ -75,6 +81,28 @@ export function TeamPlayersCard({
                 )}
           </ul>
         </div>
+        {total > 0 && (
+          <div className="mt-8">
+            <p className="mb-2 tracking-widest text-center text-xs font-semibold tabular-nums text-white">
+              {found}
+              /
+              {total}
+            </p>
+            <div
+              className="h-2 w-full overflow-hidden rounded-full bg-white/25"
+              role="progressbar"
+              aria-valuenow={found}
+              aria-valuemin={0}
+              aria-valuemax={total}
+              aria-label={`Mots équipe trouvés : ${found} sur ${total}`}
+            >
+              <div
+                className="h-full rounded-full bg-white transition-[width] duration-300 ease-out"
+                style={{ width: `${progressRatio * 100}%` }}
+              />
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   )

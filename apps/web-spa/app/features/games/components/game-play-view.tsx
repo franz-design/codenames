@@ -1,6 +1,7 @@
 import type { GameState, Side, TimelineItem } from '../types'
 import { Button } from '@codenames/ui/components/primitives/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@codenames/ui/components/primitives/card'
+import { cn } from '@codenames/ui/lib/utils'
 import { ClueForm } from './clue-form'
 import { GameTimelineSidebar } from './game-timeline-sidebar'
 import { TeamPlayersCard } from './team-players-card'
@@ -10,6 +11,11 @@ import { WordGrid } from './word-grid'
 const SIDE_LABELS: Record<Side, string> = {
   red: 'rouge',
   blue: 'bleue',
+}
+
+const WINNING_PANEL_STYLES: Record<Side, string> = {
+  red: 'bg-red border-red-dark text-white shadow-[4px_4px_0px_0px_#A11734]',
+  blue: 'bg-blue border-blue-dark text-white shadow-[4px_4px_0px_0px_#42689F]',
 }
 
 export interface GamePlayViewProps {
@@ -98,7 +104,7 @@ export function GamePlayView({
             <Card
               className={
                 gameState.winningSide
-                  ? 'border-green-500 bg-green-50 dark:bg-green-950/30'
+                  ? WINNING_PANEL_STYLES[gameState.winningSide]
                   : gameState.losingSide
                     ? 'border-destructive bg-destructive/5'
                     : 'border-primary'
@@ -106,13 +112,9 @@ export function GamePlayView({
             >
               <CardHeader>
                 <CardTitle
-                  className={
-                    gameState.winningSide
-                      ? 'text-green-700 dark:text-green-400 text-center'
-                      : gameState.losingSide
-                        ? 'text-destructive'
-                        : ''
-                  }
+                  className={cn(
+                    'text-center text-white',
+                  )}
                 >
                   {gameState.winningSide
                     ? `Victoire de l'équipe ${SIDE_LABELS[gameState.winningSide]} !`
@@ -122,7 +124,7 @@ export function GamePlayView({
                 </CardTitle>
               </CardHeader>
               {isCreator && onRestart && (
-                <CardContent className="pt-0">
+                <CardContent className="pt-0 w-full flex justify-center">
                   <Button
                     onClick={onRestart}
                     disabled={isRestartPending}
@@ -146,6 +148,7 @@ export function GamePlayView({
             <TeamPlayersCard
               side="red"
               players={gameState.players.filter(p => p.side === 'red')}
+              round={round}
               className="w-32"
             />
             <div className="flex min-w-0 flex-1 flex-col">
@@ -164,6 +167,7 @@ export function GamePlayView({
             <TeamPlayersCard
               side="blue"
               players={gameState.players.filter(p => p.side === 'blue')}
+              round={round}
               className="w-32 shrink-0"
             />
           </div>

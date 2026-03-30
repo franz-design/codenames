@@ -2,12 +2,14 @@ import type { Route } from './+types/root'
 import { client } from '@codenames/openapi-generator'
 import { Header } from '@codenames/ui/components/layout/Header'
 import { TooltipProvider } from '@codenames/ui/components/primitives/tooltip'
-import { User } from '@codenames/ui/icons'
-import { QueryClientProvider } from '@tanstack/react-query'
+import { User, User2Icon } from '@codenames/ui/icons'
+import { cn } from '@codenames/ui/lib/utils'
+import { QueryClientProvider, useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo } from 'react'
 import { isRouteErrorResponse, Link, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
 import { Toaster } from 'sonner'
 import { useGameSession } from '@/features/games/hooks/use-game-session'
+import { createGamesApiClient } from '@/features/games/utils/games-api'
 import { authClient } from '@/lib/auth-client'
 import { queryClient } from '@/lib/query-client'
 import { HeaderRightProvider, useHeaderRightContent } from './contexts/header-right-context'
@@ -43,7 +45,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
-        <title>Dashboard</title>
+        <title>codenames</title>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="author" content="Lonestone" />
@@ -72,7 +74,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
 function AppHeader() {
   const headerRight = useHeaderRightContent()
   const { data: session } = authClient.useSession()
-  const { playerName } = useGameSession()
+  const { playerName, gameId, playerId } = useGameSession()
+
+  const shouldFetchGameState = Boolean(gameId && playerId)
+  const { data: gameState } = useQuery({
+    queryKey: ['gameState', gameId, playerId],
+    queryFn: () => {
+      if (!gameId || !playerId)
+        throw new Error('Missing gameId or playerId')
+      return createGamesApiClient(playerId).getGameState(gameId)
+    },
+    enabled: shouldFetchGameState,
+  })
+
+  const playerSide = gameState?.players.find(p => p.id === playerId)?.side ?? null
+  const playerBackground = playerSide === 'red' ? 'bg-red' : 'bg-blue'
 
   const displayName = useMemo(() => {
     const authName = session?.user?.name?.trim()
@@ -89,8 +105,8 @@ function AppHeader() {
 
   const headerLeft = displayName
     ? (
-        <span className="flex max-w-[min(14rem,calc(100vw-12rem))] items-center gap-2 text-sm font-medium text-foreground">
-          <User className="size-4 shrink-0 opacity-80" aria-hidden />
+        <span className={cn('flex max-w-[min(14rem,calc(100vw-12rem))] items-center gap-2 text-sm font-medium text-white rounded-full py-2 pl-3 pr-4', playerBackground)}>
+          <User2Icon className="size-4 shrink-0 opacity-80" aria-hidden />
           <span className="truncate" title={displayName}>
             {displayName}
           </span>
@@ -118,7 +134,7 @@ export default function App() {
       <TooltipProvider>
         <HeaderRightProvider>
           <AppHeader />
-          <main className="h-full flex flex-grow">
+          <main className="flex flex-grow h-[calc(100vh-80px)]">
             <Outlet />
           </main>
         </HeaderRightProvider>

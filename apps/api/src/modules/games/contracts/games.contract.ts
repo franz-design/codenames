@@ -79,6 +79,18 @@ export const roundStateSchema = z.object({
   }).nullable(),
   guessesRemaining: z.number().int().min(0),
   revealedWords: z.array(revealedWordSchema),
+  wordsTotalBySide: z.object({
+    red: z.number().int().min(0),
+    blue: z.number().int().min(0),
+  }).meta({
+    description: 'Total red/blue team cards on the grid (target per team)',
+  }),
+  wordsRemainingBySide: z.object({
+    red: z.number().int().min(0),
+    blue: z.number().int().min(0),
+  }).meta({
+    description: 'Unrevealed red/blue card counts for each team (all players; full grid only for spies)',
+  }),
   highlights: z.record(
     z.string(),
     z.array(z.object({

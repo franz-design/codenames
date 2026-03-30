@@ -4,12 +4,8 @@ import type { Options as ClientOptions, TDataShape, Client } from "./client";
 import type {
   AppControllerGetHelloData,
   AppControllerGetHelloResponses,
-  GamesControllerGetGamesData,
-  GamesControllerGetGamesResponses,
   GamesControllerCreateGameData,
   GamesControllerCreateGameResponses,
-  GamesControllerGetGameData,
-  GamesControllerGetGameResponses,
   GamesControllerGetGameStateData,
   GamesControllerGetGameStateResponses,
   GamesControllerJoinGameData,
@@ -22,6 +18,8 @@ import type {
   GamesControllerChooseSideResponses,
   GamesControllerDesignateSpyData,
   GamesControllerDesignateSpyResponses,
+  GamesControllerDesignatePlayerAsSpyData,
+  GamesControllerDesignatePlayerAsSpyResponses,
   GamesControllerStartRoundData,
   GamesControllerStartRoundResponses,
   GamesControllerGiveClueData,
@@ -36,6 +34,10 @@ import type {
   GamesControllerPassTurnResponses,
   GamesControllerRestartGameData,
   GamesControllerRestartGameResponses,
+  GamesControllerSendChatData,
+  GamesControllerSendChatResponses,
+  GamesControllerGetTimelineData,
+  GamesControllerGetTimelineResponses,
   WordsControllerGetRandomWordsData,
   WordsControllerGetRandomWordsResponses,
 } from "./types.gen";
@@ -71,19 +73,6 @@ export const appControllerGetHello = <ThrowOnError extends boolean = false>(
   });
 };
 
-export const gamesControllerGetGames = <ThrowOnError extends boolean = false>(
-  options: Options<GamesControllerGetGamesData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<
-    GamesControllerGetGamesResponses,
-    unknown,
-    ThrowOnError
-  >({
-    url: "/api/games",
-    ...options,
-  });
-};
-
 export const gamesControllerCreateGame = <ThrowOnError extends boolean = false>(
   options: Options<GamesControllerCreateGameData, ThrowOnError>,
 ) => {
@@ -98,19 +87,6 @@ export const gamesControllerCreateGame = <ThrowOnError extends boolean = false>(
       "Content-Type": "application/json",
       ...options.headers,
     },
-  });
-};
-
-export const gamesControllerGetGame = <ThrowOnError extends boolean = false>(
-  options: Options<GamesControllerGetGameData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<
-    GamesControllerGetGameResponses,
-    unknown,
-    ThrowOnError
-  >({
-    url: "/api/games/{id}",
-    ...options,
   });
 };
 
@@ -205,6 +181,25 @@ export const gamesControllerDesignateSpy = <
   >({
     url: "/api/games/{id}/players/me/spy",
     ...options,
+  });
+};
+
+export const gamesControllerDesignatePlayerAsSpy = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<GamesControllerDesignatePlayerAsSpyData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).patch<
+    GamesControllerDesignatePlayerAsSpyResponses,
+    unknown,
+    ThrowOnError
+  >({
+    url: "/api/games/{id}/players/{playerId}/spy",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
   });
 };
 
@@ -317,6 +312,38 @@ export const gamesControllerRestartGame = <
     ThrowOnError
   >({
     url: "/api/games/{id}/restart",
+    ...options,
+  });
+};
+
+export const gamesControllerSendChat = <ThrowOnError extends boolean = false>(
+  options: Options<GamesControllerSendChatData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    GamesControllerSendChatResponses,
+    unknown,
+    ThrowOnError
+  >({
+    url: "/api/games/{id}/chat",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+};
+
+export const gamesControllerGetTimeline = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<GamesControllerGetTimelineData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<
+    GamesControllerGetTimelineResponses,
+    unknown,
+    ThrowOnError
+  >({
+    url: "/api/games/{id}/timeline",
     ...options,
   });
 };

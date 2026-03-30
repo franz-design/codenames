@@ -185,6 +185,16 @@ describe('GamesController (e2e)', () => {
 
       expect(operativeRes.status).toBe(200)
       expect(operativeRes.body.currentRound?.results).toBeUndefined()
+      expect(operativeRes.body.currentRound?.wordsTotalBySide).toEqual({
+        red: expect.any(Number),
+        blue: expect.any(Number),
+      })
+      expect(operativeRes.body.currentRound?.wordsRemainingBySide).toEqual({
+        red: expect.any(Number),
+        blue: expect.any(Number),
+      })
+      expect(operativeRes.body.currentRound.wordsRemainingBySide.red).toBeGreaterThanOrEqual(0)
+      expect(operativeRes.body.currentRound.wordsRemainingBySide.blue).toBeGreaterThanOrEqual(0)
     })
 
     it('should expose results to spymasters in game state', async () => {

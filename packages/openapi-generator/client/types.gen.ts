@@ -33,6 +33,14 @@ export type ChooseSideSchema = {
 };
 
 /**
+ * DesignatePlayerAsSpySchema
+ * Schema for creator to designate a player as spy
+ */
+export type DesignatePlayerAsSpySchema = {
+  creatorToken: string;
+};
+
+/**
  * StartRoundSchema
  * Schema for starting a round
  */
@@ -63,6 +71,14 @@ export type SelectWordSchema = {
  */
 export type HighlightWordSchema = {
   wordIndex: number;
+};
+
+/**
+ * SendChatSchema
+ * Schema for sending a chat message
+ */
+export type SendChatSchema = {
+  content: string;
 };
 
 /**
@@ -111,7 +127,7 @@ export type GameStateSchema = {
   currentRound: {
     id: string;
     words: Array<string>;
-    results: Array<"neutral" | "red" | "blue" | "black">;
+    results?: Array<"neutral" | "red" | "blue" | "black">;
     order: number;
     /**
      * SideSchema
@@ -131,6 +147,20 @@ export type GameStateSchema = {
        */
       cardType: "neutral" | "red" | "blue" | "black";
     }>;
+    /**
+     * Total red/blue team cards on the grid (target per team)
+     */
+    wordsTotalBySide: {
+      red: number;
+      blue: number;
+    };
+    /**
+     * Unrevealed red/blue card counts for each team (all players; full grid only for spies)
+     */
+    wordsRemainingBySide: {
+      red: number;
+      blue: number;
+    };
     highlights: {
       [key: string]: Array<{
         playerId: string;
@@ -154,20 +184,6 @@ export type GameStatePlayerSchema = {
 };
 
 /**
- * GamesSchema
- * Schema for a paginated list of games
- */
-export type GamesSchema = {
-  data: Array<GameSchema>;
-  meta: {
-    offset: number;
-    pageSize: number;
-    itemCount: number;
-    hasMore: boolean;
-  };
-};
-
-/**
  * JoinGameResponseSchema
  * Response when joining a game
  */
@@ -177,25 +193,35 @@ export type JoinGameResponseSchema = {
 };
 
 /**
- * PaginationQuerySchema
- * Schema for pagination query
+ * TimelineResponseSchema
+ * Paginated timeline response
  */
-export type PaginationQuerySchema = {
-  /**
-   * Starting position of the query
-   */
-  offset: number;
-  /**
-   * Number of items to return
-   */
-  pageSize: number;
+export type TimelineResponseSchema = {
+  data: Array<TimelineItemSchema>;
+  meta: {
+    itemCount: number;
+    pageSize: number;
+    offset: number;
+    hasMore: boolean;
+  };
 };
 
 /**
- * SortingQueryStringSchema
- * Schema for sorting items
+ * TimelineItemSchema
+ * Timeline item (event or chat message)
  */
-export type SortingQueryStringSchema = string;
+export type TimelineItemSchema = {
+  id: string;
+  type: "event" | "chat";
+  eventType?: string;
+  payload: {
+    [key: string]: unknown;
+  };
+  triggeredBy: string | null;
+  playerName?: string;
+  createdAt: string;
+  roundId?: string | null;
+};
 
 /**
  * SideSchema
@@ -212,6 +238,21 @@ export const SideSchema = {
  */
 export type SideSchema = (typeof SideSchema)[keyof typeof SideSchema];
 
+/**
+ * PaginationQuerySchema
+ * Schema for pagination query
+ */
+export type PaginationQuerySchema = {
+  /**
+   * Starting position of the query
+   */
+  offset: number;
+  /**
+   * Number of items to return
+   */
+  pageSize: number;
+};
+
 export type AppControllerGetHelloData = {
   body?: never;
   path?: never;
@@ -222,37 +263,6 @@ export type AppControllerGetHelloData = {
 export type AppControllerGetHelloResponses = {
   200: unknown;
 };
-
-export type GamesControllerGetGamesData = {
-  body?: never;
-  path?: never;
-  query: {
-    /**
-     * SortingQueryStringSchema
-     * Schema for sorting items
-     */
-    sort?: string;
-    /**
-     * Starting position of the query
-     */
-    offset: number;
-    /**
-     * Number of items to return
-     */
-    pageSize: number;
-  };
-  url: "/api/games";
-};
-
-export type GamesControllerGetGamesResponses = {
-  /**
-   * Schema for a paginated list of games
-   */
-  200: GamesSchema;
-};
-
-export type GamesControllerGetGamesResponse =
-  GamesControllerGetGamesResponses[keyof GamesControllerGetGamesResponses];
 
 export type GamesControllerCreateGameData = {
   /**
@@ -276,25 +286,6 @@ export type GamesControllerCreateGameResponses = {
 
 export type GamesControllerCreateGameResponse =
   GamesControllerCreateGameResponses[keyof GamesControllerCreateGameResponses];
-
-export type GamesControllerGetGameData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: "/api/games/{id}";
-};
-
-export type GamesControllerGetGameResponses = {
-  /**
-   * Schema for a game (basic info)
-   */
-  200: GameSchema;
-};
-
-export type GamesControllerGetGameResponse =
-  GamesControllerGetGameResponses[keyof GamesControllerGetGameResponses];
 
 export type GamesControllerGetGameStateData = {
   body?: never;
@@ -432,6 +423,32 @@ export type GamesControllerDesignateSpyResponses = {
 
 export type GamesControllerDesignateSpyResponse =
   GamesControllerDesignateSpyResponses[keyof GamesControllerDesignateSpyResponses];
+
+export type GamesControllerDesignatePlayerAsSpyData = {
+  /**
+   * DesignatePlayerAsSpySchema
+   * Schema for creator to designate a player as spy
+   */
+  body: {
+    creatorToken: string;
+  };
+  path: {
+    playerId: string;
+    id: string;
+  };
+  query?: never;
+  url: "/api/games/{id}/players/{playerId}/spy";
+};
+
+export type GamesControllerDesignatePlayerAsSpyResponses = {
+  /**
+   * Full game state computed from events
+   */
+  200: GameStateSchema;
+};
+
+export type GamesControllerDesignatePlayerAsSpyResponse =
+  GamesControllerDesignatePlayerAsSpyResponses[keyof GamesControllerDesignatePlayerAsSpyResponses];
 
 export type GamesControllerStartRoundData = {
   /**
@@ -591,6 +608,54 @@ export type GamesControllerRestartGameResponses = {
 
 export type GamesControllerRestartGameResponse =
   GamesControllerRestartGameResponses[keyof GamesControllerRestartGameResponses];
+
+export type GamesControllerSendChatData = {
+  /**
+   * SendChatSchema
+   * Schema for sending a chat message
+   */
+  body: {
+    content: string;
+  };
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: "/api/games/{id}/chat";
+};
+
+export type GamesControllerSendChatResponses = {
+  201: unknown;
+};
+
+export type GamesControllerGetTimelineData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query: {
+    roundId: string;
+    /**
+     * Starting position of the query
+     */
+    offset: number;
+    /**
+     * Number of items to return
+     */
+    pageSize: number;
+  };
+  url: "/api/games/{id}/timeline";
+};
+
+export type GamesControllerGetTimelineResponses = {
+  /**
+   * Paginated timeline response
+   */
+  200: TimelineResponseSchema;
+};
+
+export type GamesControllerGetTimelineResponse =
+  GamesControllerGetTimelineResponses[keyof GamesControllerGetTimelineResponses];
 
 export type WordsControllerGetRandomWordsData = {
   body?: never;

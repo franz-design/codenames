@@ -57,6 +57,47 @@ export function generateGridResults(order: number): CardType[] {
   return results
 }
 
+export interface WordsBySide {
+  red: number
+  blue: number
+}
+
+/**
+ * Nombre total de cartes rouge / bleue sur la grille (objectif par équipe).
+ */
+export function computeWordsTotalBySide(results: CardType[]): WordsBySide {
+  let red = 0
+  let blue = 0
+  for (const c of results) {
+    if (c === CardType.RED)
+      red++
+    else if (c === CardType.BLUE)
+      blue++
+  }
+  return { red, blue }
+}
+
+/**
+ * Cartes rouge / bleue encore non révélées (sans exposer la grille complète).
+ */
+export function computeWordsRemainingBySide(
+  results: CardType[],
+  revealedWords: RevealedWord[],
+): WordsBySide {
+  const revealed = new Set(revealedWords.map(r => r.wordIndex))
+  let red = 0
+  let blue = 0
+  for (let i = 0; i < results.length; i++) {
+    if (revealed.has(i))
+      continue
+    if (results[i] === CardType.RED)
+      red++
+    else if (results[i] === CardType.BLUE)
+      blue++
+  }
+  return { red, blue }
+}
+
 /**
  * Applies a single event to the state (incremental update).
  */

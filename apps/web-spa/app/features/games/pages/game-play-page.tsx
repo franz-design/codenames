@@ -58,10 +58,16 @@ export default function GamePlayPage() {
   const isLoading = !gameState && (isFetching || (isConnected && !wsError))
   const error = wsError ?? fetchError
 
+  const currentPlayerSide
+    = playerId && gameState
+      ? gameState.players.find(p => p.id === playerId)?.side ?? null
+      : null
+
   const timeline = useGameTimeline({
     gameId: gameId ?? null,
     playerId: playerId ?? null,
     playerName,
+    playerSide: currentPlayerSide,
     currentRoundId: gameState?.currentRound?.id ?? null,
     enabled: Boolean(gameId && playerId && hasSession && gameState?.currentRound),
   })

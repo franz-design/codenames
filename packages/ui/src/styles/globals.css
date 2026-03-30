@@ -53,7 +53,7 @@
   --blue-light: #779fd6;
   --neutral: #F5F1E9;
   --neutral-dark: #DFD3BB;
-  --neutral-foreground: #978664;
+  --neutral-foreground: #8d8679;
   --black: #243449;
   --black-dark: #080F19;
 }
@@ -165,7 +165,7 @@
 @layer utilities {
   .transition-card-flip {
     transition:
-      transform 1100ms var(--ease-card-flip),
+      transform 1300ms var(--ease-card-flip),
       background-color 200ms ease-in-out,
       border-color 200ms ease-in-out,
       color 200ms ease-in-out;

@@ -34,6 +34,8 @@ import {
   checkGameOver,
   computeGameState,
 
+  computeWordsRemainingBySide,
+  computeWordsTotalBySide,
   generateGridResults,
 } from './game-core.logic'
 import { GameEventType } from './game-event.types'
@@ -603,6 +605,7 @@ export class GamesService {
       playerId,
       playerName: player.name,
       content,
+      ...(player.side ? { side: player.side } : {}),
     }
     gameEvent.triggeredBy = playerId
     await this.em.persistAndFlush(gameEvent)
@@ -733,10 +736,17 @@ export class GamesService {
     const currentRound = state.currentRound
       ? (() => {
           const { results: _results, ...rest } = state.currentRound
+          const wordsTotalBySide = computeWordsTotalBySide(_results)
+          const wordsRemainingBySide = computeWordsRemainingBySide(
+            _results,
+            state.currentRound.revealedWords,
+          )
           return {
             ...rest,
             currentClue: state.currentRound.currentClue ?? null,
             highlights,
+            wordsTotalBySide,
+            wordsRemainingBySide,
             ...(excludeResults ? {} : { results: _results }),
           }
         })()

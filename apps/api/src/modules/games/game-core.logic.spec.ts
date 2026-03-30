@@ -4,6 +4,8 @@ import {
   canPerformAction,
   checkGameOver,
   computeGameState,
+  computeWordsRemainingBySide,
+  computeWordsTotalBySide,
   generateGridResults,
 } from './game-core.logic'
 import { CardType, GameEventType } from './game-event.types'
@@ -35,6 +37,35 @@ describe('game-core.logic', () => {
       const results = generateGridResults(2)
       expect(results.filter(r => r === CardType.RED)).toHaveLength(8)
       expect(results.filter(r => r === CardType.BLUE)).toHaveLength(9)
+    })
+  })
+
+  describe('computeWordsTotalBySide', () => {
+    it('should match counts of red and blue in grid', () => {
+      const results = generateGridResults(1)
+      const actual = computeWordsTotalBySide(results)
+      expect(actual.red).toBe(9)
+      expect(actual.blue).toBe(8)
+      expect(actual.red + actual.blue).toBe(17)
+    })
+  })
+
+  describe('computeWordsRemainingBySide', () => {
+    it('should return full counts when nothing revealed', () => {
+      const results = generateGridResults(1)
+      const actual = computeWordsRemainingBySide(results, [])
+      expect(actual.red + actual.blue).toBe(17)
+      expect(results.filter(r => r === CardType.RED).length).toBe(actual.red)
+      expect(results.filter(r => r === CardType.BLUE).length).toBe(actual.blue)
+    })
+
+    it('should decrease when team words are revealed', () => {
+      const results = generateGridResults(1)
+      const redIndex = results.indexOf(CardType.RED)
+      const revealed = [{ wordIndex: redIndex, cardType: CardType.RED }]
+      const actual = computeWordsRemainingBySide(results, revealed)
+      expect(actual.red).toBe(results.filter(r => r === CardType.RED).length - 1)
+      expect(actual.blue).toBe(results.filter(r => r === CardType.BLUE).length)
     })
   })
 

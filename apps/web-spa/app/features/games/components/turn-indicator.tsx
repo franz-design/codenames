@@ -23,6 +23,11 @@ const CLUE_BG_COLORS: Record<Side, string> = {
   blue: 'bg-blue-dark',
 }
 
+const TEXT_COLORS: Record<Side, string> = {
+  red: 'text-red',
+  blue: 'text-blue',
+}
+
 export function TurnIndicator({
   round,
   isUserTurn,
@@ -69,11 +74,8 @@ export function TurnIndicator({
 
       {currentClue
         ? (
-            <div className="flex items-center gap-2">
-              <span className="text-sm">Tentatives restantes :</span>
-              <span className="font-medium">
-                {guessesRemaining >= 100 ? '∞' : guessesRemaining}
-              </span>
+            <div className={cn('flex items-center gap-2 font-bold w-8 h-8 justify-center rounded-full bg-white', TEXT_COLORS[currentTurn])}>
+              {guessesRemaining >= 100 ? '∞' : guessesRemaining - 1}
             </div>
           )
         : (

@@ -25,6 +25,10 @@ export interface RoundState {
   currentClue: { word: string, number: number } | null
   guessesRemaining: number
   revealedWords: RevealedWord[]
+  /** Objectif : nombre total de mots équipe sur la grille (fourni par l’API) */
+  wordsTotalBySide: { red: number, blue: number }
+  /** Mots équipe encore non trouvés */
+  wordsRemainingBySide: { red: number, blue: number }
   highlights: Record<string, { playerId: string, playerName: string }[]>
 }
 

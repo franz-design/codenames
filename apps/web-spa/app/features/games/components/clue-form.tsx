@@ -76,8 +76,8 @@ export function ClueForm({
           control={form.control}
           name="word"
           render={({ field }) => (
-            <FormItem className="flex-1 min-w-[140px]">
-              <FormLabel htmlFor="clue-word">Mot d&apos;indice</FormLabel>
+            <FormItem className="min-w-[140px] flex-grow">
+              <FormLabel htmlFor="clue-word">Indice</FormLabel>
               <FormControl>
                 <Input
                   id="clue-word"
@@ -96,34 +96,46 @@ export function ClueForm({
           control={form.control}
           name="number"
           render={({ field }) => (
-            <FormItem className="w-50">
-              <FormLabel htmlFor="clue-number">Nombre de mots à trouver</FormLabel>
+            <FormItem className="min-w-0 sm:max-w-xl">
+              <FormLabel>Nombre de mots à trouver</FormLabel>
               <FormControl>
-                <select
-                  id="clue-number"
-                  disabled={isPending || disabled}
+                <input
+                  type="hidden"
+                  name={field.name}
+                  ref={field.ref}
                   value={field.value}
-                  onChange={(e) => {
-                    const val = e.target.value
-                    field.onChange(
-                      val === String(CLUE_NUMBER_INFINITY)
-                        ? CLUE_NUMBER_INFINITY
-                        : Number.parseInt(val, 10),
-                    )
-                  }}
-                  className={cn(
-                    'border-input bg-background/80 backdrop-blur-sm flex h-9 w-full min-w-0 rounded-md border px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',
-                    'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                    'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-                  )}
-                >
-                  {CLUE_NUMBER_OPTIONS.map(n => (
-                    <option key={n} value={n}>
-                      {n === CLUE_NUMBER_INFINITY ? '∞' : n}
-                    </option>
-                  ))}
-                </select>
+                  onBlur={field.onBlur}
+                  onChange={field.onChange}
+                />
               </FormControl>
+              <div className="flex flex-wrap gap-2">
+                {CLUE_NUMBER_OPTIONS.map((n) => {
+                  const isSelected = field.value === n
+                  const label = n === CLUE_NUMBER_INFINITY ? '∞' : String(n)
+                  return (
+                    <Button
+                      key={n}
+                      type="button"
+                      size="sm"
+                      disabled={isPending || disabled}
+                      aria-pressed={isSelected}
+                      aria-label={
+                        n === CLUE_NUMBER_INFINITY
+                          ? 'Infini'
+                          : `${n} mot${n > 1 ? 's' : ''}`
+                      }
+                      onClick={() => {
+                        field.onChange(n)
+                      }}
+                      className={cn('transition-all duration-200 w-8 bg-white hover:bg-blue-dark hover:text-white hover:-left-[2px] hover:-top-[2px] hover:shadow-[4px_4px_0px_0px_#AEC0E0]', {
+                        'bg-blue-dark text-white -left-0 -top-0 shadow-[2px_2px_0px_0px_#AEC0E0] hover:-left-0 hover:-top-0 hover:shadow-[2px_2px_0px_0px_#AEC0E0]': isSelected,
+                      })}
+                    >
+                      {label}
+                    </Button>
+                  )
+                })}
+              </div>
               <FormMessage />
             </FormItem>
           )}
