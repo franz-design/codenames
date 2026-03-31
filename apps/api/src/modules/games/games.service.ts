@@ -19,7 +19,6 @@ import {
   GiveClueInput,
   HighlightWordInput,
   JoinGameResponse,
-  KickPlayerInput,
   SelectWordInput,
   SendChatInput,
   StartRoundInput,
@@ -142,14 +141,10 @@ export class GamesService {
   async kickPlayer(
     gameId: string,
     playerIdToKick: string,
-    input: KickPlayerInput,
   ): Promise<GameStateResponse> {
     const game = await this.em.findOne(Game, { id: gameId })
     if (!game)
       throw new NotFoundException('Game not found')
-
-    if (game.creatorToken !== input.creatorToken)
-      throw new ForbiddenException('Only the game creator can kick players')
 
     const events = await this.loadGameEvents(gameId)
     const state = computeGameState(events)
@@ -257,13 +252,10 @@ export class GamesService {
   async designatePlayerAsSpy(
     gameId: string,
     targetPlayerId: string,
-    input: { creatorToken: string },
   ): Promise<GameStateResponse> {
     const game = await this.em.findOne(Game, { id: gameId })
     if (!game)
       throw new NotFoundException('Game not found')
-    if (game.creatorToken !== input.creatorToken)
-      throw new ForbiddenException('Only the game creator can designate spies')
 
     const events = await this.loadGameEvents(gameId)
     const state = computeGameState(events)
