@@ -207,4 +207,93 @@ describe('GamesController (e2e)', () => {
       expect(Array.isArray(spyRes.body.currentRound.results)).toBe(true)
     })
   })
+
+  describe('Mid-game join and host team assignment', () => {
+    let midGameId: string
+    let midCreatorToken: string
+    let midRedSpyId: string
+    let midLateJoinerId: string
+
+    beforeAll(async () => {
+      const createRes = await supertest(context.app.getHttpServer())
+        .post('/games')
+        .set('Content-Type', 'application/json')
+        .send({ pseudo: 'MidHost' })
+      midCreatorToken = createRes.body.creatorToken
+      midGameId = createRes.body.game.id
+      midRedSpyId = createRes.body.playerId
+
+      const joinBlue = await supertest(context.app.getHttpServer())
+        .post(`/games/${midGameId}/join`)
+        .set('Content-Type', 'application/json')
+        .send({ pseudo: 'MidBlueSpy' })
+      const blueSpyId = joinBlue.body.playerId
+
+      const joinRedG = await supertest(context.app.getHttpServer())
+        .post(`/games/${midGameId}/join`)
+        .set('Content-Type', 'application/json')
+        .send({ pseudo: 'MidRedG' })
+      const redGuesserId = joinRedG.body.playerId
+
+      await supertest(context.app.getHttpServer())
+        .patch(`/games/${midGameId}/players/me/side`)
+        .set('X-Player-Id', midRedSpyId)
+        .set('Content-Type', 'application/json')
+        .send({ side: 'red' })
+
+      await supertest(context.app.getHttpServer())
+        .patch(`/games/${midGameId}/players/me/side`)
+        .set('X-Player-Id', blueSpyId)
+        .set('Content-Type', 'application/json')
+        .send({ side: 'blue' })
+
+      await supertest(context.app.getHttpServer())
+        .patch(`/games/${midGameId}/players/me/side`)
+        .set('X-Player-Id', redGuesserId)
+        .set('Content-Type', 'application/json')
+        .send({ side: 'red' })
+
+      await supertest(context.app.getHttpServer())
+        .patch(`/games/${midGameId}/players/me/spy`)
+        .set('X-Player-Id', midRedSpyId)
+
+      await supertest(context.app.getHttpServer())
+        .patch(`/games/${midGameId}/players/me/spy`)
+        .set('X-Player-Id', blueSpyId)
+
+      await supertest(context.app.getHttpServer())
+        .post(`/games/${midGameId}/rounds/start`)
+        .set('X-Player-Id', midRedSpyId)
+        .set('Content-Type', 'application/json')
+        .send({})
+
+      const joinLate = await supertest(context.app.getHttpServer())
+        .post(`/games/${midGameId}/join`)
+        .set('Content-Type', 'application/json')
+        .send({ pseudo: 'LateJoiner' })
+      midLateJoinerId = joinLate.body.playerId
+    })
+
+    it('should reject self-service choose side while a round is in progress', async () => {
+      const res = await supertest(context.app.getHttpServer())
+        .patch(`/games/${midGameId}/players/me/side`)
+        .set('X-Player-Id', midLateJoinerId)
+        .set('Content-Type', 'application/json')
+        .send({ side: 'red' })
+
+      expect(res.status).toBe(400)
+    })
+
+    it('should assign a waiting player to a team when the creator provides a valid token', async () => {
+      const res = await supertest(context.app.getHttpServer())
+        .patch(`/games/${midGameId}/creator/players/${midLateJoinerId}/side`)
+        .set('Content-Type', 'application/json')
+        .send({ side: 'blue', creatorToken: midCreatorToken })
+
+      expect(res.status).toBe(200)
+      const late = res.body.players.find((p: { id: string }) => p.id === midLateJoinerId)
+      expect(late?.side).toBe('blue')
+      expect(Boolean(late?.isSpy)).toBe(false)
+    })
+  })
 })

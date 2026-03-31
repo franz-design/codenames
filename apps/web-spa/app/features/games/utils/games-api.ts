@@ -53,6 +53,12 @@ export interface GamesApiClient {
   designatePlayerAsSpy: (gameId: string, playerId: string, creatorToken: string) => Promise<GameState>
   leaveGame: (gameId: string) => Promise<GameState>
   chooseSide: (gameId: string, side: 'red' | 'blue') => Promise<GameState>
+  assignPlayerSideByCreator: (
+    gameId: string,
+    targetPlayerId: string,
+    side: 'red' | 'blue',
+    creatorToken: string,
+  ) => Promise<GameState>
   designateSpy: (gameId: string) => Promise<GameState>
   startRound: (gameId: string, wordCount?: number) => Promise<GameState>
   giveClue: (gameId: string, word: string, number: number) => Promise<GameState>
@@ -143,6 +149,24 @@ export function createGamesApiClient(playerId: string): GamesApiClient {
           method: 'PATCH',
           headers: headers({}),
           body: JSON.stringify({ side }),
+          credentials: 'include',
+        },
+      )
+      return handleResponse<GameState>(response)
+    },
+
+    async assignPlayerSideByCreator(
+      gameId: string,
+      targetPlayerId: string,
+      side: 'red' | 'blue',
+      creatorToken: string,
+    ) {
+      const response = await fetch(
+        `${baseUrl}/api/games/${gameId}/creator/players/${targetPlayerId}/side`,
+        {
+          method: 'PATCH',
+          headers: headers({}),
+          body: JSON.stringify({ side, creatorToken }),
           credentials: 'include',
         },
       )

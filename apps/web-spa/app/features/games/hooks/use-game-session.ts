@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useMemo, useSyncExternalStore } from 'react'
 
 const STORAGE_KEYS = {
   playerId: 'codenames_playerId',
@@ -8,7 +8,7 @@ const STORAGE_KEYS = {
   pendingRedirect: 'codenames_pendingRedirect',
 } as const
 
-export const PENDING_REDIRECT_KEY = STORAGE_KEYS.pendingRedirect
+const SESSION_CHANGE_EVENT = 'codenames:game-session-changed'
 
 export interface GameSessionData {
   playerId: string | null
@@ -16,6 +16,21 @@ export interface GameSessionData {
   gameId: string | null
   playerName: string | null
 }
+
+const EMPTY_SESSION_JSON = JSON.stringify({
+  playerId: null,
+  creatorToken: null,
+  gameId: null,
+  playerName: null,
+} satisfies GameSessionData)
+
+function notifyGameSessionChanged(): void {
+  if (typeof window === 'undefined')
+    return
+  window.dispatchEvent(new CustomEvent(SESSION_CHANGE_EVENT))
+}
+
+export const PENDING_REDIRECT_KEY = STORAGE_KEYS.pendingRedirect
 
 function getStoredValue(key: string): string | null {
   if (typeof window === 'undefined')
@@ -32,6 +47,31 @@ function getSessionSnapshot(): GameSessionData {
   }
 }
 
+function getSessionSnapshotJson(): string {
+  return JSON.stringify(getSessionSnapshot())
+}
+
+function subscribe(onStoreChange: () => void): () => void {
+  if (typeof window === 'undefined')
+    return () => {}
+
+  const handleStorage = (event: StorageEvent) => {
+    if (
+      event.key?.startsWith('codenames_')
+      && event.storageArea === sessionStorage
+    ) {
+      onStoreChange()
+    }
+  }
+  const handleSessionChange = () => onStoreChange()
+  window.addEventListener('storage', handleStorage)
+  window.addEventListener(SESSION_CHANGE_EVENT, handleSessionChange)
+  return () => {
+    window.removeEventListener('storage', handleStorage)
+    window.removeEventListener(SESSION_CHANGE_EVENT, handleSessionChange)
+  }
+}
+
 export interface SetSessionInput {
   playerId: string
   gameId: string
@@ -40,20 +80,16 @@ export interface SetSessionInput {
 }
 
 export function useGameSession() {
-  const [session, setSessionState] = useState<GameSessionData>(getSessionSnapshot)
+  const snapshotJson = useSyncExternalStore(
+    subscribe,
+    getSessionSnapshotJson,
+    () => EMPTY_SESSION_JSON,
+  )
 
-  useEffect(() => {
-    const handleStorage = (event: StorageEvent) => {
-      if (
-        event.key?.startsWith('codenames_')
-        && event.storageArea === sessionStorage
-      ) {
-        setSessionState(getSessionSnapshot())
-      }
-    }
-    window.addEventListener('storage', handleStorage)
-    return () => window.removeEventListener('storage', handleStorage)
-  }, [])
+  const session = useMemo(
+    () => JSON.parse(snapshotJson) as GameSessionData,
+    [snapshotJson],
+  )
 
   const setSession = useCallback((data: SetSessionInput) => {
     sessionStorage.setItem(STORAGE_KEYS.playerId, data.playerId)
@@ -63,7 +99,7 @@ export function useGameSession() {
       sessionStorage.setItem(STORAGE_KEYS.creatorToken, data.creatorToken)
     else
       sessionStorage.removeItem(STORAGE_KEYS.creatorToken)
-    setSessionState(getSessionSnapshot())
+    notifyGameSessionChanged()
   }, [])
 
   const clearSession = useCallback(() => {
@@ -71,7 +107,7 @@ export function useGameSession() {
     sessionStorage.removeItem(STORAGE_KEYS.creatorToken)
     sessionStorage.removeItem(STORAGE_KEYS.gameId)
     sessionStorage.removeItem(STORAGE_KEYS.playerName)
-    setSessionState(getSessionSnapshot())
+    notifyGameSessionChanged()
   }, [])
 
   const isCreator = Boolean(session.creatorToken)

@@ -9,6 +9,7 @@ import { Query } from '@nestjs/common'
 import { z } from 'zod'
 import { OptionalPlayerId, PlayerId } from '../../common/decorators/player-id.decorator'
 import {
+  assignPlayerSideByCreatorSchema,
   chooseSideSchema,
   CreateGameInput,
   createGameResponseSchema,
@@ -85,6 +86,16 @@ export class GamesController {
     @TypedBody(chooseSideSchema) body: { side: 'red' | 'blue' },
   ) {
     return await this.gamesService.chooseSide(id, playerId, body)
+  }
+
+  @CreatorAuth('Only the game creator can assign players to a team during a round')
+  @TypedRoute.Patch(':id/creator/players/:playerId/side', gameStateSchema)
+  async assignPlayerSideByCreator(
+    @TypedParam('id', z.uuid()) id: string,
+    @TypedParam('playerId', z.uuid()) playerId: string,
+    @TypedBody(assignPlayerSideByCreatorSchema) body: { side: 'red' | 'blue', creatorToken: string },
+  ) {
+    return await this.gamesService.assignPlayerSideByCreator(id, playerId, body)
   }
 
   @TypedRoute.Patch(':id/players/me/spy', gameStateSchema)

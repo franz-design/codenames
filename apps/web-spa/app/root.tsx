@@ -2,13 +2,15 @@ import type { Route } from './+types/root'
 import { client } from '@codenames/openapi-generator'
 import { Header } from '@codenames/ui/components/layout/Header'
 import { TooltipProvider } from '@codenames/ui/components/primitives/tooltip'
-import { User, User2Icon } from '@codenames/ui/icons'
+import { User2Icon } from '@codenames/ui/icons'
 import { cn } from '@codenames/ui/lib/utils'
 import { QueryClientProvider, useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo } from 'react'
 import { isRouteErrorResponse, Link, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
 import { Toaster } from 'sonner'
+import { GamePendingPlayersDropdown } from '@/features/games/components/game-pending-players-dropdown'
 import { useGameSession } from '@/features/games/hooks/use-game-session'
+import { useGameWebSocket } from '@/features/games/hooks/use-game-websocket'
 import { createGamesApiClient } from '@/features/games/utils/games-api'
 import { authClient } from '@/lib/auth-client'
 import { queryClient } from '@/lib/query-client'
@@ -74,10 +76,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 function AppHeader() {
   const headerRight = useHeaderRightContent()
   const { data: session } = authClient.useSession()
-  const { playerName, gameId, playerId } = useGameSession()
+  const { playerName, gameId, playerId, creatorToken, isCreator, hasSession } = useGameSession()
 
   const shouldFetchGameState = Boolean(gameId && playerId)
-  const { data: gameState } = useQuery({
+  const { data: fetchedGameState } = useQuery({
     queryKey: ['gameState', gameId, playerId],
     queryFn: () => {
       if (!gameId || !playerId)
@@ -86,6 +88,12 @@ function AppHeader() {
     },
     enabled: shouldFetchGameState,
   })
+  const { gameState: wsGameState } = useGameWebSocket({
+    gameId: gameId ?? null,
+    playerId: playerId ?? null,
+    enabled: Boolean(gameId && playerId && hasSession),
+  })
+  const gameState = wsGameState ?? fetchedGameState ?? null
 
   const playerSide = gameState?.players.find(p => p.id === playerId)?.side ?? null
   const playerBackground = playerSide === 'red' ? 'bg-red' : 'bg-blue'
@@ -105,11 +113,28 @@ function AppHeader() {
 
   const headerLeft = displayName
     ? (
-        <span className={cn('flex max-w-[min(14rem,calc(100vw-12rem))] items-center gap-2 text-sm font-medium text-white rounded-full py-2 pl-3 pr-4', playerBackground)}>
-          <User2Icon className="size-4 shrink-0 opacity-80" aria-hidden />
-          <span className="truncate" title={displayName}>
-            {displayName}
+        <span className="flex max-w-[min(28rem,calc(100vw-10rem))] items-center gap-2">
+          <span
+            className={cn(
+              'flex min-w-0 max-w-[min(14rem,calc(100vw-12rem))] items-center gap-2 text-sm font-medium text-white rounded-full py-2 pl-3 pr-4',
+              playerBackground,
+            )}
+          >
+            <User2Icon className="size-4 shrink-0 opacity-80" aria-hidden />
+            <span className="truncate" title={displayName}>
+              {displayName}
+            </span>
           </span>
+          {isCreator && creatorToken && gameId && playerId && gameState
+            ? (
+                <GamePendingPlayersDropdown
+                  gameId={gameId}
+                  playerId={playerId}
+                  creatorToken={creatorToken}
+                  gameState={gameState}
+                />
+              )
+            : null}
         </span>
       )
     : null

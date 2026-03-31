@@ -42,13 +42,15 @@ export function GameChatInput({
         type="text"
         placeholder={placeholder}
         maxLength={500}
+        disabled={disabled || isPending}
         className="flex-1 [&:disabled]:opacity-100"
         aria-label="Message du chat"
-        autoFocus
+        autoFocus={!disabled}
       />
       <Button
         type="submit"
         size="sm"
+        disabled={disabled || isPending}
       >
         Envoyer
       </Button>

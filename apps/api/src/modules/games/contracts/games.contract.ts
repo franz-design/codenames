@@ -158,6 +158,16 @@ export const chooseSideSchema = z.object({
 
 export type ChooseSideInput = z.infer<typeof chooseSideSchema>
 
+export const assignPlayerSideByCreatorSchema = z.object({
+  side: sideSchema,
+  creatorToken: z.uuid(),
+}).meta({
+  title: 'AssignPlayerSideByCreatorSchema',
+  description: 'Schema for the host to assign a waiting player to a team during an active round',
+})
+
+export type AssignPlayerSideByCreatorInput = z.infer<typeof assignPlayerSideByCreatorSchema>
+
 export const giveClueSchema = z.object({
   word: z.string().min(1),
   number: z.number().int().min(0),

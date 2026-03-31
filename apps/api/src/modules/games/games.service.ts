@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common'
 import { WordsService } from '../words/words.service'
 import {
+  AssignPlayerSideByCreatorInput,
   ChooseSideInput,
   CreateGameResponse,
   GameResponse,
@@ -75,8 +76,10 @@ export class GamesService {
     await this.em.persistAndFlush(joinEvent)
     await this.emitTimelineItem(game.id, joinEvent)
 
-    await this.emitGameState(game.id)
-    const gameState = await this.getGameState(game.id, playerId)
+    const eventsAfterCreate = await this.loadGameEvents(game.id)
+    const stateAfterCreate = computeGameState(eventsAfterCreate)
+    await this.emitGameState(game.id, stateAfterCreate)
+    const gameState = this.buildGameStateResponseFromComputed(stateAfterCreate, playerId)
     return {
       game: this.mapGameToResponse(game),
       creatorToken,
@@ -100,7 +103,13 @@ export class GamesService {
 
     const events = await this.loadGameEvents(gameId)
     const state = computeGameState(events)
+    return this.buildGameStateResponseFromComputed(state, playerId)
+  }
 
+  private buildGameStateResponseFromComputed(
+    state: ReturnType<typeof computeGameState>,
+    playerId?: string,
+  ): GameStateResponse {
     const excludeResults = this.shouldExcludeResultsForPlayer(state, playerId)
     return this.mapStateToResponse(state, excludeResults)
   }
@@ -133,8 +142,10 @@ export class GamesService {
     gameEvent.triggeredBy = playerId
     await this.em.persistAndFlush(gameEvent)
 
-    await this.emitGameState(gameId)
-    const gameState = await this.getGameState(gameId, playerId)
+    const eventsAfterJoin = await this.loadGameEvents(gameId)
+    const stateAfterJoin = computeGameState(eventsAfterJoin)
+    await this.emitGameState(gameId, stateAfterJoin)
+    const gameState = this.buildGameStateResponseFromComputed(stateAfterJoin, playerId)
     return { gameState, playerId }
   }
 
@@ -160,8 +171,10 @@ export class GamesService {
     await this.em.persistAndFlush(gameEvent)
     await this.emitTimelineItem(gameId, gameEvent)
 
-    await this.emitGameState(gameId)
-    return this.getGameState(gameId)
+    const eventsAfterKick = await this.loadGameEvents(gameId)
+    const stateAfterKick = computeGameState(eventsAfterKick)
+    await this.emitGameState(gameId, stateAfterKick)
+    return this.buildGameStateResponseFromComputed(stateAfterKick, undefined)
   }
 
   async leaveGame(gameId: string, playerId: string): Promise<GameStateResponse> {
@@ -183,8 +196,10 @@ export class GamesService {
     await this.em.persistAndFlush(gameEvent)
     await this.emitTimelineItem(gameId, gameEvent)
 
-    await this.emitGameState(gameId)
-    return this.getGameState(gameId, playerId)
+    const eventsAfterLeave = await this.loadGameEvents(gameId)
+    const stateAfterLeave = computeGameState(eventsAfterLeave)
+    await this.emitGameState(gameId, stateAfterLeave)
+    return this.buildGameStateResponseFromComputed(stateAfterLeave, playerId)
   }
 
   async chooseSide(
@@ -203,6 +218,9 @@ export class GamesService {
     if (!player)
       throw new BadRequestException('Player not in game')
 
+    if (state.status !== 'LOBBY')
+      throw new BadRequestException('Team choice is only available in the lobby')
+
     const gameEvent = new GameEvent()
     gameEvent.game = game
     gameEvent.eventType = GameEventType.PLAYER_CHOSE_SIDE
@@ -215,8 +233,50 @@ export class GamesService {
     await this.em.persistAndFlush(gameEvent)
     await this.emitTimelineItem(gameId, gameEvent)
 
-    await this.emitGameState(gameId)
-    return this.getGameState(gameId, playerId)
+    const eventsAfterChooseSide = await this.loadGameEvents(gameId)
+    const stateAfterChooseSide = computeGameState(eventsAfterChooseSide)
+    await this.emitGameState(gameId, stateAfterChooseSide)
+    return this.buildGameStateResponseFromComputed(stateAfterChooseSide, playerId)
+  }
+
+  async assignPlayerSideByCreator(
+    gameId: string,
+    targetPlayerId: string,
+    data: AssignPlayerSideByCreatorInput,
+  ): Promise<GameStateResponse> {
+    const { side } = data
+    const game = await this.em.findOne(Game, { id: gameId })
+    if (!game)
+      throw new NotFoundException('Game not found')
+
+    const events = await this.loadGameEvents(gameId)
+    const state = computeGameState(events)
+
+    if (state.status !== 'PLAYING')
+      throw new BadRequestException('Players can only be assigned by the host while a round is in progress')
+
+    const player = state.players.find(p => p.id === targetPlayerId)
+    if (!player)
+      throw new BadRequestException('Player not in game')
+    if (player.side)
+      throw new BadRequestException('Player already has a team')
+
+    const gameEvent = new GameEvent()
+    gameEvent.game = game
+    gameEvent.eventType = GameEventType.PLAYER_CHOSE_SIDE
+    gameEvent.payload = {
+      playerId: targetPlayerId,
+      playerName: player.name,
+      side,
+    }
+    gameEvent.triggeredBy = targetPlayerId
+    await this.em.persistAndFlush(gameEvent)
+    await this.emitTimelineItem(gameId, gameEvent)
+
+    const eventsAfter = await this.loadGameEvents(gameId)
+    const stateAfter = computeGameState(eventsAfter)
+    await this.emitGameState(gameId, stateAfter)
+    return this.buildGameStateResponseFromComputed(stateAfter, undefined)
   }
 
   async designateSpy(gameId: string, playerId: string): Promise<GameStateResponse> {
@@ -245,8 +305,10 @@ export class GamesService {
     await this.em.persistAndFlush(gameEvent)
     await this.emitTimelineItem(gameId, gameEvent)
 
-    await this.emitGameState(gameId)
-    return this.getGameState(gameId, playerId)
+    const eventsAfterDesignateSpy = await this.loadGameEvents(gameId)
+    const stateAfterDesignateSpy = computeGameState(eventsAfterDesignateSpy)
+    await this.emitGameState(gameId, stateAfterDesignateSpy)
+    return this.buildGameStateResponseFromComputed(stateAfterDesignateSpy, playerId)
   }
 
   async designatePlayerAsSpy(
@@ -278,8 +340,10 @@ export class GamesService {
     await this.em.persistAndFlush(gameEvent)
     await this.emitTimelineItem(gameId, gameEvent)
 
-    await this.emitGameState(gameId)
-    return this.getGameState(gameId)
+    const eventsAfterDesignateTarget = await this.loadGameEvents(gameId)
+    const stateAfterDesignateTarget = computeGameState(eventsAfterDesignateTarget)
+    await this.emitGameState(gameId, stateAfterDesignateTarget)
+    return this.buildGameStateResponseFromComputed(stateAfterDesignateTarget, undefined)
   }
 
   async startRound(
@@ -325,8 +389,10 @@ export class GamesService {
     await this.em.persistAndFlush(gameEvent)
     await this.emitTimelineItem(gameId, gameEvent)
 
-    await this.emitGameState(gameId)
-    return this.getGameState(gameId, playerId)
+    const eventsAfterStartRound = await this.loadGameEvents(gameId)
+    const stateAfterStartRound = computeGameState(eventsAfterStartRound)
+    await this.emitGameState(gameId, stateAfterStartRound)
+    return this.buildGameStateResponseFromComputed(stateAfterStartRound, playerId)
   }
 
   async giveClue(
@@ -360,8 +426,10 @@ export class GamesService {
     await this.em.persistAndFlush(gameEvent)
     await this.emitTimelineItem(gameId, gameEvent)
 
-    await this.emitGameState(gameId)
-    return this.getGameState(gameId, playerId)
+    const eventsAfterClue = await this.loadGameEvents(gameId)
+    const stateAfterClue = computeGameState(eventsAfterClue)
+    await this.emitGameState(gameId, stateAfterClue)
+    return this.buildGameStateResponseFromComputed(stateAfterClue, playerId)
   }
 
   async selectWord(
@@ -433,8 +501,10 @@ export class GamesService {
       await this.emitTimelineItem(gameId, passEvent)
     }
 
-    await this.emitGameState(gameId)
-    return this.getGameState(gameId, playerId)
+    const eventsFinal = await this.loadGameEvents(gameId)
+    const stateFinal = computeGameState(eventsFinal)
+    await this.emitGameState(gameId, stateFinal)
+    return this.buildGameStateResponseFromComputed(stateFinal, playerId)
   }
 
   async highlightWord(
@@ -477,8 +547,10 @@ export class GamesService {
     await this.em.persistAndFlush(gameEvent)
     await this.emitTimelineItem(gameId, gameEvent)
 
-    await this.emitGameState(gameId)
-    return this.getGameState(gameId, playerId)
+    const eventsAfterHighlight = await this.loadGameEvents(gameId)
+    const stateAfterHighlight = computeGameState(eventsAfterHighlight)
+    await this.emitGameState(gameId, stateAfterHighlight)
+    return this.buildGameStateResponseFromComputed(stateAfterHighlight, playerId)
   }
 
   async unhighlightWord(
@@ -513,8 +585,10 @@ export class GamesService {
     await this.em.persistAndFlush(gameEvent)
     await this.emitTimelineItem(gameId, gameEvent)
 
-    await this.emitGameState(gameId)
-    return this.getGameState(gameId, playerId)
+    const eventsAfterUnhighlight = await this.loadGameEvents(gameId)
+    const stateAfterUnhighlight = computeGameState(eventsAfterUnhighlight)
+    await this.emitGameState(gameId, stateAfterUnhighlight)
+    return this.buildGameStateResponseFromComputed(stateAfterUnhighlight, playerId)
   }
 
   async passTurn(gameId: string, playerId: string): Promise<GameStateResponse> {
@@ -544,8 +618,10 @@ export class GamesService {
     await this.em.persistAndFlush(gameEvent)
     await this.emitTimelineItem(gameId, gameEvent)
 
-    await this.emitGameState(gameId)
-    return this.getGameState(gameId, playerId)
+    const eventsAfterPass = await this.loadGameEvents(gameId)
+    const stateAfterPass = computeGameState(eventsAfterPass)
+    await this.emitGameState(gameId, stateAfterPass)
+    return this.buildGameStateResponseFromComputed(stateAfterPass, playerId)
   }
 
   async restartGame(gameId: string, playerId: string): Promise<GameStateResponse> {
@@ -561,8 +637,10 @@ export class GamesService {
     await this.em.persistAndFlush(gameEvent)
     await this.emitTimelineItem(gameId, gameEvent)
 
-    await this.emitGameState(gameId)
-    return this.getGameState(gameId, playerId)
+    const eventsAfterRestart = await this.loadGameEvents(gameId)
+    const stateAfterRestart = computeGameState(eventsAfterRestart)
+    await this.emitGameState(gameId, stateAfterRestart)
+    return this.buildGameStateResponseFromComputed(stateAfterRestart, playerId)
   }
 
   async sendChatMessage(
@@ -580,6 +658,12 @@ export class GamesService {
     const player = state.players.find(p => p.id === playerId)
     if (!player)
       throw new BadRequestException('Player not in game')
+
+    if (state.status === 'PLAYING' && !player.side) {
+      throw new ForbiddenException(
+        'Cannot send chat until the host assigns you to a team',
+      )
+    }
 
     const content = data.content.trim()
     if (!content)
@@ -705,9 +789,20 @@ export class GamesService {
     }
   }
 
-  private async emitGameState(gameId: string): Promise<void> {
+  private async emitGameState(
+    gameId: string,
+    state: ReturnType<typeof computeGameState>,
+  ): Promise<void> {
     try {
-      await this.gamesGateway.broadcastGameState(gameId)
+      const withResults = this.mapStateToResponse(state, false)
+      const withoutResults = this.mapStateToResponse(state, true)
+      await this.gamesGateway.broadcastGameState(gameId, (playerId) => {
+        if (state.status === 'FINISHED')
+          return withResults
+        return this.shouldExcludeResultsForPlayer(state, playerId)
+          ? withoutResults
+          : withResults
+      })
     }
     catch {
       // Ignore emit errors (e.g. no clients in room)

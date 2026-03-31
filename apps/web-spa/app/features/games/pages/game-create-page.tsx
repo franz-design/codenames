@@ -44,11 +44,12 @@ export default function GameCreatePage() {
       const response = await api.createGame(data.pseudo)
       return response
     },
-    onSuccess: (response) => {
+    onSuccess: (response, variables) => {
+      const playerNameFromApi = response.game.creatorPseudo?.trim()
       setSession({
         playerId: response.playerId,
         gameId: response.game.id,
-        playerName: response.game.creatorPseudo,
+        playerName: playerNameFromApi || variables.pseudo,
         creatorToken: response.creatorToken,
       })
       sessionStorage.setItem(PENDING_REDIRECT_KEY, response.game.id)

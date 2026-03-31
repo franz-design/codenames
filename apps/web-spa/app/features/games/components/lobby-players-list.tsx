@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@codenames/ui/components/primitives/dropdown-menu'
-import { EyeIcon, MoreVerticalIcon, UserXIcon } from 'lucide-react'
+import { HatGlasses, MoreVerticalIcon, UserXIcon } from 'lucide-react'
 
 interface LobbyPlayersListProps {
   players: GameStatePlayer[]
@@ -138,14 +138,9 @@ function PlayerBlock({
     <li className="flex items-center justify-between rounded-lg border px-3 py-1.5">
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium">{player.name}</span>
-        {isCurrentPlayer && (
-          <Badge variant="secondary" className="text-xs relative -right-[6px] bg-primary-foreground text-primary">
-            Vous
-          </Badge>
-        )}
         {player.isSpy && (
-          <Badge variant="outline" className="text-xs relative -right-[6px]">
-            Espion
+          <Badge variant="secondary" className="py-1 bg-primary-foreground text-primary relative -right-[6px]">
+            <HatGlasses className="size-4" />
           </Badge>
         )}
       </div>
@@ -163,7 +158,7 @@ function PlayerBlock({
                 onClick={onDesignateSpy}
                 disabled={isDesignatingSpy}
               >
-                <EyeIcon className="size-4" />
+                <HatGlasses className="size-4" />
                 Désigner espion
               </DropdownMenuItem>
             )}

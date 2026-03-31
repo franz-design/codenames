@@ -1,4 +1,5 @@
 import type { Server, Socket } from 'socket.io'
+import type { GameStateResponse } from './contracts/games.contract'
 import { MikroORM, RequestContext } from '@mikro-orm/core'
 import {
   forwardRef,
@@ -92,14 +93,15 @@ export class GamesGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return { gameId: undefined, playerId: undefined }
   }
 
-  // TODO : on peut probablement optimiser en passant directement le nouveau state de la game
-  async broadcastGameState(gameId: string): Promise<void> {
+  async broadcastGameState(
+    gameId: string,
+    getPayloadForPlayer: (playerId: string | undefined) => GameStateResponse,
+  ): Promise<void> {
     const roomId = getGameRoomId(gameId)
     const sockets = await this.server.in(roomId).fetchSockets()
     for (const socket of sockets) {
       const playerId = socket.data.playerId as string | undefined
-      const state = await this.gamesService.getGameState(gameId, playerId)
-      socket.emit(GAME_STATE_EVENT, state)
+      socket.emit(GAME_STATE_EVENT, getPayloadForPlayer(playerId))
     }
     this.logger.log(`[WS] Broadcast game:state to room ${roomId}, ${sockets.length} socket(s) received personalized state`)
   }

@@ -67,6 +67,11 @@ export function GamePlayView({
   const viewMode = getViewMode(currentPlayer)
   const round = gameState.currentRound
 
+  const isAwaitingTeamAssignment
+    = gameState.status === 'PLAYING'
+      && currentPlayer != null
+      && !currentPlayer.side
+
   if (!round) {
     return (
       <div className="flex flex-grow w-full min-h-full flex-col items-center justify-center p-4">
@@ -96,10 +101,36 @@ export function GamePlayView({
       && currentPlayer?.side === round.currentTurn
       && !round.currentClue
 
+  if (isAwaitingTeamAssignment) {
+    return (
+      <div className="flex w-full">
+        <div className="flex min-h-0 min-w-0 flex-[3] flex-col items-center justify-center overflow-auto p-4">
+          <Card className="w-full max-w-lg border-primary/30">
+            <CardHeader>
+              <CardTitle className="text-center text-lg">En attente de l&apos;hôte</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-center text-muted-foreground">
+                L&apos;hôte de la partie doit vous placer dans l&apos;équipe rouge ou bleue pour que vous puissiez participer.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+        <GameTimelineSidebar
+          items={timelineItems}
+          isLoading={timelineIsLoading}
+          onSendMessage={onSendChatMessage}
+          isSending={isSendingChat}
+          isChatDisabled
+        />
+      </div>
+    )
+  }
+
   return (
     <div className="flex w-full">
       <div className="flex min-h-0 min-w-0 flex-[3] flex-col items-center overflow-auto p-4">
-        <div className="flex w-full max-w-5xl flex-col gap-6">
+        <div className="flex w-full max-w-8xl flex-col gap-6">
           {isFinished && (
             <Card
               className={

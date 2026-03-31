@@ -8,6 +8,8 @@ export interface GameTimelineSidebarProps {
   isLoading: boolean
   onSendMessage: (content: string) => void
   isSending: boolean
+  /** Joueur sans équipe en cours de partie : pas de chat jusqu'à assignation par l'hôte */
+  isChatDisabled?: boolean
   className?: string
 }
 
@@ -16,6 +18,7 @@ export function GameTimelineSidebar({
   isLoading,
   onSendMessage,
   isSending,
+  isChatDisabled = false,
   className,
 }: GameTimelineSidebarProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -54,10 +57,20 @@ export function GameTimelineSidebar({
         </div>
 
         <div className="border-t p-2">
+          {isChatDisabled && (
+            <p className="mb-2 text-xs text-muted-foreground">
+              Le chat sera disponible lorsque l&apos;hôte vous aura assigné à une équipe.
+            </p>
+          )}
           <GameChatInput
             onSend={onSendMessage}
             isPending={isSending}
-            placeholder="Écrire un message..."
+            disabled={isChatDisabled}
+            placeholder={
+              isChatDisabled
+                ? 'En attente d\'une équipe...'
+                : 'Écrire un message...'
+            }
           />
         </div>
       </div>

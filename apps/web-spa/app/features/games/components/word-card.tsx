@@ -1,6 +1,6 @@
 import type { KeyboardEvent, MouseEvent } from 'react'
 import type { CardType } from '../types'
-import { Bookmark, Pin } from '@codenames/ui/icons'
+import { Bookmark } from '@codenames/ui/icons'
 import { cn } from '@codenames/ui/lib/utils'
 import { CardHighlights } from './card-highlights'
 
