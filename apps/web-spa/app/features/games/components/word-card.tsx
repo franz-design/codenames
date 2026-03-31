@@ -38,10 +38,10 @@ const CARD_LAYER_UNDER_STYLES: Record<CardType, string> = {
 const FACE_DOWN_LAYER_UNDER = 'border border-primary-border bg-[#AEC0E0]'
 
 const CARD_REVEALED_BACK_FACE: Record<CardType, string> = {
-  red: 'border border-red-dark bg-red-dark text-transparent',
-  blue: 'border border-blue-dark bg-blue-dark text-transparent',
-  neutral: 'border border-neutral-dark bg-neutral-dark text-transparent',
-  black: 'border border-black-dark bg-black-dark text-transparent',
+  red: 'border border-red-dark word-card-revealed-back-red text-transparent',
+  blue: 'border border-blue-dark word-card-revealed-back-blue text-transparent',
+  neutral: 'border border-neutral-dark word-card-revealed-back-neutral text-transparent',
+  black: 'border border-black-dark word-card-revealed-back-black text-transparent',
 }
 
 const CARD_SHADOW_LAYER_HOVER: Record<CardType, string> = {
@@ -144,7 +144,7 @@ export function WordCard({
             'relative z-10 flex h-20 w-full flex-col items-center justify-center rounded-lg border p-3 text-center text-sm font-bold [transform-style:preserve-3d] transition-card-flip',
             '-rotate-x-[180deg]',
             CARD_REVEALED_BACK_FACE[effectiveCardType],
-            'group-hover:rotate-x-[0deg] group-hover:border-primary-border group-hover:bg-primary',
+            'group-hover:rotate-x-[0deg] group-hover:border-primary-border group-hover:bg-primary group-hover:[background-image:none] group-hover:[&::before]:opacity-0',
             CARD_REVEALED_HOVER_TEXT[effectiveCardType],
             className,
           )}

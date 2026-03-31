@@ -163,6 +163,74 @@
 }
 
 @layer utilities {
+  .word-card-revealed-back-red,
+  .word-card-revealed-back-blue,
+  .word-card-revealed-back-neutral,
+  .word-card-revealed-back-black {
+    background-color: var(--word-card-back-top);
+    background-image: linear-gradient(
+      180deg,
+      var(--word-card-back-bottom) 0%,
+      var(--word-card-back-top) 100%
+    );
+  }
+
+  .word-card-revealed-back-red {
+    --word-card-back-top: var(--red);
+    --word-card-back-bottom: color-mix(in srgb, var(--red-dark) 78%, var(--red));
+    --word-card-dot: color-mix(in srgb, var(--red) 85%, white);
+  }
+
+  .word-card-revealed-back-blue {
+    --word-card-back-top: var(--blue);
+    --word-card-back-bottom: color-mix(in srgb, var(--blue-dark) 78%, var(--blue));
+    --word-card-dot: color-mix(in srgb, var(--blue) 85%, white);
+  }
+
+  .word-card-revealed-back-neutral {
+    --word-card-back-top: var(--neutral-dark);
+    --word-card-back-bottom: color-mix(in srgb, var(--neutral-dark) 85%, var(--neutral));
+    --word-card-dot: color-mix(in srgb, var(--neutral) 85%, white);
+  }
+
+  .word-card-revealed-back-black {
+    --word-card-back-top: var(--black-dark);
+    --word-card-back-bottom: color-mix(in srgb, var(--black-dark) 88%, var(--black));
+    --word-card-dot: color-mix(in srgb, var(--black) 40%, white);
+  }
+
+  .word-card-revealed-back-red::before,
+  .word-card-revealed-back-blue::before,
+  .word-card-revealed-back-neutral::before,
+  .word-card-revealed-back-black::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background-image:
+      radial-gradient(
+        circle at 50% 50%,
+        var(--word-card-dot) 3px,
+        transparent 3.1px
+      ),
+      radial-gradient(
+        circle at 50% 50%,
+        var(--word-card-dot) 3px,
+        transparent 3.1px
+      );
+    background-size:
+      12px 12px,
+      12px 12px;
+    background-position:
+      0 0,
+      6px 6px;
+    mask-image: linear-gradient(200deg, black 0%, transparent 60%);
+    -webkit-mask-image: linear-gradient(200deg, black 0%, transparent 60%);
+    transition: opacity 200ms ease-in-out;
+  }
+
   .transition-card-flip {
     transition:
       transform 1300ms var(--ease-card-flip),

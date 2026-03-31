@@ -121,6 +121,7 @@ export function GamePlayView({
           isLoading={timelineIsLoading}
           onSendMessage={onSendChatMessage}
           isSending={isSendingChat}
+          currentPlayerId={playerId}
           isChatDisabled
         />
       </div>
@@ -227,6 +228,7 @@ export function GamePlayView({
         isLoading={timelineIsLoading}
         onSendMessage={onSendChatMessage}
         isSending={isSendingChat}
+        currentPlayerId={playerId}
       />
     </div>
   )

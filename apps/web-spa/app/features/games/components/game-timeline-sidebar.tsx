@@ -8,6 +8,8 @@ export interface GameTimelineSidebarProps {
   isLoading: boolean
   onSendMessage: (content: string) => void
   isSending: boolean
+  /** Pour aligner les bulles de chat (soi à droite, les autres à gauche) */
+  currentPlayerId?: string | null
   /** Joueur sans équipe en cours de partie : pas de chat jusqu'à assignation par l'hôte */
   isChatDisabled?: boolean
   className?: string
@@ -18,6 +20,7 @@ export function GameTimelineSidebar({
   isLoading,
   onSendMessage,
   isSending,
+  currentPlayerId = null,
   isChatDisabled = false,
   className,
 }: GameTimelineSidebarProps) {
@@ -48,8 +51,8 @@ export function GameTimelineSidebar({
               : (
                   <ul className="flex flex-col gap-1">
                     {items.map(item => (
-                      <li key={item.id}>
-                        <GameTimelineItem item={item} />
+                      <li key={item.id} className="w-full">
+                        <GameTimelineItem item={item} currentPlayerId={currentPlayerId} />
                       </li>
                     ))}
                   </ul>

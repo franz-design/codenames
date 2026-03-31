@@ -12,6 +12,11 @@ const TEAM_TURN_TEXT_CLASS: Record<Side, string> = {
   blue: 'text-blue',
 }
 
+const CHAT_BUBBLE_BG_BY_SIDE: Record<Side, string> = {
+  red: 'bg-red text-white',
+  blue: 'bg-blue text-white',
+}
+
 const WORD_CARD_TYPE_TEXT_CLASS: Record<CardType, string> = {
   red: 'text-red',
   blue: 'text-blue',
@@ -109,9 +114,13 @@ function renderEventContent(item: TimelineItem): ReactNode {
 
 export interface GameTimelineItemProps {
   item: TimelineItem
+  currentPlayerId?: string | null
 }
 
-export function GameTimelineItem({ item }: GameTimelineItemProps) {
+const CHAT_BUBBLE_BASE_CLASS
+  = 'flex flex-col gap-1 rounded-md px-3 py-2 text-sm break-words relative bottom-[8px]'
+
+export function GameTimelineItem({ item, currentPlayerId = null }: GameTimelineItemProps) {
   const content = renderEventContent(item)
   if (content === '' || content === null)
     return null
@@ -120,36 +129,47 @@ export function GameTimelineItem({ item }: GameTimelineItemProps) {
   const playerName = item.playerName
   const chatPlayerSide = getChatPlayerSide(item)
 
-  return (
-    <div
-      className="flex w-full justify-between gap-8 px-2 py-1.5 text-sm"
-      data-testid={isChat ? 'timeline-chat' : 'timeline-event'}
-    >
-      <div className="flex gap-3 items-end">
-        {isChat && playerName && (
-          <div
-            className={cn(
-              'flex-shrink-0 max-w-[100px] word-break keep-all font-bold truncate',
-              chatPlayerSide && TEAM_TURN_TEXT_CLASS[chatPlayerSide],
-            )}
-            title={playerName}
-          >
-            {playerName}
-          </div>
-        )}
-        <div className={cn('text-sm', {
-          'bg-blue-light text-white rounded-md rounded-bl-none mb-1 px-2 py-1': isChat,
-          'italic text-muted-foreground/90': !isChat,
-        })}
-        >
+  if (!isChat) {
+    return (
+      <div
+        className="flex w-full flex-col items-center px-2 py-1.5 text-sm"
+        data-testid="timeline-event"
+      >
+        <div className="max-w-full text-center italic text-muted-foreground/90">
           {content}
         </div>
       </div>
-      <div className="text-xs text-muted-foreground/70">
-        {new Date(item.createdAt).toLocaleTimeString('fr-FR', {
-          hour: '2-digit',
-          minute: '2-digit',
-        })}
+    )
+  }
+
+  const isOwnMessage
+    = Boolean(currentPlayerId && item.triggeredBy && item.triggeredBy === currentPlayerId)
+
+  const chatBubbleBgClass
+    = chatPlayerSide != null
+      ? CHAT_BUBBLE_BG_BY_SIDE[chatPlayerSide]
+      : 'bg-blue-light text-white'
+
+  return (
+    <div
+      className={cn(
+        'flex w-full px-2 py-1.5 text-sm',
+        isOwnMessage ? 'justify-end' : 'justify-start',
+      )}
+      data-testid="timeline-chat"
+    >
+      <div
+        className={cn(
+          CHAT_BUBBLE_BASE_CLASS,
+          chatBubbleBgClass,
+          'min-w-[80px] max-w-[min(100%,18rem)]',
+          isOwnMessage ? 'rounded-tr-none' : 'rounded-tl-none',
+        )}
+      >
+        {playerName && (
+          <span className="font-bold text-white">{playerName}</span>
+        )}
+        {content}
       </div>
     </div>
   )
