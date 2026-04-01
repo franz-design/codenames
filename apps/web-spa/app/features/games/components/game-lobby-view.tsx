@@ -20,6 +20,7 @@ import { TeamSelector } from './team-selector'
 interface GameLobbyViewProps {
   gameId: string
   gameState: GameState
+  readOnly?: boolean
 }
 
 function canStartGame(gameState: GameState): boolean {
@@ -36,7 +37,7 @@ function canStartGame(gameState: GameState): boolean {
   )
 }
 
-export function GameLobbyView({ gameId, gameState }: GameLobbyViewProps) {
+export function GameLobbyView({ gameId, gameState, readOnly = false }: GameLobbyViewProps) {
   const queryClient = useQueryClient()
   const { playerId, creatorToken, isCreator } = useGameSession()
   const currentPlayer = gameState.players.find(p => p.id === playerId)
@@ -90,13 +91,15 @@ export function GameLobbyView({ gameId, gameState }: GameLobbyViewProps) {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h1 className="text-2xl font-bold">Lobby</h1>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleCopyJoinLink}
-            >
-              Copier le lien d&apos;invitation
-            </Button>
+            {!readOnly && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopyJoinLink}
+              >
+                Copier le lien d&apos;invitation
+              </Button>
+            )}
             <span className="text-sm text-muted-foreground">
               {gameState.players.length}
               {' '}

@@ -35,6 +35,8 @@ export interface UseGameTimelineOptions {
   playerSide?: Side | null
   currentRoundId: string | null
   enabled?: boolean
+  /** No outbound chat (admin spectator mode) */
+  readOnly?: boolean
 }
 
 export interface UseGameTimelineResult {
@@ -51,6 +53,7 @@ export function useGameTimeline({
   playerSide = null,
   currentRoundId,
   enabled = true,
+  readOnly = false,
 }: UseGameTimelineOptions): UseGameTimelineResult {
   const queryClient = useQueryClient()
   const [wsItems, setWsItems] = useState<TimelineItem[]>([])
@@ -119,6 +122,8 @@ export function useGameTimeline({
 
   const { mutate: sendMessage, isPending: isSending } = useMutation({
     mutationFn: (content: string) => {
+      if (readOnly)
+        return Promise.resolve()
       if (!gameId || !playerId)
         throw new Error('Missing gameId or playerId')
       return createGamesApiClient(playerId).sendChatMessage(gameId, content)
@@ -151,10 +156,18 @@ export function useGameTimeline({
     },
   })
 
+  const safeSendMessage = useCallback(
+    (content: string) => {
+      if (!readOnly)
+        sendMessage(content)
+    },
+    [readOnly, sendMessage],
+  )
+
   return {
     items,
     isLoading: !timelineData && Boolean(enabled && gameId),
-    sendMessage: (content: string) => sendMessage(content),
-    isSending,
+    sendMessage: safeSendMessage,
+    isSending: readOnly ? false : isSending,
   }
 }

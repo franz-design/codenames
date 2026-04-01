@@ -46,6 +46,9 @@ export class GamesGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   handleDisconnect(client: Socket): void {
+    const playerId = client.data.playerId as string | undefined
+    if (playerId)
+      this.gamesService.unregisterAdminSpectatorIfExists(playerId)
     this.logger.log(`[WS] Client disconnected from /games, id: ${client.id}`)
   }
 

@@ -5,10 +5,19 @@ import {
   TypedParam,
   TypedRoute,
 } from '@lonestone/nzoth/server'
-import { Query } from '@nestjs/common'
-import { z } from 'zod'
-import { OptionalPlayerId, PlayerId } from '../../common/decorators/player-id.decorator'
 import {
+  ForbiddenException,
+  Headers,
+  Query,
+} from '@nestjs/common'
+import { z } from 'zod'
+import { config } from '../../config/env.config'
+import { OptionalPlayerId, PlayerId } from '../../common/decorators/player-id.decorator'
+import { isAdminSpectatorTokenValid } from './admin-spectator-token.util'
+import {
+  adminOngoingGamesResponseSchema,
+  adminUnwatchOkSchema,
+  adminWatchResponseSchema,
   assignPlayerSideByCreatorSchema,
   chooseSideSchema,
   CreateGameInput,
@@ -39,6 +48,48 @@ import { CreatorAuth } from './guards/creator-auth.guard'
 })
 export class GamesController {
   constructor(private readonly gamesService: GamesService) {}
+
+  private assertAdminSpectatorEnabled(): void {
+    if (!config.adminSpectatorToken)
+      throw new ForbiddenException('Admin spectator API is disabled')
+  }
+
+  private assertAdminToken(headerValue: string | undefined): void {
+    this.assertAdminSpectatorEnabled()
+    if (!isAdminSpectatorTokenValid(headerValue, config.adminSpectatorToken))
+      throw new ForbiddenException('Invalid admin token')
+  }
+
+  @TypedRoute.Get('admin/ongoing', adminOngoingGamesResponseSchema)
+  async listAdminOngoingGames(
+    @Headers('x-admin-token') adminToken: string | undefined,
+  ) {
+    this.assertAdminToken(adminToken)
+    return await this.gamesService.listOngoingGamesForAdmin()
+  }
+
+  @TypedRoute.Post(':id/admin/watch', adminWatchResponseSchema)
+  async adminWatchGame(
+    @TypedParam('id', z.uuid()) id: string,
+    @Headers('x-admin-token') adminToken: string | undefined,
+  ) {
+    this.assertAdminToken(adminToken)
+    await this.gamesService.getGame(id)
+    const playerId = this.gamesService.registerAdminSpectator()
+    return { playerId }
+  }
+
+  @TypedRoute.Post(':id/admin/unwatch', adminUnwatchOkSchema)
+  async adminUnwatchGame(
+    @PlayerId() playerId: string,
+    @TypedParam('id', z.uuid()) id: string,
+    @Headers('x-admin-token') adminToken: string | undefined,
+  ) {
+    this.assertAdminToken(adminToken)
+    await this.gamesService.getGame(id)
+    this.gamesService.unregisterAdminSpectatorOrThrow(playerId)
+    return { ok: true as const }
+  }
 
   @TypedRoute.Post('', createGameResponseSchema)
   async createGame(@TypedBody(createGameSchema) body: CreateGameInput) {

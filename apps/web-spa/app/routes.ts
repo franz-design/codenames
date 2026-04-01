@@ -3,6 +3,7 @@ import { index, route } from '@react-router/dev/routes'
 
 export default [
   index('features/games/pages/game-home-page.tsx'),
+  route('games/__admin/ongoing', 'features/games/pages/game-admin-ongoing-page.tsx'),
   route('games/new', 'features/games/pages/game-create-page.tsx'),
   route('games/join', 'features/games/pages/game-join-page.tsx'),
   route('games/:gameId/join', 'features/games/pages/game-join-by-link-page.tsx'),

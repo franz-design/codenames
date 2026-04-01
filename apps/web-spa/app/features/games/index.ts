@@ -1,5 +1,5 @@
 export { PENDING_REDIRECT_KEY, useGameSession } from './hooks/use-game-session'
-export type { GameSessionData, SetSessionInput } from './hooks/use-game-session'
+export type { GameSessionData, SetAdminSpectatorSessionInput, SetSessionInput } from './hooks/use-game-session'
 export { useGameTimeline } from './hooks/use-game-timeline'
 export { useGameWebSocket } from './hooks/use-game-websocket'
 export type {
@@ -23,5 +23,14 @@ export type {
   TimelineItem,
   TimelineResponse,
 } from './types'
-export { createGamesApiClient } from './utils/games-api'
-export type { GamesApiClient } from './utils/games-api'
+export {
+  adminUnwatchGame,
+  adminWatchGame,
+  createGamesApiClient,
+  fetchAdminOngoingGames,
+} from './utils/games-api'
+export type { AdminOngoingGame, GamesApiClient } from './utils/games-api'
+export {
+  isAdminSpectatorClientConfigured,
+  readAdminTokenFromLocalStorage,
+} from './utils/admin-spectator-client'

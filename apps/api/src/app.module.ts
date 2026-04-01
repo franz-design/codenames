@@ -1,6 +1,7 @@
 import { IncomingMessage, ServerResponse } from 'node:http'
 import { Module } from '@nestjs/common'
 import { ConfigModule as NestConfigModule } from '@nestjs/config'
+import { ScheduleModule } from '@nestjs/schedule'
 import { LoggerModule } from 'nestjs-pino'
 import { AppController } from './app.controller'
 import { DbModule } from './modules/db/db.module'
@@ -87,6 +88,7 @@ interface ExpressResponse extends ServerResponse<IncomingMessage> {
     GamesModule,
     WordsModule,
     NestConfigModule,
+    ScheduleModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [],

@@ -22,6 +22,8 @@ export interface GamePlayViewProps {
   gameState: GameState
   playerId: string
   playerName: string | null
+  /** Read-only spectator: spy grid, no actions or chat */
+  isReadOnly?: boolean
   isConnected: boolean
   isCreator: boolean
   onGiveClue?: (word: string, number: number) => void
@@ -48,6 +50,7 @@ function getViewMode(
 export function GamePlayView({
   gameState,
   playerId,
+  isReadOnly = false,
   isCreator,
   onGiveClue,
   isCluePending = false,
@@ -64,11 +67,12 @@ export function GamePlayView({
   isSendingChat,
 }: GamePlayViewProps) {
   const currentPlayer = gameState.players.find(p => p.id === playerId)
-  const viewMode = getViewMode(currentPlayer)
+  const viewMode: 'spy' | 'operative' = isReadOnly ? 'spy' : getViewMode(currentPlayer)
   const round = gameState.currentRound
 
   const isAwaitingTeamAssignment
-    = gameState.status === 'PLAYING'
+    = !isReadOnly
+      && gameState.status === 'PLAYING'
       && currentPlayer != null
       && !currentPlayer.side
 
@@ -82,21 +86,24 @@ export function GamePlayView({
 
   const isFinished = gameState.status === 'FINISHED'
   const canGiveClue
-    = !isFinished
+    = !isReadOnly
+      && !isFinished
       && viewMode === 'spy'
       && currentPlayer?.side === round.currentTurn
       && !round.currentClue
       && Boolean(onGiveClue)
 
   const canOperativeInteract
-    = !isFinished
+    = !isReadOnly
+      && !isFinished
       && viewMode === 'operative'
       && currentPlayer?.side === round.currentTurn
       && Boolean(round.currentClue)
       && round.guessesRemaining > 0
 
   const isWaitingForClueOnMyTeam
-    = !isFinished
+    = !isReadOnly
+      && !isFinished
       && viewMode === 'operative'
       && currentPlayer?.side === round.currentTurn
       && !round.currentClue
@@ -122,7 +129,7 @@ export function GamePlayView({
           onSendMessage={onSendChatMessage}
           isSending={isSendingChat}
           currentPlayerId={playerId}
-          isChatDisabled
+          isChatDisabled={isReadOnly}
         />
       </div>
     )
@@ -155,7 +162,7 @@ export function GamePlayView({
                       : 'Partie terminée'}
                 </CardTitle>
               </CardHeader>
-              {isCreator && onRestart && (
+              {!isReadOnly && isCreator && onRestart && (
                 <CardContent className="pt-0 w-full flex justify-center">
                   <Button
                     onClick={onRestart}
@@ -188,7 +195,7 @@ export function GamePlayView({
                 round={round}
                 viewMode={viewMode}
                 playerId={playerId}
-                isOperativeInteractive={canOperativeInteract}
+                isOperativeInteractive={canOperativeInteract && !isReadOnly}
                 isGameFinished={isFinished}
                 onHighlight={onHighlight}
                 onUnhighlight={onUnhighlight}
@@ -229,6 +236,7 @@ export function GamePlayView({
         onSendMessage={onSendChatMessage}
         isSending={isSendingChat}
         currentPlayerId={playerId}
+        isChatDisabled={isReadOnly}
       />
     </div>
   )

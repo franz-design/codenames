@@ -8,8 +8,10 @@ import {
   forwardRef,
   Inject,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common'
+import { subHours } from 'date-fns'
 import { WordsService } from '../words/words.service'
 import {
   AssignPlayerSideByCreatorInput,
@@ -42,8 +44,13 @@ import { GameEventType } from './game-event.types'
 import { Game } from './games.entity'
 import { GamesGateway } from './games.gateway'
 
+const STALE_UNFINISHED_GAME_MAX_AGE_HOURS = 24
+
 @Injectable()
 export class GamesService {
+  private readonly logger = new Logger(GamesService.name)
+  private readonly adminSpectatorPlayerIds = new Set<string>()
+
   constructor(
     private readonly em: EntityManager,
     private readonly wordsService: WordsService,
@@ -51,6 +58,94 @@ export class GamesService {
     @Inject(forwardRef(() => GamesGateway))
     private readonly gamesGateway: GamesGateway,
   ) {}
+
+  isAdminSpectatorPlayer(playerId: string): boolean {
+    return this.adminSpectatorPlayerIds.has(playerId)
+  }
+
+  registerAdminSpectator(): string {
+    const playerId = randomUUID()
+    this.adminSpectatorPlayerIds.add(playerId)
+    return playerId
+  }
+
+  unregisterAdminSpectatorIfExists(playerId: string): void {
+    this.adminSpectatorPlayerIds.delete(playerId)
+  }
+
+  unregisterAdminSpectatorOrThrow(playerId: string): void {
+    if (!this.adminSpectatorPlayerIds.has(playerId))
+      throw new ForbiddenException('Invalid spectator session')
+    this.adminSpectatorPlayerIds.delete(playerId)
+  }
+
+  /**
+   * Closes unfinished games whose `Game.createdAt` is older than 24 hours by appending `GAME_FINISHED`.
+   * Intended for the daily cron job.
+   */
+  async expireStaleUnfinishedGames(): Promise<number> {
+    const cutoff = subHours(new Date(), STALE_UNFINISHED_GAME_MAX_AGE_HOURS)
+    const games = await this.em.find(Game, { createdAt: { $lt: cutoff } })
+    let closed = 0
+    for (const game of games) {
+      try {
+        const events = await this.loadGameEvents(game.id)
+        const state = computeGameState(events)
+        if (state.status === 'FINISHED')
+          continue
+
+        const finishEvent = new GameEvent()
+        finishEvent.game = game
+        finishEvent.eventType = GameEventType.GAME_FINISHED
+        if (state.currentRound) {
+          const roundEntity = await this.em.findOne(Round, { id: state.currentRound.id })
+          if (roundEntity)
+            finishEvent.round = roundEntity
+        }
+        finishEvent.payload = { reason: 'STALE_SESSION' }
+        finishEvent.triggeredBy = null
+        await this.em.persistAndFlush(finishEvent)
+        await this.emitTimelineItem(game.id, finishEvent)
+
+        const eventsAfter = await this.loadGameEvents(game.id)
+        const stateAfter = computeGameState(eventsAfter)
+        await this.emitGameState(game.id, stateAfter)
+        closed++
+      }
+      catch (err) {
+        this.logger.warn(
+          `expireStaleUnfinishedGames: failed for game ${game.id}: ${err instanceof Error ? err.message : String(err)}`,
+        )
+      }
+    }
+    return closed
+  }
+
+  async listOngoingGamesForAdmin(): Promise<
+    { id: string, status: 'LOBBY' | 'PLAYING' | 'FINISHED', creatorPseudo: string, createdAt: string }[]
+  > {
+    const games = await this.em.find(Game, {}, { orderBy: { createdAt: 'DESC' }, limit: 150 })
+    const ongoing: { id: string, status: 'LOBBY' | 'PLAYING' | 'FINISHED', creatorPseudo: string, createdAt: string }[] = []
+    for (const game of games) {
+      const events = await this.loadGameEvents(game.id)
+      const state = computeGameState(events)
+      if (state.status === 'FINISHED')
+        continue
+      ongoing.push({
+        id: game.id,
+        status: state.status,
+        creatorPseudo: game.creatorPseudo,
+        createdAt: game.createdAt.toISOString(),
+      })
+    }
+    return ongoing
+  }
+
+  private assertPlayerCanMutate(playerId: string): void {
+    if (this.isAdminSpectatorPlayer(playerId)) {
+      throw new ForbiddenException('Spectator session cannot modify the game')
+    }
+  }
 
   async createGame(pseudo: string): Promise<CreateGameResponse> {
     const creatorToken = randomUUID()
@@ -118,6 +213,8 @@ export class GamesService {
     state: ReturnType<typeof computeGameState>,
     playerId?: string,
   ): boolean {
+    if (playerId && this.isAdminSpectatorPlayer(playerId))
+      return false
     if (!playerId)
       return true
     if (state.status === 'FINISHED')
@@ -178,6 +275,8 @@ export class GamesService {
   }
 
   async leaveGame(gameId: string, playerId: string): Promise<GameStateResponse> {
+    this.assertPlayerCanMutate(playerId)
+
     const game = await this.em.findOne(Game, { id: gameId })
     if (!game)
       throw new NotFoundException('Game not found')
@@ -207,6 +306,8 @@ export class GamesService {
     playerId: string,
     data: ChooseSideInput,
   ): Promise<GameStateResponse> {
+    this.assertPlayerCanMutate(playerId)
+
     const game = await this.em.findOne(Game, { id: gameId })
     if (!game)
       throw new NotFoundException('Game not found')
@@ -280,6 +381,8 @@ export class GamesService {
   }
 
   async designateSpy(gameId: string, playerId: string): Promise<GameStateResponse> {
+    this.assertPlayerCanMutate(playerId)
+
     const game = await this.em.findOne(Game, { id: gameId })
     if (!game)
       throw new NotFoundException('Game not found')
@@ -351,6 +454,8 @@ export class GamesService {
     playerId: string,
     data?: StartRoundInput,
   ): Promise<GameStateResponse> {
+    this.assertPlayerCanMutate(playerId)
+
     const game = await this.em.findOne(Game, { id: gameId })
     if (!game)
       throw new NotFoundException('Game not found')
@@ -400,6 +505,8 @@ export class GamesService {
     playerId: string,
     data: GiveClueInput,
   ): Promise<GameStateResponse> {
+    this.assertPlayerCanMutate(playerId)
+
     const game = await this.em.findOne(Game, { id: gameId })
     if (!game)
       throw new NotFoundException('Game not found')
@@ -437,6 +544,8 @@ export class GamesService {
     playerId: string,
     data: SelectWordInput,
   ): Promise<GameStateResponse> {
+    this.assertPlayerCanMutate(playerId)
+
     const game = await this.em.findOne(Game, { id: gameId })
     if (!game)
       throw new NotFoundException('Game not found')
@@ -512,6 +621,8 @@ export class GamesService {
     playerId: string,
     data: HighlightWordInput,
   ): Promise<GameStateResponse> {
+    this.assertPlayerCanMutate(playerId)
+
     const game = await this.em.findOne(Game, { id: gameId })
     if (!game)
       throw new NotFoundException('Game not found')
@@ -558,6 +669,8 @@ export class GamesService {
     playerId: string,
     wordIndex: number,
   ): Promise<GameStateResponse> {
+    this.assertPlayerCanMutate(playerId)
+
     const game = await this.em.findOne(Game, { id: gameId })
     if (!game)
       throw new NotFoundException('Game not found')
@@ -592,6 +705,8 @@ export class GamesService {
   }
 
   async passTurn(gameId: string, playerId: string): Promise<GameStateResponse> {
+    this.assertPlayerCanMutate(playerId)
+
     const game = await this.em.findOne(Game, { id: gameId })
     if (!game)
       throw new NotFoundException('Game not found')
@@ -625,6 +740,8 @@ export class GamesService {
   }
 
   async restartGame(gameId: string, playerId: string): Promise<GameStateResponse> {
+    this.assertPlayerCanMutate(playerId)
+
     const game = await this.em.findOne(Game, { id: gameId })
     if (!game)
       throw new NotFoundException('Game not found')
@@ -648,6 +765,8 @@ export class GamesService {
     playerId: string,
     data: SendChatInput,
   ): Promise<void> {
+    this.assertPlayerCanMutate(playerId)
+
     const game = await this.em.findOne(Game, { id: gameId })
     if (!game)
       throw new NotFoundException('Game not found')
@@ -798,6 +917,8 @@ export class GamesService {
       const withoutResults = this.mapStateToResponse(state, true)
       await this.gamesGateway.broadcastGameState(gameId, (playerId) => {
         if (state.status === 'FINISHED')
+          return withResults
+        if (playerId && this.isAdminSpectatorPlayer(playerId))
           return withResults
         return this.shouldExcludeResultsForPlayer(state, playerId)
           ? withoutResults

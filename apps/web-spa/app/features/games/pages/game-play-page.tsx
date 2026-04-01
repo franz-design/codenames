@@ -8,8 +8,10 @@ import { GameHeaderLeaveButton } from '../components/game-header-leave-button'
 import { GameLobbyView } from '../components/game-lobby-view'
 import { GamePlayView } from '../components/game-play-view'
 import {
+  adminUnwatchGame,
   createGamesApiClient,
   PENDING_REDIRECT_KEY,
+  readAdminTokenFromLocalStorage,
   useGameSession,
   useGameTimeline,
   useGameWebSocket,
@@ -30,7 +32,7 @@ export default function GamePlayPage() {
   const { gameId } = useParams<{ gameId: string }>()
   const navigate = useNavigate()
   const { setRight } = useHeaderRight()
-  const { playerName, hasSession, playerId, clearSession, isCreator } = useGameSession()
+  const { playerName, hasSession, playerId, clearSession, isCreator, isAdminSpectator } = useGameSession()
   const { gameState: wsGameState, isConnected, error: wsError } = useGameWebSocket({
     gameId: gameId ?? null,
     playerId: playerId ?? null,
@@ -70,6 +72,7 @@ export default function GamePlayPage() {
     playerSide: currentPlayerSide,
     currentRoundId: gameState?.currentRound?.id ?? null,
     enabled: Boolean(gameId && playerId && hasSession && gameState?.currentRound),
+    readOnly: isAdminSpectator,
   })
 
   useEffect(() => {
@@ -79,7 +82,18 @@ export default function GamePlayPage() {
 
   const api = createGamesApiClient(playerId ?? '')
   const { mutate: leaveGame, isPending: isLeaving } = useMutation({
-    mutationFn: () => api.leaveGame(gameId!),
+    mutationFn: async () => {
+      if (!gameId || !playerId)
+        throw new Error('Missing gameId or playerId')
+      if (isAdminSpectator) {
+        const token = readAdminTokenFromLocalStorage()
+        if (!token)
+          throw new Error('Missing admin token')
+        await adminUnwatchGame(gameId, token, playerId)
+        return
+      }
+      return api.leaveGame(gameId)
+    },
     onSuccess: () => {
       clearSession()
       navigate('/')
@@ -157,7 +171,7 @@ export default function GamePlayPage() {
     = isHighlightPending || isUnhighlightPending || isSelectPending || isPassPending
 
   useEffect(() => {
-    if (!gameState || !playerId)
+    if (!gameState || !playerId || isAdminSpectator)
       return
     const isPlayerInGame = gameState.players.some(p => p.id === playerId)
     if (!isPlayerInGame) {
@@ -165,17 +179,17 @@ export default function GamePlayPage() {
       toast.info('Vous avez été éjecté du lobby')
       navigate('/')
     }
-  }, [gameState, playerId, clearSession, navigate])
+  }, [gameState, playerId, clearSession, navigate, isAdminSpectator])
 
   useEffect(() => {
-    if (!fetchError || !playerId || !gameId)
+    if (!fetchError || !playerId || !gameId || isAdminSpectator)
       return
     if (getErrorStatus(fetchError) === 401) {
       clearSession()
       toast.error('Session expirée. Veuillez rejoindre la partie.')
       navigate(`/games/${gameId}/join`)
     }
-  }, [fetchError, playerId, clearSession, navigate, gameId])
+  }, [fetchError, playerId, clearSession, navigate, gameId, isAdminSpectator])
 
   if (!gameId) {
     return (
@@ -228,7 +242,11 @@ export default function GamePlayPage() {
   if (gameState.status === 'LOBBY') {
     return (
       <div className="flex flex-grow w-full min-h-full flex-col items-center justify-center p-4">
-        <GameLobbyView gameId={gameId} gameState={gameState} />
+        <GameLobbyView
+          gameId={gameId}
+          gameState={gameState}
+          readOnly={isAdminSpectator}
+        />
       </div>
     )
   }
@@ -238,6 +256,7 @@ export default function GamePlayPage() {
       gameState={gameState}
       playerId={playerId ?? ''}
       playerName={playerName}
+      isReadOnly={isAdminSpectator}
       isConnected={isConnected}
       isCreator={isCreator}
       onGiveClue={(word, number) => giveClue({ word, number })}

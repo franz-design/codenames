@@ -27,6 +27,16 @@ export const configValidationSchema = z.object({
 
   // CORS
   CORS_ORIGINS: z.string().default('*').transform(val => val.split(',')),
+
+  /** Same value as web-spa VITE_ADMIN_TOKEN; optional — admin spectator API is disabled if unset */
+  ADMIN_SPECTATOR_TOKEN: z
+    .string()
+    .optional()
+    .transform((s) => {
+      if (s === undefined || s === '')
+        return undefined
+      return s
+    }),
 })
 
 export type ConfigSchema = z.infer<typeof configValidationSchema>
@@ -57,4 +67,5 @@ export const config = {
     port: configParsed.data.DATABASE_PORT,
     connectionStringUrl: `postgresql://${configParsed.data.DATABASE_USER}:${configParsed.data.DATABASE_PASSWORD}@${configParsed.data.DATABASE_HOST}:${configParsed.data.DATABASE_PORT}/${configParsed.data.DATABASE_NAME}`,
   },
+  adminSpectatorToken: configParsed.data.ADMIN_SPECTATOR_TOKEN,
 } as const

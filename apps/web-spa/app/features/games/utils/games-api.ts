@@ -290,3 +290,57 @@ export function createGamesApiClient(playerId: string): GamesApiClient {
     },
   }
 }
+
+export interface AdminOngoingGame {
+  id: string
+  status: 'LOBBY' | 'PLAYING' | 'FINISHED'
+  creatorPseudo: string
+  createdAt: string
+}
+
+function buildAdminHeaders(adminToken: string, playerId?: string): HeadersInit {
+  const h: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'X-Admin-Token': adminToken,
+  }
+  if (playerId)
+    h['X-Player-Id'] = playerId
+  return h
+}
+
+export async function fetchAdminOngoingGames(adminToken: string): Promise<AdminOngoingGame[]> {
+  const baseUrl = getBaseUrl()
+  const response = await fetch(`${baseUrl}/api/games/admin/ongoing`, {
+    method: 'GET',
+    headers: buildAdminHeaders(adminToken),
+    credentials: 'include',
+  })
+  return handleResponse<AdminOngoingGame[]>(response)
+}
+
+export async function adminWatchGame(
+  gameId: string,
+  adminToken: string,
+): Promise<{ playerId: string }> {
+  const baseUrl = getBaseUrl()
+  const response = await fetch(`${baseUrl}/api/games/${gameId}/admin/watch`, {
+    method: 'POST',
+    headers: buildAdminHeaders(adminToken),
+    credentials: 'include',
+  })
+  return handleResponse<{ playerId: string }>(response)
+}
+
+export async function adminUnwatchGame(
+  gameId: string,
+  adminToken: string,
+  playerId: string,
+): Promise<void> {
+  const baseUrl = getBaseUrl()
+  const response = await fetch(`${baseUrl}/api/games/${gameId}/admin/unwatch`, {
+    method: 'POST',
+    headers: buildAdminHeaders(adminToken, playerId),
+    credentials: 'include',
+  })
+  await handleResponse<{ ok: true }>(response)
+}

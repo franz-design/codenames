@@ -248,3 +248,29 @@ export type TimelineResponse = z.infer<typeof timelineResponseSchema>
 export const timelinePaginationSchema = createPaginationQuerySchema()
 
 export type TimelinePagination = z.infer<typeof timelinePaginationSchema>
+
+export const adminOngoingGameSchema = z.object({
+  id: z.uuid(),
+  status: z.enum(['LOBBY', 'PLAYING', 'FINISHED']),
+  creatorPseudo: z.string(),
+  createdAt: z.string(),
+}).meta({
+  title: 'AdminOngoingGameSchema',
+  description: 'Game row for admin spectator listing',
+})
+
+export const adminOngoingGamesResponseSchema = z.array(adminOngoingGameSchema)
+
+export const adminWatchResponseSchema = z.object({
+  playerId: z.uuid(),
+}).meta({
+  title: 'AdminWatchResponseSchema',
+  description: 'Spectator session id (X-Player-Id) for admin watch mode',
+})
+
+export const adminUnwatchOkSchema = z.object({
+  ok: z.literal(true),
+}).meta({
+  title: 'AdminUnwatchOkSchema',
+  description: 'Admin spectator session ended',
+})

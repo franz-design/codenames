@@ -16,8 +16,12 @@ import { authClient } from '@/lib/auth-client'
 import { queryClient } from '@/lib/query-client'
 import { HeaderRightProvider, useHeaderRightContent } from './contexts/header-right-context'
 import useTheme from './hooks/useTheme'
+import ogImageSrc from './assets/images/capture.png'
 import '@fontsource/source-sans-pro'
 import '@codenames/ui/globals.css'
+
+const appOrigin = import.meta.env.VITE_APP_ORIGIN?.replace(/\/$/, '') ?? ''
+const ogImageUrl = appOrigin ? `${appOrigin}${ogImageSrc}` : ogImageSrc
 
 client.setConfig({
   baseUrl: import.meta.env.VITE_API_URL,
@@ -60,6 +64,22 @@ export function Layout({ children }: { children: React.ReactNode }) {
           name="description"
           content="Lonestone is a platform for creating and sharing your ideas."
         />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="codenames" />
+        <meta
+          property="og:description"
+          content="Lonestone is a platform for creating and sharing your ideas."
+        />
+        <meta property="og:image" content={ogImageUrl} />
+        <meta property="og:image:alt" content="codenames" />
+        {appOrigin ? <meta property="og:url" content={`${appOrigin}/`} /> : null}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="codenames" />
+        <meta
+          name="twitter:description"
+          content="Lonestone is a platform for creating and sharing your ideas."
+        />
+        <meta name="twitter:image" content={ogImageUrl} />
         <Meta />
         <Links />
       </head>
@@ -82,7 +102,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 function AppHeader() {
   const headerRight = useHeaderRightContent()
   const { data: session } = authClient.useSession()
-  const { playerName, gameId, playerId, creatorToken, isCreator, hasSession } = useGameSession()
+  const { playerName, gameId, playerId, creatorToken, isCreator, hasSession, isAdminSpectator } = useGameSession()
 
   const shouldFetchGameState = Boolean(gameId && playerId)
   const { data: fetchedGameState } = useQuery({
@@ -102,7 +122,12 @@ function AppHeader() {
   const gameState = wsGameState ?? fetchedGameState ?? null
 
   const playerSide = gameState?.players.find(p => p.id === playerId)?.side ?? null
-  const playerBackground = playerSide === 'red' ? 'bg-red' : 'bg-blue'
+  const playerBackground
+    = playerSide === 'red'
+      ? 'bg-red'
+      : playerSide === 'blue'
+        ? 'bg-blue'
+        : 'bg-muted'
 
   const displayName = useMemo(() => {
     const authName = session?.user?.name?.trim()
@@ -131,7 +156,7 @@ function AppHeader() {
               {displayName}
             </span>
           </span>
-          {isCreator && creatorToken && gameId && playerId && gameState
+          {!isAdminSpectator && isCreator && creatorToken && gameId && playerId && gameState
             ? (
                 <GamePendingPlayersDropdown
                   gameId={gameId}

@@ -6,6 +6,7 @@ const STORAGE_KEYS = {
   gameId: 'codenames_gameId',
   playerName: 'codenames_playerName',
   pendingRedirect: 'codenames_pendingRedirect',
+  isAdminSpectator: 'codenames_isAdminSpectator',
 } as const
 
 const SESSION_CHANGE_EVENT = 'codenames:game-session-changed'
@@ -15,6 +16,7 @@ export interface GameSessionData {
   creatorToken: string | null
   gameId: string | null
   playerName: string | null
+  isAdminSpectator: boolean
 }
 
 const EMPTY_SESSION_JSON = JSON.stringify({
@@ -22,6 +24,7 @@ const EMPTY_SESSION_JSON = JSON.stringify({
   creatorToken: null,
   gameId: null,
   playerName: null,
+  isAdminSpectator: false,
 } satisfies GameSessionData)
 
 function notifyGameSessionChanged(): void {
@@ -44,6 +47,7 @@ function getSessionSnapshot(): GameSessionData {
     creatorToken: getStoredValue(STORAGE_KEYS.creatorToken),
     gameId: getStoredValue(STORAGE_KEYS.gameId),
     playerName: getStoredValue(STORAGE_KEYS.playerName),
+    isAdminSpectator: getStoredValue(STORAGE_KEYS.isAdminSpectator) === '1',
   }
 }
 
@@ -79,6 +83,11 @@ export interface SetSessionInput {
   creatorToken?: string
 }
 
+export interface SetAdminSpectatorSessionInput {
+  playerId: string
+  gameId: string
+}
+
 export function useGameSession() {
   const snapshotJson = useSyncExternalStore(
     subscribe,
@@ -95,10 +104,20 @@ export function useGameSession() {
     sessionStorage.setItem(STORAGE_KEYS.playerId, data.playerId)
     sessionStorage.setItem(STORAGE_KEYS.gameId, data.gameId)
     sessionStorage.setItem(STORAGE_KEYS.playerName, data.playerName)
+    sessionStorage.removeItem(STORAGE_KEYS.isAdminSpectator)
     if (data.creatorToken)
       sessionStorage.setItem(STORAGE_KEYS.creatorToken, data.creatorToken)
     else
       sessionStorage.removeItem(STORAGE_KEYS.creatorToken)
+    notifyGameSessionChanged()
+  }, [])
+
+  const setAdminSpectatorSession = useCallback((data: SetAdminSpectatorSessionInput) => {
+    sessionStorage.setItem(STORAGE_KEYS.playerId, data.playerId)
+    sessionStorage.setItem(STORAGE_KEYS.gameId, data.gameId)
+    sessionStorage.setItem(STORAGE_KEYS.playerName, '')
+    sessionStorage.removeItem(STORAGE_KEYS.creatorToken)
+    sessionStorage.setItem(STORAGE_KEYS.isAdminSpectator, '1')
     notifyGameSessionChanged()
   }, [])
 
@@ -107,6 +126,7 @@ export function useGameSession() {
     sessionStorage.removeItem(STORAGE_KEYS.creatorToken)
     sessionStorage.removeItem(STORAGE_KEYS.gameId)
     sessionStorage.removeItem(STORAGE_KEYS.playerName)
+    sessionStorage.removeItem(STORAGE_KEYS.isAdminSpectator)
     notifyGameSessionChanged()
   }, [])
 
@@ -116,6 +136,7 @@ export function useGameSession() {
   return {
     ...session,
     setSession,
+    setAdminSpectatorSession,
     clearSession,
     isCreator,
     hasSession,

@@ -12,6 +12,8 @@ FROM base AS builder
 # Define build arguments
 ARG VITE_API_URL
 ENV VITE_API_URL=${VITE_API_URL}
+ARG VITE_APP_ORIGIN
+ENV VITE_APP_ORIGIN=${VITE_APP_ORIGIN}
 
 # pnpm fetch does require only lockfile
 COPY pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
