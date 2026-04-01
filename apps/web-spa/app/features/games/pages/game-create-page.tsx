@@ -28,7 +28,7 @@ type CreateGameFormData = z.infer<typeof createGameSchema>
 
 export default function GameCreatePage() {
   const navigate = useNavigate()
-  const { setSession, hasSession, gameId } = useGameSession()
+  const { setSession, hasSession, gameId, playerName } = useGameSession()
 
   useEffect(() => {
     const pendingGameId = typeof window !== 'undefined' ? sessionStorage.getItem(PENDING_REDIRECT_KEY) : null
@@ -59,7 +59,7 @@ export default function GameCreatePage() {
 
   const form = useForm<CreateGameFormData>({
     resolver: zodResolver(createGameSchema),
-    defaultValues: { pseudo: '' },
+    defaultValues: { pseudo: playerName || '' },
   })
 
   const handleSubmit = (data: CreateGameFormData) => {

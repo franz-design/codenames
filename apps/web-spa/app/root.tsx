@@ -64,7 +64,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body className="h-full flex flex-col">
-        {children}
+        <div
+          className="pointer-events-none fixed bottom-0 left-0 z-0 h-full w-full word-card-revealed-back-white rotate-[180deg]"
+          aria-hidden
+        />
+        <div className="relative z-10 flex min-h-0 flex-1 flex-col">
+          {children}
+        </div>
         <Toaster richColors position="top-center" />
         <ScrollRestoration />
         <Scripts />

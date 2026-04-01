@@ -27,7 +27,7 @@ type JoinGameFormData = z.infer<typeof joinGameSchema>
 
 export default function GameJoinPage() {
   const navigate = useNavigate()
-  const { setSession } = useGameSession()
+  const { setSession, playerName } = useGameSession()
 
   const { mutate: joinGame, isPending, error } = useMutation({
     mutationFn: async (data: JoinGameFormData) => {
@@ -47,7 +47,7 @@ export default function GameJoinPage() {
 
   const form = useForm<JoinGameFormData>({
     resolver: zodResolver(joinGameSchema),
-    defaultValues: { gameId: '', pseudo: '' },
+    defaultValues: { gameId: '', pseudo: playerName || '' },
   })
 
   const handleSubmit = (data: JoinGameFormData) => {

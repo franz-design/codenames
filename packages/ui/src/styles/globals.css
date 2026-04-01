@@ -56,6 +56,8 @@
   --neutral-foreground: #8d8679;
   --black: #243449;
   --black-dark: #080F19;
+  --white: #FFFFFF;
+  --white-dark: #d5e9fb;
 }
 
 .dark {
@@ -125,6 +127,8 @@
   --color-neutral-foreground: var(--neutral-foreground);
   --color-black: var(--black);
   --color-black-dark: var(--black-dark);
+  --color-white: var(--white);
+  --color-white-dark: var(--white-dark);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -166,7 +170,8 @@
   .word-card-revealed-back-red,
   .word-card-revealed-back-blue,
   .word-card-revealed-back-neutral,
-  .word-card-revealed-back-black {
+  .word-card-revealed-back-black,
+  .word-card-revealed-back-white {
     background-color: var(--word-card-back-top);
     background-image: linear-gradient(
       180deg,
@@ -199,10 +204,17 @@
     --word-card-dot: color-mix(in srgb, var(--black) 40%, white);
   }
 
+  .word-card-revealed-back-white {
+    --word-card-back-top: var(--white);
+    --word-card-back-bottom: color-mix(in srgb, var(--white-dark) 78%, var(--white));
+    --word-card-dot: color-mix(in srgb, var(--white) 85%, white);
+  }
+
   .word-card-revealed-back-red::before,
   .word-card-revealed-back-blue::before,
   .word-card-revealed-back-neutral::before,
-  .word-card-revealed-back-black::before {
+  .word-card-revealed-back-black::before,
+  .word-card-revealed-back-white::before {
     content: '';
     position: absolute;
     inset: 0;
@@ -229,6 +241,11 @@
     mask-image: linear-gradient(200deg, black 0%, transparent 60%);
     -webkit-mask-image: linear-gradient(200deg, black 0%, transparent 60%);
     transition: opacity 200ms ease-in-out;
+  }
+
+  .word-card-revealed-back-white::before {
+    mask-image: linear-gradient(190deg, black 0%, transparent 20%);
+    -webkit-mask-image: linear-gradient(190deg, black 0%, transparent 20%);
   }
 
   .transition-card-flip {

@@ -35,7 +35,7 @@ export function CardHighlights({ highlights, className, isSpy }: CardHighlightsP
       )}
     >
       {highlights.map(h => (
-        <Tooltip key={h.playerId}>
+        <Tooltip key={h.playerId} delayDuration={0}>
           <TooltipTrigger asChild>
             <span
               className={cn(

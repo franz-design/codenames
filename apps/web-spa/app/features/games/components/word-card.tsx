@@ -78,7 +78,7 @@ export function WordCard({
   const effectiveCardType = showColorOnReveal && cardType ? cardType : null
 
   const baseStyles
-    = 'relative z-10 flex h-20 flex-col items-center justify-center rounded-lg border p-3 text-center text-sm font-medium origin-center'
+    = 'relative z-10 flex h-20 flex-col items-center justify-center rounded-lg border p-3 text-center text-sm font-medium origin-center transition-all duration-200'
   const faceDownStyles
     = 'bg-primary text-primary-foreground border-primary-border font-bold'
   const faceUpStyles = effectiveCardType ? CARD_TYPE_STYLES[effectiveCardType] : faceDownStyles
@@ -182,7 +182,7 @@ export function WordCard({
             getMainFaceStyles(),
             isInteractive
             && !isRevealed
-            && 'cursor-pointer hover:bg-primary/90',
+            && 'cursor-pointer hover:bg-white',
             showRevealedBack && 'cursor-default',
             className,
           )}
@@ -218,10 +218,7 @@ export function WordCard({
                   )}
                 >
                   <Bookmark
-                    className={cn(
-                      'h-5 w-5',
-                      hasMyHighlight ? 'fill-current' : '',
-                    )}
+                    className="h-5 w-5 fill-current"
                   />
                 </button>
               )}

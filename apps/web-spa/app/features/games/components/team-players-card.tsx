@@ -57,14 +57,14 @@ export function TeamPlayersCard({
       <CardContent className="flex flex-col gap-2 px-4 pt-4 pb-6">
         {spy && (
           <div>
-            <p className="mb-0.5 text-[10px] font-medium uppercase tracking-wide text-destructive">
+            <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wide text-destructive">
               Espion
             </p>
             <p className="truncate text-xs font-medium">{spy.name}</p>
           </div>
         )}
         <div>
-          <p className="mb-0.5 text-[10px] font-medium uppercase tracking-wide text-destructive">
+          <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wide text-destructive">
             Agents
           </p>
           <ul className="flex flex-col gap-0.5">
