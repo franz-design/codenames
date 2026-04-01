@@ -14,9 +14,9 @@ import { useGameWebSocket } from '@/features/games/hooks/use-game-websocket'
 import { createGamesApiClient } from '@/features/games/utils/games-api'
 import { authClient } from '@/lib/auth-client'
 import { queryClient } from '@/lib/query-client'
+import ogImageSrc from './assets/images/capture.png'
 import { HeaderRightProvider, useHeaderRightContent } from './contexts/header-right-context'
 import useTheme from './hooks/useTheme'
-import ogImageSrc from './assets/images/capture.png'
 import '@fontsource/source-sans-pro'
 import '@codenames/ui/globals.css'
 
@@ -62,13 +62,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         <meta
           name="description"
-          content="Lonestone is a platform for creating and sharing your ideas."
+          content="Codenames. Devine des mots et c'est chouette, voilà."
         />
         <meta property="og:type" content="website" />
         <meta property="og:title" content="codenames" />
         <meta
           property="og:description"
-          content="Lonestone is a platform for creating and sharing your ideas."
+          content="Codenames. Devine des mots et c'est chouette, voilà."
         />
         <meta property="og:image" content={ogImageUrl} />
         <meta property="og:image:alt" content="codenames" />
@@ -77,7 +77,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="twitter:title" content="codenames" />
         <meta
           name="twitter:description"
-          content="Lonestone is a platform for creating and sharing your ideas."
+          content="Codenames. Devine des mots et c'est chouette, voilà."
         />
         <meta name="twitter:image" content={ogImageUrl} />
         <Meta />
