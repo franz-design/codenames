@@ -1,8 +1,10 @@
-import type { RoundState, Side } from '../types'
+import type { GameTimerSettings, RoundState, Side } from '../types'
 import { cn } from '@codenames/ui/lib/utils'
+import { useEffect, useMemo, useState } from 'react'
 
 export interface TurnIndicatorProps {
   round: RoundState
+  timerSettings: GameTimerSettings | null | undefined
   isUserTurn: boolean
   isWaitingForClueOnMyTeam?: boolean
   className?: string
@@ -30,11 +32,35 @@ const TEXT_COLORS: Record<Side, string> = {
 
 export function TurnIndicator({
   round,
+  timerSettings,
   isUserTurn,
   isWaitingForClueOnMyTeam = false,
   className,
 }: TurnIndicatorProps) {
-  const { currentTurn, currentClue, guessesRemaining } = round
+  const { currentTurn, currentClue, guessesRemaining, turnStartedAt } = round
+
+  const [renderPulse, setRenderPulse] = useState(0)
+  const isTimerVisible
+    = Boolean(timerSettings?.isEnabled && turnStartedAt && timerSettings.durationSeconds > 0)
+
+  useEffect(() => {
+    if (!isTimerVisible || !turnStartedAt || !timerSettings)
+      return
+    const id = window.setInterval(() => {
+      setRenderPulse(c => c + 1)
+    }, 200)
+    return () => window.clearInterval(id)
+  }, [isTimerVisible, turnStartedAt, timerSettings])
+
+  const timerProgress = useMemo(() => {
+    void renderPulse
+    if (!isTimerVisible || !turnStartedAt || !timerSettings)
+      return 0
+    const durationMs = timerSettings.durationSeconds * 1000
+    const startMs = new Date(turnStartedAt).getTime()
+    const elapsed = Date.now() - startMs
+    return Math.min(1, Math.max(0, elapsed / durationMs))
+  }, [isTimerVisible, turnStartedAt, timerSettings, renderPulse])
 
   const primaryMessage = ((): string => {
     if (isUserTurn) {
@@ -56,14 +82,25 @@ export function TurnIndicator({
         className,
       )}
     >
-      <div className="flex items-center gap-2">
+      {isTimerVisible && (
+        <div
+          className={cn(
+            'pointer-events-none absolute inset-y-0 left-0 z-0 h-full transition-[width] duration-200 ease-linear',
+            clueBgColor,
+          )}
+          style={{ width: `${timerProgress * 100}%` }}
+          aria-hidden
+        />
+      )}
+
+      <div className="relative z-10 flex items-center gap-2">
         <span className="text-sm">
           {primaryMessage}
         </span>
       </div>
 
       {currentClue && (
-        <div className="absolute flex w-full items-center justify-center">
+        <div className="absolute z-20 flex w-full items-center justify-center">
           <div className={cn('gap-2 p-16 rounded-full scaleIn', clueBgColor)}>
             <span className="font-bold text-lg">
               {currentClue.word}
@@ -72,15 +109,17 @@ export function TurnIndicator({
         </div>
       )}
 
-      {currentClue
-        ? (
-            <div className={cn('flex items-center gap-2 font-bold w-8 h-8 justify-center rounded-full bg-white', TEXT_COLORS[currentTurn])}>
-              {guessesRemaining >= 100 ? '∞' : guessesRemaining - 1}
-            </div>
-          )
-        : (
-            <span className="text-sm">L'espion réfléchit...</span>
-          )}
+      <div className="relative z-10">
+        {currentClue
+          ? (
+              <div className={cn('flex items-center gap-2 font-bold w-8 h-8 justify-center rounded-full bg-white', TEXT_COLORS[currentTurn])}>
+                {guessesRemaining >= 100 ? '∞' : guessesRemaining - 1}
+              </div>
+            )
+          : (
+              <span className="text-sm">L'espion réfléchit...</span>
+            )}
+      </div>
     </div>
   )
 }

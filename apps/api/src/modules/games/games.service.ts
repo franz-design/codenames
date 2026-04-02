@@ -24,6 +24,7 @@ import {
   JoinGameResponse,
   SelectWordInput,
   SendChatInput,
+  SetTimerSettingsInput,
   StartRoundInput,
   TimelineItemResponse,
   TimelinePagination,
@@ -50,6 +51,7 @@ const STALE_UNFINISHED_GAME_MAX_AGE_HOURS = 24
 export class GamesService {
   private readonly logger = new Logger(GamesService.name)
   private readonly adminSpectatorPlayerIds = new Set<string>()
+  private readonly turnTimerHandles = new Map<string, ReturnType<typeof setTimeout>>()
 
   constructor(
     private readonly em: EntityManager,
@@ -449,6 +451,37 @@ export class GamesService {
     return this.buildGameStateResponseFromComputed(stateAfterDesignateTarget, undefined)
   }
 
+  async setTimerSettings(
+    gameId: string,
+    data: SetTimerSettingsInput,
+  ): Promise<GameStateResponse> {
+    const game = await this.em.findOne(Game, { id: gameId })
+    if (!game)
+      throw new NotFoundException('Game not found')
+
+    const events = await this.loadGameEvents(gameId)
+    const state = computeGameState(events)
+
+    if (state.status !== 'LOBBY')
+      throw new BadRequestException('Timer settings can only be changed in the lobby')
+
+    const gameEvent = new GameEvent()
+    gameEvent.game = game
+    gameEvent.eventType = GameEventType.GAME_TIMER_SETTINGS
+    gameEvent.payload = {
+      isEnabled: data.isEnabled,
+      durationSeconds: data.durationSeconds,
+    }
+    gameEvent.triggeredBy = null
+    await this.em.persistAndFlush(gameEvent)
+    await this.emitTimelineItem(gameId, gameEvent)
+
+    const eventsAfter = await this.loadGameEvents(gameId)
+    const stateAfter = computeGameState(eventsAfter)
+    await this.emitGameState(gameId, stateAfter)
+    return this.buildGameStateResponseFromComputed(stateAfter, undefined)
+  }
+
   async startRound(
     gameId: string,
     playerId: string,
@@ -460,11 +493,32 @@ export class GamesService {
     if (!game)
       throw new NotFoundException('Game not found')
 
-    const events = await this.loadGameEvents(gameId)
-    const state = computeGameState(events)
+    let events = await this.loadGameEvents(gameId)
+    let state = computeGameState(events)
 
     if (state.status === 'PLAYING')
       throw new BadRequestException('Round already in progress')
+
+    if (data?.timerSettings) {
+      if (state.status !== 'LOBBY')
+        throw new BadRequestException('Timer settings can only be applied from the lobby')
+      if (game.creatorToken !== data.timerSettings.creatorToken)
+        throw new ForbiddenException('Only the game creator can set timer settings')
+
+      const timerEvent = new GameEvent()
+      timerEvent.game = game
+      timerEvent.eventType = GameEventType.GAME_TIMER_SETTINGS
+      timerEvent.payload = {
+        isEnabled: data.timerSettings.isEnabled,
+        durationSeconds: data.timerSettings.durationSeconds,
+      }
+      timerEvent.triggeredBy = null
+      await this.em.persistAndFlush(timerEvent)
+      await this.emitTimelineItem(gameId, timerEvent)
+
+      events = await this.loadGameEvents(gameId)
+      state = computeGameState(events)
+    }
 
     const wordCount = data?.wordCount ?? 25
     const wordsResult = await this.wordsService.getRandomWords({ count: wordCount })
@@ -472,6 +526,9 @@ export class GamesService {
     const order = state.currentRound ? state.currentRound.order + 1 : 1
     const results = generateGridResults(order)
     const startingSide: Side = order % 2 === 0 ? 'blue' : 'red'
+    const timerSettings = state.timerSettings
+    const turnStartedAt
+      = timerSettings?.isEnabled === true ? new Date().toISOString() : null
 
     const round = new Round()
     round.game = game
@@ -489,6 +546,7 @@ export class GamesService {
       results,
       order,
       startingSide,
+      turnStartedAt,
     }
     gameEvent.triggeredBy = playerId
     await this.em.persistAndFlush(gameEvent)
@@ -497,6 +555,7 @@ export class GamesService {
     const eventsAfterStartRound = await this.loadGameEvents(gameId)
     const stateAfterStartRound = computeGameState(eventsAfterStartRound)
     await this.emitGameState(gameId, stateAfterStartRound)
+    this.syncTurnTimer(gameId)
     return this.buildGameStateResponseFromComputed(stateAfterStartRound, playerId)
   }
 
@@ -510,6 +569,8 @@ export class GamesService {
     const game = await this.em.findOne(Game, { id: gameId })
     if (!game)
       throw new NotFoundException('Game not found')
+
+    await this.enforceTurnTimerIfExpired(gameId)
 
     const events = await this.loadGameEvents(gameId)
     const state = computeGameState(events)
@@ -550,6 +611,8 @@ export class GamesService {
     if (!game)
       throw new NotFoundException('Game not found')
 
+    await this.enforceTurnTimerIfExpired(gameId)
+
     const events = await this.loadGameEvents(gameId)
     const state = computeGameState(events)
 
@@ -583,6 +646,7 @@ export class GamesService {
       newRound.currentTurn,
     )
 
+    let didPassTurn = false
     if (gameOver.isOver) {
       const finishEvent = new GameEvent()
       finishEvent.game = game
@@ -599,20 +663,15 @@ export class GamesService {
       await this.emitTimelineItem(gameId, finishEvent)
     }
     else if (cardType !== round.currentTurn || newRound.guessesRemaining <= 0) {
-      const nextTurn = round.currentTurn === 'red' ? 'blue' : 'red'
-      const passEvent = new GameEvent()
-      passEvent.game = game
-      passEvent.round = roundEntity
-      passEvent.eventType = GameEventType.TURN_PASSED
-      passEvent.payload = { nextTurn }
-      passEvent.triggeredBy = playerId
-      await this.em.persistAndFlush(passEvent)
-      await this.emitTimelineItem(gameId, passEvent)
+      await this.persistTurnPassed(gameId, game, roundEntity, newState, playerId, undefined)
+      didPassTurn = true
     }
 
     const eventsFinal = await this.loadGameEvents(gameId)
     const stateFinal = computeGameState(eventsFinal)
     await this.emitGameState(gameId, stateFinal)
+    if (gameOver.isOver || didPassTurn)
+      this.syncTurnTimer(gameId)
     return this.buildGameStateResponseFromComputed(stateFinal, playerId)
   }
 
@@ -626,6 +685,8 @@ export class GamesService {
     const game = await this.em.findOne(Game, { id: gameId })
     if (!game)
       throw new NotFoundException('Game not found')
+
+    await this.enforceTurnTimerIfExpired(gameId)
 
     const events = await this.loadGameEvents(gameId)
     const state = computeGameState(events)
@@ -675,6 +736,8 @@ export class GamesService {
     if (!game)
       throw new NotFoundException('Game not found')
 
+    await this.enforceTurnTimerIfExpired(gameId)
+
     const events = await this.loadGameEvents(gameId)
     const state = computeGameState(events)
 
@@ -711,6 +774,8 @@ export class GamesService {
     if (!game)
       throw new NotFoundException('Game not found')
 
+    await this.enforceTurnTimerIfExpired(gameId)
+
     const events = await this.loadGameEvents(gameId)
     const state = computeGameState(events)
 
@@ -723,19 +788,12 @@ export class GamesService {
     if (!roundEntity)
       throw new NotFoundException('Round not found')
 
-    const nextTurn = round.currentTurn === 'red' ? 'blue' : 'red'
-    const gameEvent = new GameEvent()
-    gameEvent.game = game
-    gameEvent.round = roundEntity
-    gameEvent.eventType = GameEventType.TURN_PASSED
-    gameEvent.payload = { nextTurn }
-    gameEvent.triggeredBy = playerId
-    await this.em.persistAndFlush(gameEvent)
-    await this.emitTimelineItem(gameId, gameEvent)
+    await this.persistTurnPassed(gameId, game, roundEntity, state, playerId, undefined)
 
     const eventsAfterPass = await this.loadGameEvents(gameId)
     const stateAfterPass = computeGameState(eventsAfterPass)
     await this.emitGameState(gameId, stateAfterPass)
+    this.syncTurnTimer(gameId)
     return this.buildGameStateResponseFromComputed(stateAfterPass, playerId)
   }
 
@@ -745,6 +803,8 @@ export class GamesService {
     const game = await this.em.findOne(Game, { id: gameId })
     if (!game)
       throw new NotFoundException('Game not found')
+
+    this.cancelTurnTimer(gameId)
 
     const gameEvent = new GameEvent()
     gameEvent.game = game
@@ -900,6 +960,107 @@ export class GamesService {
     }))
   }
 
+  private buildTurnPassedPayload(
+    round: { currentTurn: Side },
+    timerSettings: { isEnabled: boolean, durationSeconds: number } | null | undefined,
+    reason?: 'TIMER',
+  ): Record<string, unknown> {
+    const nextTurn: Side = round.currentTurn === 'red' ? 'blue' : 'red'
+    const payload: Record<string, unknown> = { nextTurn }
+    if (timerSettings?.isEnabled)
+      payload.nextTurnStartedAt = new Date().toISOString()
+    if (reason)
+      payload.reason = reason
+    return payload
+  }
+
+  private async persistTurnPassed(
+    gameId: string,
+    game: Game,
+    roundEntity: Round,
+    stateBeforePass: ReturnType<typeof computeGameState>,
+    triggeredBy: string | null,
+    reason?: 'TIMER',
+  ): Promise<void> {
+    const round = stateBeforePass.currentRound!
+    const payload = this.buildTurnPassedPayload(round, stateBeforePass.timerSettings, reason)
+    const gameEvent = new GameEvent()
+    gameEvent.game = game
+    gameEvent.round = roundEntity
+    gameEvent.eventType = GameEventType.TURN_PASSED
+    gameEvent.payload = payload
+    gameEvent.triggeredBy = triggeredBy
+    await this.em.persistAndFlush(gameEvent)
+    await this.emitTimelineItem(gameId, gameEvent)
+  }
+
+  private cancelTurnTimer(gameId: string): void {
+    const handle = this.turnTimerHandles.get(gameId)
+    if (handle !== undefined) {
+      clearTimeout(handle)
+      this.turnTimerHandles.delete(gameId)
+    }
+  }
+
+  private syncTurnTimer(gameId: string): void {
+    this.cancelTurnTimer(gameId)
+    void this.scheduleTurnTimer(gameId)
+  }
+
+  private async scheduleTurnTimer(gameId: string): Promise<void> {
+    const events = await this.loadGameEvents(gameId)
+    const state = computeGameState(events)
+    if (state.status !== 'PLAYING' || !state.currentRound?.turnStartedAt || !state.timerSettings?.isEnabled)
+      return
+    const deadlineMs = new Date(state.currentRound.turnStartedAt).getTime() + state.timerSettings.durationSeconds * 1000
+    const delay = Math.max(0, deadlineMs - Date.now())
+    const expectedAt = state.currentRound.turnStartedAt
+    const handle = setTimeout(() => {
+      void this.handleTurnTimerElapsed(gameId, expectedAt)
+    }, delay)
+    this.turnTimerHandles.set(gameId, handle)
+  }
+
+  private async handleTurnTimerElapsed(
+    gameId: string,
+    expectedTurnStartedAt: string | null,
+  ): Promise<void> {
+    this.turnTimerHandles.delete(gameId)
+    const events = await this.loadGameEvents(gameId)
+    const state = computeGameState(events)
+    if (state.status !== 'PLAYING' || !state.currentRound)
+      return
+    if (state.currentRound.turnStartedAt !== expectedTurnStartedAt)
+      return
+    await this.enforceTurnTimerIfExpired(gameId)
+  }
+
+  private async enforceTurnTimerIfExpired(gameId: string): Promise<void> {
+    const events = await this.loadGameEvents(gameId)
+    const state = computeGameState(events)
+    if (state.status !== 'PLAYING' || !state.currentRound)
+      return
+    const ts = state.timerSettings
+    const started = state.currentRound.turnStartedAt
+    if (!ts?.isEnabled || !started)
+      return
+    const deadlineMs = new Date(started).getTime() + ts.durationSeconds * 1000
+    if (Date.now() < deadlineMs)
+      return
+
+    const game = await this.em.findOne(Game, { id: gameId })
+    if (!game)
+      return
+    const roundEntity = await this.em.findOne(Round, { id: state.currentRound.id })
+    if (!roundEntity)
+      return
+    await this.persistTurnPassed(gameId, game, roundEntity, state, null, 'TIMER')
+    const eventsAfter = await this.loadGameEvents(gameId)
+    const stateAfter = computeGameState(eventsAfter)
+    await this.emitGameState(gameId, stateAfter)
+    this.syncTurnTimer(gameId)
+  }
+
   private mapGameToResponse(game: Game): GameResponse {
     return {
       id: game.id,
@@ -971,6 +1132,7 @@ export class GamesService {
       currentRound,
       winningSide: state.winningSide ?? null,
       losingSide: state.losingSide ?? null,
+      timerSettings: state.timerSettings ?? null,
     }
   }
 }

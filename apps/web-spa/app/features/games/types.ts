@@ -16,6 +16,11 @@ export interface RevealedWord {
   cardType: CardType
 }
 
+export interface GameTimerSettings {
+  isEnabled: boolean
+  durationSeconds: number
+}
+
 export interface RoundState {
   id: string
   words: string[]
@@ -30,6 +35,7 @@ export interface RoundState {
   /** Mots équipe encore non trouvés */
   wordsRemainingBySide: { red: number, blue: number }
   highlights: Record<string, { playerId: string, playerName: string }[]>
+  turnStartedAt?: string | null
 }
 
 export interface GameState {
@@ -38,6 +44,7 @@ export interface GameState {
   currentRound: RoundState | null
   winningSide: Side | null
   losingSide: Side | null
+  timerSettings?: GameTimerSettings | null
 }
 
 export interface Game {

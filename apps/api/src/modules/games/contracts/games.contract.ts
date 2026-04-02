@@ -67,6 +67,14 @@ export const revealedWordSchema = z.object({
   description: 'Revealed word in the grid',
 })
 
+export const gameTimerSettingsSchema = z.object({
+  isEnabled: z.boolean(),
+  durationSeconds: z.number().int().min(60).max(3600),
+}).meta({
+  title: 'GameTimerSettingsSchema',
+  description: 'Per-turn timer configuration for the game',
+})
+
 export const roundStateSchema = z.object({
   id: z.uuid(),
   words: z.array(z.string()),
@@ -98,6 +106,7 @@ export const roundStateSchema = z.object({
       playerName: z.string(),
     })),
   ),
+  turnStartedAt: z.string().nullable().optional(),
 }).meta({
   title: 'RoundStateSchema',
   description: 'Current round state',
@@ -109,6 +118,7 @@ export const gameStateSchema = z.object({
   currentRound: roundStateSchema.nullable(),
   winningSide: sideSchema.nullable(),
   losingSide: sideSchema.nullable(),
+  timerSettings: gameTimerSettingsSchema.nullable().optional(),
 }).meta({
   title: 'GameStateSchema',
   description: 'Full game state computed from events',
@@ -196,14 +206,32 @@ export const highlightWordSchema = z.object({
 
 export type HighlightWordInput = z.infer<typeof highlightWordSchema>
 
+export const startRoundTimerSettingsSchema = z.object({
+  creatorToken: z.uuid(),
+  isEnabled: z.boolean(),
+  durationSeconds: z.number().int().min(60).max(3600),
+})
+
 export const startRoundSchema = z.object({
   wordCount: z.number().int().positive().min(1).max(400).optional(),
+  timerSettings: startRoundTimerSettingsSchema.optional(),
 }).meta({
   title: 'StartRoundSchema',
   description: 'Schema for starting a round',
 })
 
 export type StartRoundInput = z.infer<typeof startRoundSchema>
+
+export const setTimerSettingsSchema = z.object({
+  creatorToken: z.uuid(),
+  isEnabled: z.boolean(),
+  durationSeconds: z.number().int().min(60).max(3600),
+}).meta({
+  title: 'SetTimerSettingsSchema',
+  description: 'Lobby timer settings (host only)',
+})
+
+export type SetTimerSettingsInput = z.infer<typeof setTimerSettingsSchema>
 
 export const sendChatSchema = z.object({
   content: z.string().min(1).max(500),

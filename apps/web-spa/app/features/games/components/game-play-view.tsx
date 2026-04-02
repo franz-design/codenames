@@ -178,6 +178,7 @@ export function GamePlayView({
           {!isFinished && (
             <TurnIndicator
               round={round}
+              timerSettings={gameState.timerSettings}
               isUserTurn={canGiveClue || canOperativeInteract}
               isWaitingForClueOnMyTeam={isWaitingForClueOnMyTeam}
             />

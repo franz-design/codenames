@@ -20,6 +20,7 @@ export type {
   GameOverResult,
   GameState,
   GameStatePlayer,
+  GameTimerSettings,
   RevealedWord,
   RoundState,
 } from './game-core.types'
@@ -115,6 +116,17 @@ export function applyEvent(
     }
   }
 
+  if (eventType === GameEventType.GAME_TIMER_SETTINGS) {
+    const { isEnabled, durationSeconds } = payload as {
+      isEnabled: boolean
+      durationSeconds: number
+    }
+    return {
+      ...state,
+      timerSettings: { isEnabled, durationSeconds },
+    }
+  }
+
   if (eventType === GameEventType.PLAYER_KICKED) {
     const { playerId } = payload as { playerId: string }
     return {
@@ -189,11 +201,12 @@ export function applyEvent(
   }
 
   if (eventType === GameEventType.ROUND_STARTED && state.currentRound) {
-    const { words, results, order, startingSide } = payload as {
+    const { words, results, order, startingSide, turnStartedAt } = payload as {
       words: string[]
       results: CardType[]
       order: number
       startingSide: Side
+      turnStartedAt?: string | null
     }
     return {
       ...state,
@@ -208,6 +221,7 @@ export function applyEvent(
         guessesRemaining: 0,
         revealedWords: [],
         highlights: {},
+        turnStartedAt: turnStartedAt ?? null,
       },
     }
   }
@@ -258,10 +272,14 @@ export function applyEvent(
   }
 
   if (eventType === GameEventType.TURN_PASSED) {
+    const { nextTurnStartedAt } = payload as {
+      nextTurnStartedAt?: string | null
+    }
     round.currentTurn = round.currentTurn === 'red' ? 'blue' : 'red'
     round.currentClue = null
     round.guessesRemaining = 0
     round.highlights = {}
+    round.turnStartedAt = nextTurnStartedAt ?? null
     return { ...state, currentRound: round }
   }
 
@@ -279,6 +297,7 @@ export function computeGameState(events: GameEventInput[]): GameState {
   const initialState: GameState = {
     status: 'LOBBY',
     players: [],
+    timerSettings: { isEnabled: false, durationSeconds: 120 },
   }
 
   let state = initialState
@@ -286,11 +305,12 @@ export function computeGameState(events: GameEventInput[]): GameState {
 
   for (const event of events) {
     if (event.eventType === GameEventType.ROUND_STARTED) {
-      const { words, results, order, startingSide } = event.payload as {
+      const { words, results, order, startingSide, turnStartedAt } = event.payload as {
         words: string[]
         results: CardType[]
         order: number
         startingSide: Side
+        turnStartedAt?: string | null
       }
       currentRoundId = event.roundId ?? null
       state = {
@@ -306,6 +326,7 @@ export function computeGameState(events: GameEventInput[]): GameState {
           guessesRemaining: 0,
           revealedWords: [],
           highlights: {},
+          turnStartedAt: turnStartedAt ?? null,
         },
       }
     }

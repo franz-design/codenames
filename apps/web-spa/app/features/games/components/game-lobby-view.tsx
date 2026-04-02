@@ -1,4 +1,4 @@
-import type { GameState, Side } from '../types'
+import type { GameState, GameTimerSettings, Side } from '../types'
 import { Button } from '@codenames/ui/components/primitives/button'
 import {
   Card,
@@ -9,11 +9,14 @@ import {
 } from '@codenames/ui/components/primitives/card'
 import { toast } from '@codenames/ui/components/primitives/sonner'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useRef } from 'react'
 import {
   createGamesApiClient,
   useGameSession,
 } from '../index'
+import { canStartGame } from '../utils/can-start-game'
 import { LobbyPlayersList } from './lobby-players-list'
+import { LobbyTimerSettingsPanel } from './lobby-timer-settings-panel'
 import { SpyDesignation } from './spy-designation'
 import { TeamSelector } from './team-selector'
 
@@ -21,20 +24,6 @@ interface GameLobbyViewProps {
   gameId: string
   gameState: GameState
   readOnly?: boolean
-}
-
-function canStartGame(gameState: GameState): boolean {
-  const redPlayers = gameState.players.filter(p => p.side === 'red')
-  const bluePlayers = gameState.players.filter(p => p.side === 'blue')
-  const redSpy = redPlayers.some(p => p.isSpy)
-  const blueSpy = bluePlayers.some(p => p.isSpy)
-
-  return (
-    redPlayers.length >= 1
-    && bluePlayers.length >= 1
-    && redSpy
-    && blueSpy
-  )
 }
 
 export function GameLobbyView({ gameId, gameState, readOnly = false }: GameLobbyViewProps) {
@@ -54,10 +43,6 @@ export function GameLobbyView({ gameId, gameState, readOnly = false }: GameLobby
     mutationFn: () => api.designateSpy(gameId),
   })
 
-  const { mutate: startRound, isPending: isStartingRound } = useMutation({
-    mutationFn: () => api.startRound(gameId),
-  })
-
   const { mutate: kickPlayer, isPending: isKicking } = useMutation({
     mutationFn: (targetPlayerId: string) => {
       if (!creatorToken)
@@ -74,6 +59,31 @@ export function GameLobbyView({ gameId, gameState, readOnly = false }: GameLobby
     },
   })
 
+  const serverTimer = gameState.timerSettings ?? { isEnabled: false, durationSeconds: 120 }
+
+  const timerForStartRef = useRef<GameTimerSettings>({
+    isEnabled: serverTimer.isEnabled,
+    durationSeconds: serverTimer.durationSeconds,
+  })
+
+  const { mutate: startRound, isPending: isStartingRound } = useMutation({
+    mutationFn: () => {
+      if (!creatorToken)
+        throw new Error('Creator token required')
+      const timer = timerForStartRef.current
+      return api.startRound(gameId, {
+        timerSettings: {
+          creatorToken,
+          isEnabled: timer.isEnabled,
+          durationSeconds: timer.durationSeconds,
+        },
+      })
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['gameState', gameId, playerId] })
+    },
+  })
+
   const readyToStart = canStartGame(gameState)
   const canStart = isCreator && readyToStart
 
@@ -86,7 +96,7 @@ export function GameLobbyView({ gameId, gameState, readOnly = false }: GameLobby
   }
 
   return (
-    <div className="flex flex-col items-center justify-center p-4">
+    <div className="flex flex-col items-center justify-center p-4 mt-24">
       <div className="w-full max-w-2xl space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h1 className="text-2xl font-bold">Lobby</h1>
@@ -152,7 +162,14 @@ export function GameLobbyView({ gameId, gameState, readOnly = false }: GameLobby
             )}
 
             {isCreator && (
-              <div className="border-t pt-6">
+              <div className="border-t pt-6 space-y-4">
+                <LobbyTimerSettingsPanel
+                  timerSettings={serverTimer}
+                  onTimerChange={(settings) => {
+                    timerForStartRef.current = settings
+                  }}
+                />
+
                 <Button
                   onClick={() => startRound()}
                   disabled={!canStart || isStartingRound}

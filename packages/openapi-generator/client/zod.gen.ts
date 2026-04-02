@@ -45,6 +45,19 @@ export const zChooseSideSchema = z.object({
 });
 
 /**
+ * AssignPlayerSideByCreatorSchema
+ * Schema for the host to assign a waiting player to a team during an active round
+ */
+export const zAssignPlayerSideByCreatorSchema = z.object({
+  side: zSideSchema,
+  creatorToken: z
+    .uuid()
+    .regex(
+      /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+    ),
+});
+
+/**
  * DesignatePlayerAsSpySchema
  * Schema for creator to designate a player as spy
  */
@@ -57,11 +70,36 @@ export const zDesignatePlayerAsSpySchema = z.object({
 });
 
 /**
+ * SetTimerSettingsSchema
+ * Lobby timer settings (host only)
+ */
+export const zSetTimerSettingsSchema = z.object({
+  creatorToken: z
+    .uuid()
+    .regex(
+      /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+    ),
+  isEnabled: z.boolean(),
+  durationSeconds: z.int().gte(60).lte(3600),
+});
+
+/**
  * StartRoundSchema
  * Schema for starting a round
  */
 export const zStartRoundSchema = z.object({
   wordCount: z.optional(z.int().gte(1).lte(400)),
+  timerSettings: z.optional(
+    z.object({
+      creatorToken: z
+        .uuid()
+        .regex(
+          /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+        ),
+      isEnabled: z.boolean(),
+      durationSeconds: z.int().gte(60).lte(3600),
+    }),
+  ),
 });
 
 /**
@@ -115,6 +153,43 @@ export const zWordSchema = z.object({
  * Schema for a list of words
  */
 export const zWordsSchema = z.array(zWordSchema);
+
+/**
+ * AdminOngoingGameSchema
+ * Game row for admin spectator listing
+ */
+export const zAdminOngoingGameSchema = z.object({
+  id: z
+    .uuid()
+    .regex(
+      /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+    ),
+  status: z.enum(["LOBBY", "PLAYING", "FINISHED"]),
+  creatorPseudo: z.string(),
+  createdAt: z.string(),
+});
+
+export const zGetAdminOngoing = z.array(zAdminOngoingGameSchema);
+
+/**
+ * AdminWatchResponseSchema
+ * Spectator session id (X-Player-Id) for admin watch mode
+ */
+export const zAdminWatchResponseSchema = z.object({
+  playerId: z
+    .uuid()
+    .regex(
+      /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+    ),
+});
+
+/**
+ * AdminUnwatchOkSchema
+ * Admin spectator session ended
+ */
+export const zAdminUnwatchOkSchema = z.object({
+  ok: z.literal(true),
+});
 
 /**
  * GameSchema
@@ -198,11 +273,21 @@ export const zGameStateSchema = z.object({
           }),
         ),
       ),
+      turnStartedAt: z.optional(z.union([z.string(), z.null()])),
     }),
     z.null(),
   ]),
   winningSide: z.union([z.enum(["red", "blue"]), z.null()]),
   losingSide: z.union([z.enum(["red", "blue"]), z.null()]),
+  timerSettings: z.optional(
+    z.union([
+      z.object({
+        isEnabled: z.boolean(),
+        durationSeconds: z.int().gte(60).lte(3600),
+      }),
+      z.null(),
+    ]),
+  ),
 });
 
 /**
@@ -300,6 +385,51 @@ export const zAppControllerGetHelloData = z.object({
   path: z.optional(z.never()),
   query: z.optional(z.never()),
 });
+
+export const zGamesControllerListAdminOngoingGamesData = z.object({
+  body: z.optional(z.never()),
+  path: z.optional(z.never()),
+  query: z.optional(z.never()),
+});
+
+/**
+ * Successful response
+ */
+export const zGamesControllerListAdminOngoingGamesResponse = zGetAdminOngoing;
+
+export const zGamesControllerAdminWatchGameData = z.object({
+  body: z.optional(z.never()),
+  path: z.object({
+    id: z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      ),
+  }),
+  query: z.optional(z.never()),
+});
+
+/**
+ * Spectator session id (X-Player-Id) for admin watch mode
+ */
+export const zGamesControllerAdminWatchGameResponse = zAdminWatchResponseSchema;
+
+export const zGamesControllerAdminUnwatchGameData = z.object({
+  body: z.optional(z.never()),
+  path: z.object({
+    id: z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      ),
+  }),
+  query: z.optional(z.never()),
+});
+
+/**
+ * Admin spectator session ended
+ */
+export const zGamesControllerAdminUnwatchGameResponse = zAdminUnwatchOkSchema;
 
 export const zGamesControllerCreateGameData = z.object({
   body: z.object({
@@ -414,6 +544,36 @@ export const zGamesControllerChooseSideData = z.object({
  */
 export const zGamesControllerChooseSideResponse = zGameStateSchema;
 
+export const zGamesControllerAssignPlayerSideByCreatorData = z.object({
+  body: z.object({
+    side: z.enum(["red", "blue"]),
+    creatorToken: z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      ),
+  }),
+  path: z.object({
+    playerId: z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      ),
+    id: z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      ),
+  }),
+  query: z.optional(z.never()),
+});
+
+/**
+ * Full game state computed from events
+ */
+export const zGamesControllerAssignPlayerSideByCreatorResponse =
+  zGameStateSchema;
+
 export const zGamesControllerDesignateSpyData = z.object({
   body: z.optional(z.never()),
   path: z.object({
@@ -459,9 +619,45 @@ export const zGamesControllerDesignatePlayerAsSpyData = z.object({
  */
 export const zGamesControllerDesignatePlayerAsSpyResponse = zGameStateSchema;
 
+export const zGamesControllerSetTimerSettingsData = z.object({
+  body: z.object({
+    creatorToken: z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      ),
+    isEnabled: z.boolean(),
+    durationSeconds: z.int().gte(60).lte(3600),
+  }),
+  path: z.object({
+    id: z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      ),
+  }),
+  query: z.optional(z.never()),
+});
+
+/**
+ * Full game state computed from events
+ */
+export const zGamesControllerSetTimerSettingsResponse = zGameStateSchema;
+
 export const zGamesControllerStartRoundData = z.object({
   body: z.object({
     wordCount: z.optional(z.int().gte(1).lte(400)),
+    timerSettings: z.optional(
+      z.object({
+        creatorToken: z
+          .uuid()
+          .regex(
+            /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+          ),
+        isEnabled: z.boolean(),
+        durationSeconds: z.int().gte(60).lte(3600),
+      }),
+    ),
   }),
   path: z.object({
     id: z

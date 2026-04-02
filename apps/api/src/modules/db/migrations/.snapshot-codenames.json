@@ -121,6 +121,12 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "enumItems": [
+            "neutral",
+            "red",
+            "blue",
+            "black"
+          ],
           "mappedType": "array"
         },
         "createdAt": {
@@ -214,6 +220,7 @@
           "nullable": false,
           "enumItems": [
             "GAME_CREATED",
+            "GAME_TIMER_SETTINGS",
             "PLAYER_JOINED",
             "PLAYER_LEFT",
             "PLAYER_CHOSE_SIDE",

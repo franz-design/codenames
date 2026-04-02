@@ -11,8 +11,8 @@ import {
   Query,
 } from '@nestjs/common'
 import { z } from 'zod'
-import { config } from '../../config/env.config'
 import { OptionalPlayerId, PlayerId } from '../../common/decorators/player-id.decorator'
+import { config } from '../../config/env.config'
 import { isAdminSpectatorTokenValid } from './admin-spectator-token.util'
 import {
   adminOngoingGamesResponseSchema,
@@ -35,6 +35,9 @@ import {
   kickPlayerSchema,
   selectWordSchema,
   sendChatSchema,
+  SetTimerSettingsInput,
+  setTimerSettingsSchema,
+  StartRoundInput,
   startRoundSchema,
   TimelinePagination,
   timelinePaginationSchema,
@@ -167,11 +170,20 @@ export class GamesController {
     return await this.gamesService.designatePlayerAsSpy(id, targetPlayerId)
   }
 
+  @CreatorAuth('Only the game creator can change timer settings')
+  @TypedRoute.Patch(':id/timer-settings', gameStateSchema)
+  async setTimerSettings(
+    @TypedParam('id', z.uuid()) id: string,
+    @TypedBody(setTimerSettingsSchema) body: SetTimerSettingsInput,
+  ) {
+    return await this.gamesService.setTimerSettings(id, body)
+  }
+
   @TypedRoute.Post(':id/rounds/start', gameStateSchema)
   async startRound(
     @PlayerId() playerId: string,
     @TypedParam('id', z.uuid()) id: string,
-    @TypedBody(startRoundSchema.optional()) body?: { wordCount?: number },
+    @TypedBody(startRoundSchema.optional()) body?: StartRoundInput,
   ) {
     return await this.gamesService.startRound(id, playerId, body)
   }

@@ -16,6 +16,7 @@ export type {
   Game,
   GameState,
   GameStatePlayer,
+  GameTimerSettings,
   JoinGameResponse,
   RevealedWord,
   RoundState,

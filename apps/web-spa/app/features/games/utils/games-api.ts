@@ -60,7 +60,23 @@ export interface GamesApiClient {
     creatorToken: string,
   ) => Promise<GameState>
   designateSpy: (gameId: string) => Promise<GameState>
-  startRound: (gameId: string, wordCount?: number) => Promise<GameState>
+  setTimerSettings: (
+    gameId: string,
+    creatorToken: string,
+    isEnabled: boolean,
+    durationSeconds: number,
+  ) => Promise<GameState>
+  startRound: (
+    gameId: string,
+    body?: {
+      wordCount?: number
+      timerSettings?: {
+        creatorToken: string
+        isEnabled: boolean
+        durationSeconds: number
+      }
+    },
+  ) => Promise<GameState>
   giveClue: (gameId: string, word: string, number: number) => Promise<GameState>
   selectWord: (gameId: string, wordIndex: number) => Promise<GameState>
   highlightWord: (gameId: string, wordIndex: number) => Promise<GameState>
@@ -185,11 +201,39 @@ export function createGamesApiClient(playerId: string): GamesApiClient {
       return handleResponse<GameState>(response)
     },
 
-    async startRound(gameId: string, wordCount?: number) {
+    async setTimerSettings(
+      gameId: string,
+      creatorToken: string,
+      isEnabled: boolean,
+      durationSeconds: number,
+    ) {
+      const response = await fetch(`${baseUrl}/api/games/${gameId}/timer-settings`, {
+        method: 'PATCH',
+        headers: headers({}),
+        body: JSON.stringify({ creatorToken, isEnabled, durationSeconds }),
+        credentials: 'include',
+      })
+      return handleResponse<GameState>(response)
+    },
+
+    async startRound(gameId: string, body?: {
+      wordCount?: number
+      timerSettings?: {
+        creatorToken: string
+        isEnabled: boolean
+        durationSeconds: number
+      }
+    }) {
+      const payload: Record<string, unknown> = {}
+      if (body?.wordCount !== undefined)
+        payload.wordCount = body.wordCount
+      if (body?.timerSettings !== undefined)
+        payload.timerSettings = body.timerSettings
+
       const response = await fetch(`${baseUrl}/api/games/${gameId}/rounds/start`, {
         method: 'POST',
         headers: headers({}),
-        body: JSON.stringify(wordCount !== undefined ? { wordCount } : {}),
+        body: JSON.stringify(payload),
         credentials: 'include',
       })
       return handleResponse<GameState>(response)

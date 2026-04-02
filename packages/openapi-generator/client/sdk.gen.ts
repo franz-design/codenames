@@ -4,6 +4,12 @@ import type { Options as ClientOptions, TDataShape, Client } from "./client";
 import type {
   AppControllerGetHelloData,
   AppControllerGetHelloResponses,
+  GamesControllerListAdminOngoingGamesData,
+  GamesControllerListAdminOngoingGamesResponses,
+  GamesControllerAdminWatchGameData,
+  GamesControllerAdminWatchGameResponses,
+  GamesControllerAdminUnwatchGameData,
+  GamesControllerAdminUnwatchGameResponses,
   GamesControllerCreateGameData,
   GamesControllerCreateGameResponses,
   GamesControllerGetGameStateData,
@@ -16,10 +22,14 @@ import type {
   GamesControllerLeaveGameResponses,
   GamesControllerChooseSideData,
   GamesControllerChooseSideResponses,
+  GamesControllerAssignPlayerSideByCreatorData,
+  GamesControllerAssignPlayerSideByCreatorResponses,
   GamesControllerDesignateSpyData,
   GamesControllerDesignateSpyResponses,
   GamesControllerDesignatePlayerAsSpyData,
   GamesControllerDesignatePlayerAsSpyResponses,
+  GamesControllerSetTimerSettingsData,
+  GamesControllerSetTimerSettingsResponses,
   GamesControllerStartRoundData,
   GamesControllerStartRoundResponses,
   GamesControllerGiveClueData,
@@ -69,6 +79,51 @@ export const appControllerGetHello = <ThrowOnError extends boolean = false>(
     ThrowOnError
   >({
     url: "/api",
+    ...options,
+  });
+};
+
+export const gamesControllerListAdminOngoingGames = <
+  ThrowOnError extends boolean = false,
+>(
+  options?: Options<GamesControllerListAdminOngoingGamesData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).get<
+    GamesControllerListAdminOngoingGamesResponses,
+    unknown,
+    ThrowOnError
+  >({
+    url: "/api/games/admin/ongoing",
+    ...options,
+  });
+};
+
+export const gamesControllerAdminWatchGame = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<GamesControllerAdminWatchGameData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    GamesControllerAdminWatchGameResponses,
+    unknown,
+    ThrowOnError
+  >({
+    url: "/api/games/{id}/admin/watch",
+    ...options,
+  });
+};
+
+export const gamesControllerAdminUnwatchGame = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<GamesControllerAdminUnwatchGameData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    GamesControllerAdminUnwatchGameResponses,
+    unknown,
+    ThrowOnError
+  >({
+    url: "/api/games/{id}/admin/unwatch",
     ...options,
   });
 };
@@ -169,6 +224,25 @@ export const gamesControllerChooseSide = <ThrowOnError extends boolean = false>(
   });
 };
 
+export const gamesControllerAssignPlayerSideByCreator = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<GamesControllerAssignPlayerSideByCreatorData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).patch<
+    GamesControllerAssignPlayerSideByCreatorResponses,
+    unknown,
+    ThrowOnError
+  >({
+    url: "/api/games/{id}/creator/players/{playerId}/side",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+};
+
 export const gamesControllerDesignateSpy = <
   ThrowOnError extends boolean = false,
 >(
@@ -195,6 +269,25 @@ export const gamesControllerDesignatePlayerAsSpy = <
     ThrowOnError
   >({
     url: "/api/games/{id}/players/{playerId}/spy",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+};
+
+export const gamesControllerSetTimerSettings = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<GamesControllerSetTimerSettingsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).patch<
+    GamesControllerSetTimerSettingsResponses,
+    unknown,
+    ThrowOnError
+  >({
+    url: "/api/games/{id}/timer-settings",
     ...options,
     headers: {
       "Content-Type": "application/json",

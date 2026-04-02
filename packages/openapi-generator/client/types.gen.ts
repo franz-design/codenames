@@ -33,6 +33,15 @@ export type ChooseSideSchema = {
 };
 
 /**
+ * AssignPlayerSideByCreatorSchema
+ * Schema for the host to assign a waiting player to a team during an active round
+ */
+export type AssignPlayerSideByCreatorSchema = {
+  side: SideSchema;
+  creatorToken: string;
+};
+
+/**
  * DesignatePlayerAsSpySchema
  * Schema for creator to designate a player as spy
  */
@@ -41,11 +50,26 @@ export type DesignatePlayerAsSpySchema = {
 };
 
 /**
+ * SetTimerSettingsSchema
+ * Lobby timer settings (host only)
+ */
+export type SetTimerSettingsSchema = {
+  creatorToken: string;
+  isEnabled: boolean;
+  durationSeconds: number;
+};
+
+/**
  * StartRoundSchema
  * Schema for starting a round
  */
 export type StartRoundSchema = {
   wordCount?: number;
+  timerSettings?: {
+    creatorToken: string;
+    isEnabled: boolean;
+    durationSeconds: number;
+  };
 };
 
 /**
@@ -94,6 +118,35 @@ export type WordsSchema = Array<WordSchema>;
 export type WordSchema = {
   id: string;
   label: string;
+};
+
+/**
+ * AdminOngoingGameSchema
+ * Game row for admin spectator listing
+ */
+export type AdminOngoingGameSchema = {
+  id: string;
+  status: "LOBBY" | "PLAYING" | "FINISHED";
+  creatorPseudo: string;
+  createdAt: string;
+};
+
+export type GetAdminOngoing = Array<AdminOngoingGameSchema>;
+
+/**
+ * AdminWatchResponseSchema
+ * Spectator session id (X-Player-Id) for admin watch mode
+ */
+export type AdminWatchResponseSchema = {
+  playerId: string;
+};
+
+/**
+ * AdminUnwatchOkSchema
+ * Admin spectator session ended
+ */
+export type AdminUnwatchOkSchema = {
+  ok: true;
 };
 
 /**
@@ -167,9 +220,14 @@ export type GameStateSchema = {
         playerName: string;
       }>;
     };
+    turnStartedAt?: string | null;
   } | null;
   winningSide: ("red" | "blue") | null;
   losingSide: ("red" | "blue") | null;
+  timerSettings?: {
+    isEnabled: boolean;
+    durationSeconds: number;
+  } | null;
 };
 
 /**
@@ -263,6 +321,61 @@ export type AppControllerGetHelloData = {
 export type AppControllerGetHelloResponses = {
   200: unknown;
 };
+
+export type GamesControllerListAdminOngoingGamesData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/api/games/admin/ongoing";
+};
+
+export type GamesControllerListAdminOngoingGamesResponses = {
+  /**
+   * Successful response
+   */
+  200: GetAdminOngoing;
+};
+
+export type GamesControllerListAdminOngoingGamesResponse =
+  GamesControllerListAdminOngoingGamesResponses[keyof GamesControllerListAdminOngoingGamesResponses];
+
+export type GamesControllerAdminWatchGameData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: "/api/games/{id}/admin/watch";
+};
+
+export type GamesControllerAdminWatchGameResponses = {
+  /**
+   * Spectator session id (X-Player-Id) for admin watch mode
+   */
+  200: AdminWatchResponseSchema;
+};
+
+export type GamesControllerAdminWatchGameResponse =
+  GamesControllerAdminWatchGameResponses[keyof GamesControllerAdminWatchGameResponses];
+
+export type GamesControllerAdminUnwatchGameData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: "/api/games/{id}/admin/unwatch";
+};
+
+export type GamesControllerAdminUnwatchGameResponses = {
+  /**
+   * Admin spectator session ended
+   */
+  200: AdminUnwatchOkSchema;
+};
+
+export type GamesControllerAdminUnwatchGameResponse =
+  GamesControllerAdminUnwatchGameResponses[keyof GamesControllerAdminUnwatchGameResponses];
 
 export type GamesControllerCreateGameData = {
   /**
@@ -405,6 +518,37 @@ export type GamesControllerChooseSideResponses = {
 export type GamesControllerChooseSideResponse =
   GamesControllerChooseSideResponses[keyof GamesControllerChooseSideResponses];
 
+export type GamesControllerAssignPlayerSideByCreatorData = {
+  /**
+   * AssignPlayerSideByCreatorSchema
+   * Schema for the host to assign a waiting player to a team during an active round
+   */
+  body: {
+    /**
+     * SideSchema
+     * Player side in a game
+     */
+    side: "red" | "blue";
+    creatorToken: string;
+  };
+  path: {
+    playerId: string;
+    id: string;
+  };
+  query?: never;
+  url: "/api/games/{id}/creator/players/{playerId}/side";
+};
+
+export type GamesControllerAssignPlayerSideByCreatorResponses = {
+  /**
+   * Full game state computed from events
+   */
+  200: GameStateSchema;
+};
+
+export type GamesControllerAssignPlayerSideByCreatorResponse =
+  GamesControllerAssignPlayerSideByCreatorResponses[keyof GamesControllerAssignPlayerSideByCreatorResponses];
+
 export type GamesControllerDesignateSpyData = {
   body?: never;
   path: {
@@ -450,6 +594,33 @@ export type GamesControllerDesignatePlayerAsSpyResponses = {
 export type GamesControllerDesignatePlayerAsSpyResponse =
   GamesControllerDesignatePlayerAsSpyResponses[keyof GamesControllerDesignatePlayerAsSpyResponses];
 
+export type GamesControllerSetTimerSettingsData = {
+  /**
+   * SetTimerSettingsSchema
+   * Lobby timer settings (host only)
+   */
+  body: {
+    creatorToken: string;
+    isEnabled: boolean;
+    durationSeconds: number;
+  };
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: "/api/games/{id}/timer-settings";
+};
+
+export type GamesControllerSetTimerSettingsResponses = {
+  /**
+   * Full game state computed from events
+   */
+  200: GameStateSchema;
+};
+
+export type GamesControllerSetTimerSettingsResponse =
+  GamesControllerSetTimerSettingsResponses[keyof GamesControllerSetTimerSettingsResponses];
+
 export type GamesControllerStartRoundData = {
   /**
    * StartRoundSchema
@@ -457,6 +628,11 @@ export type GamesControllerStartRoundData = {
    */
   body: {
     wordCount?: number;
+    timerSettings?: {
+      creatorToken: string;
+      isEnabled: boolean;
+      durationSeconds: number;
+    };
   };
   path: {
     id: string;

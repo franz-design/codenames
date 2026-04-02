@@ -131,6 +131,24 @@ describe('game-core.logic', () => {
       ])
     })
 
+    it('should apply GAME_TIMER_SETTINGS', () => {
+      const state = {
+        status: 'LOBBY' as const,
+        players: [],
+        timerSettings: { isEnabled: false, durationSeconds: 120 },
+      }
+      const event: GameEventInput = {
+        id: '1',
+        gameId: 'g1',
+        eventType: GameEventType.GAME_TIMER_SETTINGS,
+        payload: { isEnabled: true, durationSeconds: 180 },
+        triggeredBy: null,
+        createdAt: new Date(),
+      }
+      const result = applyEvent(state as never, event)
+      expect(result.timerSettings).toEqual({ isEnabled: true, durationSeconds: 180 })
+    })
+
     it('should apply WORD_UNHIGHLIGHTED and remove player from highlights', () => {
       const state = {
         status: 'PLAYING' as const,
@@ -197,6 +215,59 @@ describe('game-core.logic', () => {
         name: 'Alice',
         side: 'red',
       })
+    })
+
+    it('should replay timer settings and turn timestamps', () => {
+      const words = ['a', 'b']
+      const results: CardType[] = [CardType.RED, CardType.BLUE]
+      const t0 = '2020-01-01T00:00:00.000Z'
+      const t1 = '2020-01-01T00:03:00.000Z'
+      const events: GameEventInput[] = [
+        {
+          id: '1',
+          gameId: 'g1',
+          eventType: GameEventType.GAME_CREATED,
+          payload: { creatorPseudo: 'Alice', creatorToken: 'token-123' },
+          triggeredBy: 'u1',
+          createdAt: new Date(),
+        },
+        {
+          id: '2',
+          gameId: 'g1',
+          eventType: GameEventType.GAME_TIMER_SETTINGS,
+          payload: { isEnabled: true, durationSeconds: 120 },
+          triggeredBy: null,
+          createdAt: new Date(),
+        },
+        {
+          id: '3',
+          gameId: 'g1',
+          roundId: 'r1',
+          eventType: GameEventType.ROUND_STARTED,
+          payload: {
+            words,
+            results,
+            order: 1,
+            startingSide: 'red',
+            turnStartedAt: t0,
+          },
+          triggeredBy: 'u1',
+          createdAt: new Date(),
+        },
+        {
+          id: '4',
+          gameId: 'g1',
+          roundId: 'r1',
+          eventType: GameEventType.TURN_PASSED,
+          payload: { nextTurn: 'blue', nextTurnStartedAt: t1 },
+          triggeredBy: 'u1',
+          createdAt: new Date(),
+        },
+      ]
+      const state = computeGameState(events)
+      expect(state.timerSettings).toEqual({ isEnabled: true, durationSeconds: 120 })
+      expect(state.currentRound?.turnStartedAt).toBe(t1)
+      expect(state.currentRound?.currentTurn).toBe('blue')
     })
 
     it('should include highlights in currentRound', () => {
