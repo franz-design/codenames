@@ -18,7 +18,6 @@ import { canStartGame } from '../utils/can-start-game'
 import { LobbyPlayersList } from './lobby-players-list'
 import { LobbyTimerSettingsPanel } from './lobby-timer-settings-panel'
 import { SpyDesignation } from './spy-designation'
-import { TeamSelector } from './team-selector'
 
 interface GameLobbyViewProps {
   gameId: string
@@ -32,7 +31,7 @@ export function GameLobbyView({ gameId, gameState, readOnly = false }: GameLobby
   const currentPlayer = gameState.players.find(p => p.id === playerId)
   const api = createGamesApiClient(playerId ?? '')
 
-  const { mutate: chooseSide, isPending: isChoosingSide } = useMutation({
+  const { mutate: chooseSide } = useMutation({
     mutationFn: (side: Side) => api.chooseSide(gameId, side),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['gameState', gameId, playerId] })
@@ -97,7 +96,7 @@ export function GameLobbyView({ gameId, gameState, readOnly = false }: GameLobby
 
   return (
     <div className="flex flex-col items-center justify-center p-4 mt-24">
-      <div className="w-full max-w-2xl space-y-6">
+      <div className="w-full max-w-4xl space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h1 className="text-2xl font-bold">Lobby</h1>
           <div className="flex items-center gap-2">
@@ -110,85 +109,85 @@ export function GameLobbyView({ gameId, gameState, readOnly = false }: GameLobby
                 Copier le lien d&apos;invitation
               </Button>
             )}
-            <span className="text-sm text-muted-foreground">
-              {gameState.players.length}
-              {' '}
-              joueur(s)
-            </span>
           </div>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Joueurs</CardTitle>
-            <CardDescription>
-              Choisissez votre équipe et désignez un espion par équipe
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <LobbyPlayersList
-              players={gameState.players}
-              currentPlayerId={playerId}
-              isCreator={isCreator}
-              creatorToken={creatorToken}
-              onKickPlayer={targetId => kickPlayer(targetId)}
-              onDesignateSpy={targetId => designatePlayerAsSpy(targetId)}
-              isKicking={isKicking}
-              isDesignatingSpy={isDesignatingPlayerSpy}
-            />
-
-            {currentPlayer && (
-              <div className="flex flex-col gap-2 border-t pt-6">
-                <h3 className="font-semibold">Choisissez une équipe</h3>
-                <div className="flex flex-col gap-4">
-                  <TeamSelector
-                    onSelectSide={side => chooseSide(side)}
-                    disabled={isChoosingSide}
-                  />
-                  {currentPlayer.side && (
-                    <div className="flex flex-col gap-2">
-                      <span className="text-sm text-muted-foreground">
-                        Rôle
-                      </span>
-                      <SpyDesignation
-                        isSpy={Boolean(currentPlayer.isSpy)}
-                        onToggleSpy={() => designateSpy()}
-                        disabled={isDesignatingSpy || currentPlayer.isSpy}
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {isCreator && (
-              <div className="border-t pt-6 space-y-4">
-                <LobbyTimerSettingsPanel
-                  timerSettings={serverTimer}
-                  onTimerChange={(settings) => {
-                    timerForStartRef.current = settings
-                  }}
+        <Card className="p-0">
+          <div className="flex gap-0">
+            <div className="flex flex-col gap-4 py-6 pr-2">
+              <CardHeader>
+                <CardTitle>Joueurs</CardTitle>
+                <CardDescription>
+                  Choisissez votre équipe et désignez un espion par équipe
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <LobbyPlayersList
+                  players={gameState.players}
+                  currentPlayerId={playerId}
+                  isCreator={isCreator}
+                  creatorToken={creatorToken}
+                  onKickPlayer={targetId => kickPlayer(targetId)}
+                  onDesignateSpy={targetId => designatePlayerAsSpy(targetId)}
+                  isKicking={isKicking}
+                  isDesignatingSpy={isDesignatingPlayerSpy}
+                  currentPlayer={currentPlayer ?? null}
+                  onSelectSide={side => chooseSide(side)}
                 />
 
-                <Button
-                  onClick={() => startRound()}
-                  disabled={!canStart || isStartingRound}
-                  className="w-full"
-                >
-                  {isStartingRound
-                    ? 'Démarrage...'
-                    : !readyToStart
-                        ? 'En attente des équipes et espions'
-                        : 'Démarrer la partie'}
-                </Button>
-                {!readyToStart && (
-                  <p className="mt-2 text-center text-sm text-muted-foreground">
-                    Chaque équipe doit avoir au moins un joueur et un espion
-                  </p>
+                {currentPlayer && currentPlayer.side && (
+                  <div className="flex flex-col gap-2">
+                    <SpyDesignation
+                      isSpy={Boolean(currentPlayer.isSpy)}
+                      onToggleSpy={() => designateSpy()}
+                      disabled={isDesignatingSpy || currentPlayer.isSpy}
+                    />
+                  </div>
                 )}
+              </CardContent>
+            </div>
+
+            {isCreator && (
+              <div className="flex flex-col gap-4 border-l pl-2 py-6 w-1/2">
+                <CardHeader>
+                  <CardTitle>Options</CardTitle>
+                  <CardDescription>
+                    Configurez les options de la partie
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col justify-between flex-1 h-full">
+                  <div className="border-t pt-6 flex flex-col justify-between flex-1 h-full">
+                    <LobbyTimerSettingsPanel
+                      timerSettings={serverTimer}
+                      onTimerChange={(settings) => {
+                        timerForStartRef.current = settings
+                      }}
+                    />
+
+                    <div className="flex flex-col gap-2">
+                      {!readyToStart && (
+                        <p className="mt-2 text-center text-xs italic text-muted-foreground">
+                          Chaque équipe doit avoir au moins un joueur et un espion
+                        </p>
+                      )}
+                      <Button
+                        onClick={() => startRound()}
+                        disabled={!canStart || isStartingRound}
+                        className="w-full"
+                      >
+                        {isStartingRound
+                          ? 'Démarrage...'
+                          : !readyToStart
+                              ? 'En attente des équipes et espions'
+                              : 'Démarrer la partie'}
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
               </div>
             )}
-          </CardContent>
+
+          </div>
         </Card>
       </div>
     </div>

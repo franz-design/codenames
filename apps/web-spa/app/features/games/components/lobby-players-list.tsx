@@ -1,4 +1,4 @@
-import type { GameStatePlayer } from '../types'
+import type { GameStatePlayer, Side } from '../types'
 import { Badge } from '@codenames/ui/components/primitives/badge'
 import { Button } from '@codenames/ui/components/primitives/button'
 import {
@@ -7,6 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@codenames/ui/components/primitives/dropdown-menu'
+import { cn } from '@codenames/ui/lib/utils'
 import { HatGlasses, MoreVerticalIcon, UserXIcon } from 'lucide-react'
 
 interface LobbyPlayersListProps {
@@ -18,6 +19,8 @@ interface LobbyPlayersListProps {
   onDesignateSpy?: (playerId: string) => void
   isKicking?: boolean
   isDesignatingSpy?: boolean
+  currentPlayer: GameStatePlayer | null
+  onSelectSide: (side: Side) => void
 }
 
 export function LobbyPlayersList({
@@ -29,6 +32,8 @@ export function LobbyPlayersList({
   onDesignateSpy,
   isKicking = false,
   isDesignatingSpy = false,
+  currentPlayer,
+  onSelectSide,
 }: LobbyPlayersListProps) {
   const canKick = isCreator && Boolean(creatorToken)
   const canDesignateSpy = isCreator && Boolean(creatorToken) && Boolean(onDesignateSpy)
@@ -37,52 +42,58 @@ export function LobbyPlayersList({
   const unassignedPlayers = players.filter(p => !p.side)
 
   return (
-    <div className="space-y-4">
-      {redPlayers.length > 0 && (
-        <div>
-          <h3 className="mb-2 text-sm font-bold text-red">Équipe rouge</h3>
-          <div className="flex gap-2 flex-wrap">
-            {redPlayers.map(player => (
-              <PlayerBlock
-                key={player.id}
-                player={player}
-                isCurrentPlayer={player.id === currentPlayerId}
-                canKick={canKick}
-                canDesignateSpy={canDesignateSpy}
-                onKick={() => onKickPlayer(player.id)}
-                onDesignateSpy={onDesignateSpy ? () => onDesignateSpy(player.id) : undefined}
-                isKicking={isKicking}
-                isDesignatingSpy={isDesignatingSpy}
-              />
-            ))}
-          </div>
+    <div className="flex flex-col gap-4">
+      <div className="bg-red rounded-lg p-4">
+        <div className="flex justify-between items-start mb-4">
+          <h3 className="mb-2 text-sm font-bold text-white">Équipe rouge</h3>
+          {(!currentPlayer?.side || currentPlayer?.side === 'blue') && (
+            <Button variant="red" size="sm" onClick={() => onSelectSide('red')}>Rejoindre</Button>
+          )}
         </div>
-      )}
+        <div className="flex gap-2 flex-wrap">
+          {redPlayers.map(player => (
+            <PlayerBlock
+              key={player.id}
+              player={player}
+              isCurrentPlayer={player.id === currentPlayerId}
+              canKick={canKick}
+              canDesignateSpy={canDesignateSpy}
+              onKick={() => onKickPlayer(player.id)}
+              onDesignateSpy={onDesignateSpy ? () => onDesignateSpy(player.id) : undefined}
+              isKicking={isKicking}
+              isDesignatingSpy={isDesignatingSpy}
+            />
+          ))}
+        </div>
+      </div>
 
-      {bluePlayers.length > 0 && (
-        <div>
-          <h3 className="mb-2 text-sm font-bold text-blue">Équipe bleue</h3>
-          <div className="flex gap-2 flex-wrap">
-            {bluePlayers.map(player => (
-              <PlayerBlock
-                key={player.id}
-                player={player}
-                isCurrentPlayer={player.id === currentPlayerId}
-                canKick={canKick}
-                canDesignateSpy={canDesignateSpy}
-                onKick={() => onKickPlayer(player.id)}
-                onDesignateSpy={onDesignateSpy ? () => onDesignateSpy(player.id) : undefined}
-                isKicking={isKicking}
-                isDesignatingSpy={isDesignatingSpy}
-              />
-            ))}
-          </div>
+      <div className="bg-blue rounded-lg p-4">
+        <div className="flex justify-between items-start mb-4">
+          <h3 className="mb-2 text-sm font-bold text-white">Équipe bleue</h3>
+          {(!currentPlayer?.side || currentPlayer?.side === 'red') && (
+            <Button variant="blue" size="sm" onClick={() => onSelectSide('blue')}>Rejoindre</Button>
+          )}
         </div>
-      )}
+        <div className="flex gap-2 flex-wrap">
+          {bluePlayers.map(player => (
+            <PlayerBlock
+              key={player.id}
+              player={player}
+              isCurrentPlayer={player.id === currentPlayerId}
+              canKick={canKick}
+              canDesignateSpy={canDesignateSpy}
+              onKick={() => onKickPlayer(player.id)}
+              onDesignateSpy={onDesignateSpy ? () => onDesignateSpy(player.id) : undefined}
+              isKicking={isKicking}
+              isDesignatingSpy={isDesignatingSpy}
+            />
+          ))}
+        </div>
+      </div>
 
       {unassignedPlayers.length > 0 && (
         <div>
-          <h3 className="mb-2 text-sm font-bold text-muted-foreground">
+          <h3 className="mb-2 text-sm font-bold text-black">
             Sans équipe
           </h3>
           <div className="flex gap-2 flex-wrap">
@@ -96,6 +107,7 @@ export function LobbyPlayersList({
                 onKick={() => onKickPlayer(player.id)}
                 isKicking={isKicking}
                 isDesignatingSpy={isDesignatingSpy}
+                className="border border-black"
               />
             ))}
           </div>
@@ -110,6 +122,7 @@ export function LobbyPlayersList({
 }
 
 interface PlayerBlockProps {
+  className?: string
   player: GameStatePlayer
   isCurrentPlayer: boolean
   canKick: boolean
@@ -121,6 +134,7 @@ interface PlayerBlockProps {
 }
 
 function PlayerBlock({
+  className,
   player,
   isCurrentPlayer,
   canKick,
@@ -135,11 +149,11 @@ function PlayerBlock({
       || (canDesignateSpy && Boolean(player.side))
 
   return (
-    <li className="flex items-center justify-between rounded-lg border px-3 py-1.5">
+    <li className={cn('flex items-center justify-between rounded-lg bg-white px-3 py-1.5', className)}>
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium">{player.name}</span>
         {player.isSpy && (
-          <Badge variant="secondary" className="py-1 bg-primary-foreground text-primary relative -right-[6px]">
+          <Badge variant="secondary" className={cn('py-1 relative -right-[6px]', player.side === 'red' ? 'bg-red text-white' : 'bg-blue text-white')}>
             <HatGlasses className="size-4" />
           </Badge>
         )}
