@@ -17,7 +17,6 @@ import { queryClient } from '@/lib/query-client'
 import ogImageSrc from './assets/images/capture.png'
 import { HeaderRightProvider, useHeaderRightContent } from './contexts/header-right-context'
 import useTheme from './hooks/useTheme'
-import '@fontsource/source-sans-pro'
 import '@codenames/ui/globals.css'
 
 const appOrigin = import.meta.env.VITE_APP_ORIGIN?.replace(/\/$/, '') ?? ''
@@ -91,7 +90,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="relative z-10 flex min-h-0 flex-1 flex-col">
           {children}
         </div>
-        <Toaster richColors position="top-center" />
+        <Toaster position="top-center" />
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -122,12 +121,12 @@ function AppHeader() {
   const gameState = wsGameState ?? fetchedGameState ?? null
 
   const playerSide = gameState?.players.find(p => p.id === playerId)?.side ?? null
-  const playerBackground
+  const playerStyle
     = playerSide === 'red'
       ? 'bg-red'
       : playerSide === 'blue'
         ? 'bg-blue'
-        : 'bg-muted'
+        : 'bg-black'
 
   const displayName = useMemo(() => {
     const authName = session?.user?.name?.trim()
@@ -148,7 +147,7 @@ function AppHeader() {
           <span
             className={cn(
               'flex min-w-0 max-w-[min(14rem,calc(100vw-12rem))] items-center gap-2 text-sm font-medium text-white rounded-full py-2 pl-3 pr-4',
-              playerBackground,
+              playerStyle,
             )}
           >
             <User2Icon className="size-4 shrink-0 opacity-80" aria-hidden />

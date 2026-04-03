@@ -14,8 +14,6 @@ export function SpyDesignation({
   return (
     <Button
       type="button"
-      variant={isSpy ? 'default' : 'outline'}
-      size="sm"
       onClick={onToggleSpy}
       disabled={disabled}
     >

@@ -6,18 +6,18 @@ import { cva } from 'class-variance-authority'
 import * as React from 'react'
 
 const buttonVariants = cva(
-  'inline-flex items-center cursor-pointer justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-[color,box-shadow] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*=\'size-\'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+  'inline-flex items-center cursor-pointer justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-[color,box-shadow] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*=\'size-\'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-all duration-200',
   {
     variants: {
       variant: {
         default:
-          'bg-primary text-primary-foreground border border-primary-border font-bold hover:bg-primary/90 shadow-[4px_4px_0px_0px_#AEC0E0] relative -top-[2px] -left-[2px] hover:top-0 hover:left-0 hover:shadow-[2px_2px_0px_0px_#AEC0E0] transition-all duration-100',
+          'bg-primary text-primary-foreground border border-primary-border font-bold hover:bg-primary/90 shadow-[4px_4px_0px_0px_#AEC0E0] relative -top-[2px] -left-[2px] hover:top-0 hover:left-0 hover:shadow-[2px_2px_0px_0px_#AEC0E0]',
         red: 'bg-[#DB1C45] text-white border border-[#A11734] font-bold shadow-[4px_4px_0px_0px_#A11734] relative -top-[2px] -left-[2px] hover:top-0 hover:left-0 hover:shadow-[2px_2px_0px_0px_#A11734] transition-all duration-100',
         blue: 'bg-[#6687B7] text-white border border-[#42689F] font-bold shadow-[4px_4px_0px_0px_#42689F] relative -top-[2px] -left-[2px] hover:top-0 hover:left-0 hover:shadow-[2px_2px_0px_0px_#42689F] transition-all duration-100',
         destructive:
           'bg-destructive text-white shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40',
         outline:
-          'border border-input bg-background shadow-xs hover:bg-accent hover:text-accent-foreground',
+          'py-3 border border-input bg-background shadow-xs hover:bg-white hover:text-accent-foreground',
         secondary:
           'bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80',
         ghost: 'hover:bg-accent hover:text-accent-foreground',

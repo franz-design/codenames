@@ -89,21 +89,29 @@ export function GameLobbyView({ gameId, gameState, readOnly = false }: GameLobby
   const handleCopyJoinLink = () => {
     const joinUrl = `${window.location.origin}/games/${gameId}/join`
     navigator.clipboard.writeText(joinUrl).then(
-      () => toast.success('Lien copié dans le presse-papier'),
+      () => toast.success('Lien copié dans le presse-papier', {
+        position: 'top-right',
+        style: {
+          textAlign: 'center',
+          justifyContent: 'center',
+          width: 'auto',
+          margin: 'auto',
+          marginLeft: 'auto',
+        },
+      }),
       () => toast.error('Impossible de copier le lien'),
     )
   }
 
   return (
-    <div className="flex flex-col items-center justify-center p-4 mt-24">
-      <div className="w-full max-w-4xl space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+    <div className="flex flex-col items-center justify-center p-4 mt-4">
+      <div className="w-full max-w-4xl flex flex-col gap-4">
+        <div className="flex flex-wrap items-end justify-between gap-4">
           <h1 className="text-2xl font-bold">Lobby</h1>
           <div className="flex items-center gap-2">
             {!readOnly && (
               <Button
                 variant="outline"
-                size="sm"
                 onClick={handleCopyJoinLink}
               >
                 Copier le lien d&apos;invitation
@@ -114,7 +122,7 @@ export function GameLobbyView({ gameId, gameState, readOnly = false }: GameLobby
 
         <Card className="p-0">
           <div className="flex gap-0">
-            <div className="flex flex-col gap-4 py-6 pr-2">
+            <div className="flex flex-col gap-4 py-6">
               <CardHeader>
                 <CardTitle>Joueurs</CardTitle>
                 <CardDescription>
@@ -148,15 +156,15 @@ export function GameLobbyView({ gameId, gameState, readOnly = false }: GameLobby
             </div>
 
             {isCreator && (
-              <div className="flex flex-col gap-4 border-l pl-2 py-6 w-1/2">
-                <CardHeader>
+              <div className="flex flex-col gap-4 border-l py-6 w-1/2">
+                <CardHeader className="pb-2">
                   <CardTitle>Options</CardTitle>
                   <CardDescription>
                     Configurez les options de la partie
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="flex flex-col justify-between flex-1 h-full">
-                  <div className="border-t pt-6 flex flex-col justify-between flex-1 h-full">
+                <CardContent className="flex flex-col justify-between flex-1 h-full px-0">
+                  <div className="border-t pt-6 flex flex-col justify-between flex-1 h-full px-6">
                     <LobbyTimerSettingsPanel
                       timerSettings={serverTimer}
                       onTimerChange={(settings) => {
