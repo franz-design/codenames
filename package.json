@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "private": true,
   "packageManager": "pnpm@10.5.2",
-  "description": "Monorepo for Lonestone project",
+  "description": "Monorepo for Codenames project",
   "author": "",
   "license": "ISC",
   "keywords": [],

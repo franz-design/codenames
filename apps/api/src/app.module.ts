@@ -1,9 +1,12 @@
 import { IncomingMessage, ServerResponse } from 'node:http'
 import { Module } from '@nestjs/common'
 import { ConfigModule as NestConfigModule } from '@nestjs/config'
+import { APP_GUARD } from '@nestjs/core'
 import { ScheduleModule } from '@nestjs/schedule'
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
 import { LoggerModule } from 'nestjs-pino'
 import { AppController } from './app.controller'
+import { config } from './config/env.config'
 import { DbModule } from './modules/db/db.module'
 import { GamesModule } from './modules/games/games.module'
 import { WordsModule } from './modules/words/words.module'
@@ -20,6 +23,15 @@ interface ExpressResponse extends ServerResponse<IncomingMessage> {
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: config.throttle.ttlMs,
+          limit: config.throttle.limit,
+        },
+      ],
+      setHeaders: true,
+    }),
     LoggerModule.forRoot({
       pinoHttp: {
         transport: {
@@ -91,6 +103,11 @@ interface ExpressResponse extends ServerResponse<IncomingMessage> {
     ScheduleModule.forRoot(),
   ],
   controllers: [AppController],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

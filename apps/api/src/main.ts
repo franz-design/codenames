@@ -18,6 +18,10 @@ async function bootstrap() {
   // Use Pino logger
   app.useLogger(app.get(Logger))
 
+  if (config.env === 'production') {
+    app.getHttpAdapter().getInstance().set('trust proxy', 1)
+  }
+
   // Adding error details to the logs
   // https://github.com/iamolegga/nestjs-pino?tab=readme-ov-file#expose-stack-trace-and-error-class-in-err-property
   app.useGlobalInterceptors(new LoggerErrorInterceptor())
@@ -53,10 +57,10 @@ async function bootstrap() {
   if (config.env === 'development') {
     const swaggerConfig = new DocumentBuilder()
       .setOpenAPIVersion('3.1.0')
-      .setTitle('Lonestone API')
-      .setDescription('The Lonestone API description')
+      .setTitle('Codenames API')
+      .setDescription('The Codenames API description')
       .setVersion('1.0')
-      .addTag('@lonestone')
+      .addTag('@codenames')
       .build()
 
     const document = createOpenApiDocument(app, swaggerConfig)

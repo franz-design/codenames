@@ -28,6 +28,11 @@ export const configValidationSchema = z.object({
   // CORS
   CORS_ORIGINS: z.string().default('*').transform(val => val.split(',')),
 
+  /** Window length in ms for HTTP rate limiting (requests per IP per window) */
+  API_THROTTLE_TTL_MS: z.coerce.number().positive().default(60_000),
+  /** Max HTTP requests per IP per window */
+  API_THROTTLE_LIMIT: z.coerce.number().positive().default(100),
+
   /** Same value as web-spa VITE_ADMIN_TOKEN; optional — admin spectator API is disabled if unset */
   ADMIN_SPECTATOR_TOKEN: z
     .string()
@@ -58,6 +63,10 @@ export const config = {
   apiPort: configParsed.data.API_PORT,
   cors: {
     origins: configParsed.data.CORS_ORIGINS,
+  },
+  throttle: {
+    ttlMs: configParsed.data.API_THROTTLE_TTL_MS,
+    limit: configParsed.data.API_THROTTLE_LIMIT,
   },
   database: {
     password: configParsed.data.DATABASE_PASSWORD,

@@ -40,6 +40,7 @@
     "@nestjs/platform-socket.io": "11.0.0",
     "@nestjs/schedule": "6.0.0",
     "@nestjs/swagger": "11.2.0",
+    "@nestjs/throttler": "6.5.0",
     "@nestjs/websockets": "11.0.0",
     "@scalar/nestjs-api-reference": "0.5.14",
     "@testcontainers/postgresql": "11.8.1",

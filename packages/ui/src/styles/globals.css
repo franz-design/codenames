@@ -205,7 +205,7 @@
   }
 
   .word-card-revealed-back-white {
-    --word-card-back-top: var(--white);
+    --word-card-back-top: var(--primary);
     --word-card-back-bottom: color-mix(in srgb, var(--white-dark) 78%, var(--white));
     --word-card-dot: color-mix(in srgb, var(--white) 85%, white);
   }
