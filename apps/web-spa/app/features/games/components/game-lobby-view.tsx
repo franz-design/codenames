@@ -157,31 +157,30 @@ export function GameLobbyView({ gameId, gameState, readOnly = false }: GameLobby
                       Choisissez votre équipe et désignez un espion par équipe
                     </CardDescription>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          size="sm"
-                          aria-label="Répartir les joueurs au hasard"
-                          disabled={
-                            readOnly
-                            || !isCreator
-                            || gameState.players.length === 0
-                            || isShufflingTeams
-                          }
-                          onClick={handleShufflePlayers}
-                        >
-                          <Shuffle className="w-4 h-4" />
-                          <Users2 className="w-4 h-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {!isCreator
-                          ? 'Réservé à l\'hôte'
-                          : 'Répartir les joueurs au hasard (équipes équilibrées)'}
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
+                  {isCreator && (
+                    <div className="flex items-center gap-2">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="sm"
+                            aria-label="Répartir les joueurs au hasard"
+                            disabled={
+                              readOnly
+                              || gameState.players.length === 0
+                              || isShufflingTeams
+                            }
+                            onClick={handleShufflePlayers}
+                          >
+                            <Shuffle className="w-4 h-4" />
+                            <Users2 className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          Répartir les joueurs au hasard
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  )}
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
