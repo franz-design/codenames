@@ -8,6 +8,8 @@ import {
   CardTitle,
 } from '@codenames/ui/components/primitives/card'
 import { toast } from '@codenames/ui/components/primitives/sonner'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@codenames/ui/components/primitives/tooltip'
+import { Shuffle, Users2 } from '@codenames/ui/icons'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRef } from 'react'
 import {
@@ -16,7 +18,7 @@ import {
 } from '../index'
 import { canStartGame } from '../utils/can-start-game'
 import { LobbyPlayersList } from './lobby-players-list'
-import { LobbyTimerSettingsPanel } from './lobby-timer-settings-panel'
+import { LobbySettings } from './lobby-settings'
 import { SpyDesignation } from './spy-designation'
 
 interface GameLobbyViewProps {
@@ -83,6 +85,20 @@ export function GameLobbyView({ gameId, gameState, readOnly = false }: GameLobby
     },
   })
 
+  const { mutate: shuffleLobbyTeams, isPending: isShufflingTeams } = useMutation({
+    mutationFn: () => {
+      if (!creatorToken)
+        throw new Error('Creator token required')
+      return api.shuffleLobbyTeams(gameId, creatorToken)
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['gameState', gameId, playerId] })
+    },
+    onError: () => {
+      toast.error('Impossible de répartir les équipes')
+    },
+  })
+
   const readyToStart = canStartGame(gameState)
   const canStart = isCreator && readyToStart
 
@@ -101,6 +117,16 @@ export function GameLobbyView({ gameId, gameState, readOnly = false }: GameLobby
       }),
       () => toast.error('Impossible de copier le lien'),
     )
+  }
+
+  const handleShufflePlayers = () => {
+    if (!isCreator || !creatorToken) {
+      toast.error('Seul l\'hôte peut répartir les équipes')
+      return
+    }
+    if (gameState.players.length === 0)
+      return
+    shuffleLobbyTeams()
   }
 
   return (
@@ -124,10 +150,39 @@ export function GameLobbyView({ gameId, gameState, readOnly = false }: GameLobby
           <div className="flex gap-0">
             <div className="flex flex-col gap-4 py-6">
               <CardHeader>
-                <CardTitle>Joueurs</CardTitle>
-                <CardDescription>
-                  Choisissez votre équipe et désignez un espion par équipe
-                </CardDescription>
+                <div className="flex justify-between items-start gap-8">
+                  <div className="flex flex-col gap-2">
+                    <CardTitle>Joueurs</CardTitle>
+                    <CardDescription>
+                      Choisissez votre équipe et désignez un espion par équipe
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          size="sm"
+                          aria-label="Répartir les joueurs au hasard"
+                          disabled={
+                            readOnly
+                            || !isCreator
+                            || gameState.players.length === 0
+                            || isShufflingTeams
+                          }
+                          onClick={handleShufflePlayers}
+                        >
+                          <Shuffle className="w-4 h-4" />
+                          <Users2 className="w-4 h-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {!isCreator
+                          ? 'Réservé à l\'hôte'
+                          : 'Répartir les joueurs au hasard (équipes équilibrées)'}
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="space-y-6">
                 <LobbyPlayersList
@@ -165,7 +220,7 @@ export function GameLobbyView({ gameId, gameState, readOnly = false }: GameLobby
                 </CardHeader>
                 <CardContent className="flex flex-col justify-between flex-1 h-full px-0">
                   <div className="border-t pt-6 flex flex-col justify-between flex-1 h-full px-6">
-                    <LobbyTimerSettingsPanel
+                    <LobbySettings
                       timerSettings={serverTimer}
                       onTimerChange={(settings) => {
                         timerForStartRef.current = settings

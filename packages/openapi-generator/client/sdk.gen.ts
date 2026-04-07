@@ -24,6 +24,8 @@ import type {
   GamesControllerChooseSideResponses,
   GamesControllerAssignPlayerSideByCreatorData,
   GamesControllerAssignPlayerSideByCreatorResponses,
+  GamesControllerShuffleLobbyTeamsData,
+  GamesControllerShuffleLobbyTeamsResponses,
   GamesControllerDesignateSpyData,
   GamesControllerDesignateSpyResponses,
   GamesControllerDesignatePlayerAsSpyData,
@@ -235,6 +237,25 @@ export const gamesControllerAssignPlayerSideByCreator = <
     ThrowOnError
   >({
     url: "/api/games/{id}/creator/players/{playerId}/side",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+};
+
+export const gamesControllerShuffleLobbyTeams = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<GamesControllerShuffleLobbyTeamsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    GamesControllerShuffleLobbyTeamsResponses,
+    unknown,
+    ThrowOnError
+  >({
+    url: "/api/games/{id}/creator/shuffle-teams",
     ...options,
     headers: {
       "Content-Type": "application/json",

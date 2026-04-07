@@ -178,6 +178,15 @@ export const assignPlayerSideByCreatorSchema = z.object({
 
 export type AssignPlayerSideByCreatorInput = z.infer<typeof assignPlayerSideByCreatorSchema>
 
+export const shuffleLobbyTeamsSchema = z.object({
+  creatorToken: z.uuid(),
+}).meta({
+  title: 'ShuffleLobbyTeamsSchema',
+  description: 'Schema for the host to randomly redistribute players across teams in the lobby',
+})
+
+export type ShuffleLobbyTeamsInput = z.infer<typeof shuffleLobbyTeamsSchema>
+
 export const giveClueSchema = z.object({
   word: z.string().min(1),
   number: z.number().int().min(0),

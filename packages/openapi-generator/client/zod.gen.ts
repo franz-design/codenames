@@ -58,6 +58,18 @@ export const zAssignPlayerSideByCreatorSchema = z.object({
 });
 
 /**
+ * ShuffleLobbyTeamsSchema
+ * Schema for the host to randomly redistribute players across teams in the lobby
+ */
+export const zShuffleLobbyTeamsSchema = z.object({
+  creatorToken: z
+    .uuid()
+    .regex(
+      /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+    ),
+});
+
+/**
  * DesignatePlayerAsSpySchema
  * Schema for creator to designate a player as spy
  */
@@ -573,6 +585,29 @@ export const zGamesControllerAssignPlayerSideByCreatorData = z.object({
  */
 export const zGamesControllerAssignPlayerSideByCreatorResponse =
   zGameStateSchema;
+
+export const zGamesControllerShuffleLobbyTeamsData = z.object({
+  body: z.object({
+    creatorToken: z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      ),
+  }),
+  path: z.object({
+    id: z
+      .uuid()
+      .regex(
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+      ),
+  }),
+  query: z.optional(z.never()),
+});
+
+/**
+ * Full game state computed from events
+ */
+export const zGamesControllerShuffleLobbyTeamsResponse = zGameStateSchema;
 
 export const zGamesControllerDesignateSpyData = z.object({
   body: z.optional(z.never()),

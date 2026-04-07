@@ -37,6 +37,8 @@ import {
   sendChatSchema,
   SetTimerSettingsInput,
   setTimerSettingsSchema,
+  ShuffleLobbyTeamsInput,
+  shuffleLobbyTeamsSchema,
   StartRoundInput,
   startRoundSchema,
   TimelinePagination,
@@ -150,6 +152,15 @@ export class GamesController {
     @TypedBody(assignPlayerSideByCreatorSchema) body: { side: 'red' | 'blue', creatorToken: string },
   ) {
     return await this.gamesService.assignPlayerSideByCreator(id, playerId, body)
+  }
+
+  @CreatorAuth('Only the game creator can shuffle teams in the lobby')
+  @TypedRoute.Post(':id/creator/shuffle-teams', gameStateSchema)
+  async shuffleLobbyTeams(
+    @TypedParam('id', z.uuid()) id: string,
+    @TypedBody(shuffleLobbyTeamsSchema) body: ShuffleLobbyTeamsInput,
+  ) {
+    return await this.gamesService.shuffleLobbyTeams(id, body)
   }
 
   @TypedRoute.Patch(':id/players/me/spy', gameStateSchema)

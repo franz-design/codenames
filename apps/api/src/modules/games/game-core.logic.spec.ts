@@ -214,6 +214,7 @@ describe('game-core.logic', () => {
         id: 'u1',
         name: 'Alice',
         side: 'red',
+        isSpy: false,
       })
     })
 

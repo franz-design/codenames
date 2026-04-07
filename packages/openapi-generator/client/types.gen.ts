@@ -42,6 +42,14 @@ export type AssignPlayerSideByCreatorSchema = {
 };
 
 /**
+ * ShuffleLobbyTeamsSchema
+ * Schema for the host to randomly redistribute players across teams in the lobby
+ */
+export type ShuffleLobbyTeamsSchema = {
+  creatorToken: string;
+};
+
+/**
  * DesignatePlayerAsSpySchema
  * Schema for creator to designate a player as spy
  */
@@ -548,6 +556,31 @@ export type GamesControllerAssignPlayerSideByCreatorResponses = {
 
 export type GamesControllerAssignPlayerSideByCreatorResponse =
   GamesControllerAssignPlayerSideByCreatorResponses[keyof GamesControllerAssignPlayerSideByCreatorResponses];
+
+export type GamesControllerShuffleLobbyTeamsData = {
+  /**
+   * ShuffleLobbyTeamsSchema
+   * Schema for the host to randomly redistribute players across teams in the lobby
+   */
+  body: {
+    creatorToken: string;
+  };
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: "/api/games/{id}/creator/shuffle-teams";
+};
+
+export type GamesControllerShuffleLobbyTeamsResponses = {
+  /**
+   * Full game state computed from events
+   */
+  200: GameStateSchema;
+};
+
+export type GamesControllerShuffleLobbyTeamsResponse =
+  GamesControllerShuffleLobbyTeamsResponses[keyof GamesControllerShuffleLobbyTeamsResponses];
 
 export type GamesControllerDesignateSpyData = {
   body?: never;

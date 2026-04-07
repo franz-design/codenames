@@ -156,7 +156,7 @@ export function applyEvent(
   if (eventType === GameEventType.PLAYER_CHOSE_SIDE) {
     const { playerId, playerName, side } = payload as { playerId: string, playerName: string, side: Side }
     const players = state.players.map(p =>
-      p.id === playerId ? { ...p, name: playerName, side } : p,
+      p.id === playerId ? { ...p, name: playerName, side, isSpy: false } : p,
     )
     if (!players.some(p => p.id === playerId)) {
       players.push({ id: playerId, name: playerName, side })

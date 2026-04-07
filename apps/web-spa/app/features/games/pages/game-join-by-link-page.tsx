@@ -89,6 +89,7 @@ export default function GameJoinByLinkPage() {
                       placeholder="Votre pseudo"
                       autoComplete="username"
                       disabled={isPending}
+                      autoFocus
                     />
                   </FormControl>
                   <FormMessage />

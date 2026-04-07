@@ -59,6 +59,7 @@ export interface GamesApiClient {
     side: 'red' | 'blue',
     creatorToken: string,
   ) => Promise<GameState>
+  shuffleLobbyTeams: (gameId: string, creatorToken: string) => Promise<GameState>
   designateSpy: (gameId: string) => Promise<GameState>
   setTimerSettings: (
     gameId: string,
@@ -183,6 +184,19 @@ export function createGamesApiClient(playerId: string): GamesApiClient {
           method: 'PATCH',
           headers: headers({}),
           body: JSON.stringify({ side, creatorToken }),
+          credentials: 'include',
+        },
+      )
+      return handleResponse<GameState>(response)
+    },
+
+    async shuffleLobbyTeams(gameId: string, creatorToken: string) {
+      const response = await fetch(
+        `${baseUrl}/api/games/${gameId}/creator/shuffle-teams`,
+        {
+          method: 'POST',
+          headers: headers({}),
+          body: JSON.stringify({ creatorToken }),
           credentials: 'include',
         },
       )

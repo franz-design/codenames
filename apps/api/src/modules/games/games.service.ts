@@ -25,6 +25,7 @@ import {
   SelectWordInput,
   SendChatInput,
   SetTimerSettingsInput,
+  ShuffleLobbyTeamsInput,
   StartRoundInput,
   TimelineItemResponse,
   TimelinePagination,
@@ -375,6 +376,55 @@ export class GamesService {
     gameEvent.triggeredBy = targetPlayerId
     await this.em.persistAndFlush(gameEvent)
     await this.emitTimelineItem(gameId, gameEvent)
+
+    const eventsAfter = await this.loadGameEvents(gameId)
+    const stateAfter = computeGameState(eventsAfter)
+    await this.emitGameState(gameId, stateAfter)
+    return this.buildGameStateResponseFromComputed(stateAfter, undefined)
+  }
+
+  async shuffleLobbyTeams(
+    gameId: string,
+    _data: ShuffleLobbyTeamsInput,
+  ): Promise<GameStateResponse> {
+    const game = await this.em.findOne(Game, { id: gameId })
+    if (!game)
+      throw new NotFoundException('Game not found')
+
+    const events = await this.loadGameEvents(gameId)
+    const state = computeGameState(events)
+
+    if (state.status !== 'LOBBY')
+      throw new BadRequestException('Teams can only be shuffled in the lobby')
+
+    const roster = [...state.players]
+    if (roster.length === 0)
+      throw new BadRequestException('No players to assign')
+
+    for (let i = roster.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[roster[i], roster[j]] = [roster[j], roster[i]]
+    }
+
+    const n = roster.length
+    const redGetsMore = Math.random() < 0.5
+    const redCount = redGetsMore ? Math.ceil(n / 2) : Math.floor(n / 2)
+
+    for (let index = 0; index < roster.length; index++) {
+      const player = roster[index]
+      const side: Side = index < redCount ? 'red' : 'blue'
+      const gameEvent = new GameEvent()
+      gameEvent.game = game
+      gameEvent.eventType = GameEventType.PLAYER_CHOSE_SIDE
+      gameEvent.payload = {
+        playerId: player.id,
+        playerName: player.name,
+        side,
+      }
+      gameEvent.triggeredBy = player.id
+      await this.em.persistAndFlush(gameEvent)
+      await this.emitTimelineItem(gameId, gameEvent)
+    }
 
     const eventsAfter = await this.loadGameEvents(gameId)
     const stateAfter = computeGameState(eventsAfter)
