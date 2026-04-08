@@ -66,6 +66,8 @@ export function ClueForm({
     form.reset({ word: '', number: 1 })
   }
 
+  const isFormValid = form.formState.isValid
+
   return (
     <Form {...form}>
       <form
@@ -86,6 +88,7 @@ export function ClueForm({
                   autoComplete="off"
                   disabled={isPending || disabled}
                   onChange={e => field.onChange(e.target.value.trimStart())}
+                  maxLength={32}
                 />
               </FormControl>
               <FormMessage />
@@ -142,10 +145,10 @@ export function ClueForm({
         />
         <Button
           type="submit"
-          disabled={isPending || disabled}
+          disabled={isPending || disabled || !isFormValid}
           className="shrink-0"
         >
-          {isPending ? 'Envoi...' : 'Donner l\'indice'}
+          Donner l'indice
         </Button>
       </form>
     </Form>
