@@ -4,7 +4,7 @@ import type { GameTimelineSidebarProps } from './game-timeline-sidebar'
 import { Button } from '@codenames/ui/components/primitives/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@codenames/ui/components/primitives/card'
 import { cn } from '@codenames/ui/lib/utils'
-import { ChevronLeft } from 'lucide-react'
+import { MessageCircle } from 'lucide-react'
 import { useState } from 'react'
 import { ClueForm } from './clue-form'
 import { GameTimelineSidebar } from './game-timeline-sidebar'
@@ -90,11 +90,11 @@ function GamePlayTimelineLayout({
           type="button"
           variant="outline"
           size="icon"
-          className="fixed top-24 right-0 z-40 hidden size-10 rounded-l-md rounded-r-none border-r-0 bg-background shadow-sm lg:inline-flex"
+          className="fixed top-24 right-0 z-40 hidden size-10 rounded-l-md rounded-r-none border-r-0 bg-background shadow-sm lg:inline-flex px-3 w-auto"
           onClick={onShowTimeline}
           aria-label="Afficher l’historique et le chat"
         >
-          <ChevronLeft className="size-4" aria-hidden />
+          <MessageCircle />
         </Button>
       )}
     </>
