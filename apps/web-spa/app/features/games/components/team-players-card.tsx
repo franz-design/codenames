@@ -17,6 +17,11 @@ const HEADER_STYLES: Record<Side, string> = {
   blue: 'border-b-2 border-blue-dark bg-blue-dark/60',
 }
 
+const USER_NAME_STYLES: Record<Side, string> = {
+  red: 'bg-white text-red shadow-[4px_4px_0px_0px_#A11734]',
+  blue: 'bg-white text-blue shadow-[4px_4px_0px_0px_#42689F]',
+}
+
 export interface TeamPlayersCardProps {
   side: Side
   players: GameStatePlayer[]
@@ -57,25 +62,27 @@ export function TeamPlayersCard({
       <CardContent className="flex flex-col gap-2 px-4 pt-4 pb-6">
         {spy && (
           <div>
-            <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wide text-destructive">
+            <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wide text-destructive">
               Espion
             </p>
-            <p className="truncate text-xs font-medium">{spy.name}</p>
+            <div className="flex gap-0.5 flex-wrap items-start">
+              <p className={`truncate text-sm font-bold py-1 px-2 rounded-md ${USER_NAME_STYLES[side]}`}>{spy.name}</p>
+            </div>
           </div>
         )}
         <div>
-          <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wide text-destructive">
+          <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wide text-destructive">
             Agents
           </p>
-          <ul className="flex flex-col gap-0.5">
+          <ul className="flex gap-0.5 flex-wrap items-start">
             {operatives.length > 0
               ? operatives.map(p => (
-                  <li key={p.id} className="truncate text-xs">
+                  <li key={p.id} className={`truncate text-sm font-bold py-1 px-2 rounded-md ${USER_NAME_STYLES[side]}`}>
                     {p.name}
                   </li>
                 ))
               : (
-                  <li className="text-xs text-muted-foreground italic">
+                  <li className="text-sm text-muted-foreground italic">
                     Aucun
                   </li>
                 )}
@@ -83,7 +90,7 @@ export function TeamPlayersCard({
         </div>
         {total > 0 && (
           <div className="mt-8">
-            <p className="mb-2 tracking-widest text-center text-xs font-semibold tabular-nums text-white">
+            <p className="mb-2 tracking-widest text-center text-sm font-semibold tabular-nums text-white">
               {found}
               /
               {total}

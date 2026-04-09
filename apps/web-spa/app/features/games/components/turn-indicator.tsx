@@ -101,24 +101,21 @@ export function TurnIndicator({
 
       {currentClue && (
         <div className="absolute z-20 flex w-full items-center justify-center">
-          <div className={cn('gap-2 p-16 rounded-full scaleIn', clueBgColor)}>
+          <div className={cn('relative flex items-center gap-2 p-16 rounded-full scaleIn', clueBgColor)}>
             <span className="font-bold text-lg">
               {currentClue.word}
             </span>
+            <div className={cn('flex items-center gap-2 font-bold w-8 h-8 justify-center rounded-full bg-white z-30', TEXT_COLORS[currentTurn])}>
+              {guessesRemaining >= 100 ? '∞' : guessesRemaining - 1}
+            </div>
           </div>
         </div>
       )}
 
       <div className="relative z-10">
-        {currentClue
-          ? (
-              <div className={cn('flex items-center gap-2 font-bold w-8 h-8 justify-center rounded-full bg-white', TEXT_COLORS[currentTurn])}>
-                {guessesRemaining >= 100 ? '∞' : guessesRemaining - 1}
-              </div>
-            )
-          : (
-              <span className="text-sm">L'espion réfléchit...</span>
-            )}
+        {!currentClue && (
+          <span className="text-sm">L'espion réfléchit...</span>
+        )}
       </div>
     </div>
   )

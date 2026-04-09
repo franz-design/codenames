@@ -1,4 +1,6 @@
 import type { TimelineItem } from '../types'
+import { Button } from '@codenames/ui/components/primitives/button'
+import { ChevronRight } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import { GameChatInput } from './game-chat-input'
 import { GameTimelineItem } from './game-timeline-item'
@@ -13,6 +15,8 @@ export interface GameTimelineSidebarProps {
   /** Joueur sans équipe en cours de partie : pas de chat jusqu'à assignation par l'hôte */
   isChatDisabled?: boolean
   className?: string
+  id?: string
+  onHideTimeline?: () => void
 }
 
 export function GameTimelineSidebar({
@@ -23,6 +27,8 @@ export function GameTimelineSidebar({
   currentPlayerId = null,
   isChatDisabled = false,
   className,
+  id,
+  onHideTimeline,
 }: GameTimelineSidebarProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -31,11 +37,26 @@ export function GameTimelineSidebar({
 
   return (
     <aside
+      id={id}
       className={`hidden h-[calc(100%-34px)] min-w-64 flex-[1] flex-col border-1 rounded-lg mr-4 mt-4 bg-muted/20 lg:flex ${className ?? ''}`}
       aria-label="Historique et chat"
     >
-      <div className="border-b px-3 py-2">
+      <div className="flex items-center justify-between gap-2 border-b px-3 py-2">
         <h2 className="text-sm font-semibold">Historique & Chat</h2>
+        {onHideTimeline != null && (
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="size-8 shrink-0"
+            onClick={onHideTimeline}
+            aria-expanded
+            aria-controls={id}
+            aria-label="Masquer l’historique et le chat"
+          >
+            <ChevronRight className="size-4" aria-hidden />
+          </Button>
+        )}
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
