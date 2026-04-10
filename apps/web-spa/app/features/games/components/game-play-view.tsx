@@ -5,7 +5,8 @@ import { Button } from '@codenames/ui/components/primitives/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@codenames/ui/components/primitives/card'
 import { cn } from '@codenames/ui/lib/utils'
 import { MessageCircle } from 'lucide-react'
-import { useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
+import { useOperativeRevealPresentation } from '../hooks/use-operative-reveal-presentation'
 import { ClueForm } from './clue-form'
 import { GameTimelineSidebar } from './game-timeline-sidebar'
 import { TeamPlayersCard } from './team-players-card'
@@ -121,18 +122,45 @@ export function GamePlayView({
   isSendingChat,
 }: GamePlayViewProps) {
   const [isTimelineVisible, setIsTimelineVisible] = useState(true)
+  const revealOverlayIdleRef = useRef(true)
+  const [operativeRevealOverlayIdle, setOperativeRevealOverlayIdle] = useState(true)
+  const handleOperativeRevealOverlayIdleChange = useCallback((isIdle: boolean) => {
+    revealOverlayIdleRef.current = isIdle
+    setOperativeRevealOverlayIdle(isIdle)
+  }, [])
   const currentPlayer = gameState.players.find(p => p.id === playerId)
   const viewMode: 'spy' | 'operative' = isReadOnly ? 'spy' : getViewMode(currentPlayer)
   const round = gameState.currentRound
 
+  const { roundForDerivedUi, timelineItemsForSidebar, hasOperativeRevealPresentationLag }
+    = useOperativeRevealPresentation({
+      round: round ?? null,
+      viewMode,
+      gameStatus: gameState.status,
+      revealOverlayIdleRef,
+      isRevealOverlayIdle: operativeRevealOverlayIdle,
+      timelineItems,
+    })
+
   const timelineSidebarProps: Omit<GameTimelineSidebarProps, 'className' | 'id'> = {
-    items: timelineItems,
+    items: timelineItemsForSidebar,
     isLoading: timelineIsLoading,
     onSendMessage: onSendChatMessage,
     isSending: isSendingChat,
     currentPlayerId: playerId,
     isChatDisabled: isReadOnly,
   }
+
+  /** Grille : état serveur pour les révélations ; highlights alignés sur la présentation pour ne pas les effacer avant la fin du reveal. */
+  const roundForWordGrid = useMemo(() => {
+    if (!round)
+      return round
+    if (viewMode !== 'operative')
+      return round
+    if (!roundForDerivedUi)
+      return round
+    return { ...round, highlights: roundForDerivedUi.highlights }
+  }, [round, roundForDerivedUi, viewMode])
 
   const isAwaitingTeamAssignment
     = !isReadOnly
@@ -149,6 +177,12 @@ export function GamePlayView({
   }
 
   const isFinished = gameState.status === 'FINISHED'
+
+  /** Opérative : chrome « partie terminée » seulement quand la présentation a rattrapé le serveur (après reveal). */
+  const isGameFinishedForGridChrome
+    = isFinished && (viewMode !== 'operative' || !hasOperativeRevealPresentationLag)
+
+  const showFinishedVictoryPanel = isGameFinishedForGridChrome
   const canGiveClue
     = !isReadOnly
       && !isFinished
@@ -204,7 +238,7 @@ export function GamePlayView({
       timelineSidebarProps={timelineSidebarProps}
     >
       <div className="flex w-full max-w-8xl flex-col gap-6">
-        {isFinished && (
+        {showFinishedVictoryPanel && (
           <Card
             className={
               gameState.winningSide
@@ -240,9 +274,9 @@ export function GamePlayView({
           </Card>
         )}
 
-        {!isFinished && (
+        {!isGameFinishedForGridChrome && roundForDerivedUi != null && (
           <TurnIndicator
-            round={round}
+            round={roundForDerivedUi}
             timerSettings={gameState.timerSettings}
             isUserTurn={canGiveClue || canOperativeInteract}
             isWaitingForClueOnMyTeam={isWaitingForClueOnMyTeam}
@@ -254,26 +288,27 @@ export function GamePlayView({
           <TeamPlayersCard
             side="red"
             players={gameState.players.filter(p => p.side === 'red')}
-            round={round}
+            round={roundForDerivedUi ?? round}
             className="w-[15%]"
           />
           <div className="flex min-w-0 flex-1 flex-col">
             <WordGrid
-              round={round}
+              round={roundForWordGrid ?? round}
               viewMode={viewMode}
               playerId={playerId}
               isOperativeInteractive={canOperativeInteract && !isReadOnly}
-              isGameFinished={isFinished}
+              isGameFinished={isGameFinishedForGridChrome}
               onHighlight={onHighlight}
               onUnhighlight={onUnhighlight}
               onSelect={onSelect}
               isActionPending={isOperativeActionPending}
+              onOperativeRevealOverlayIdleChange={handleOperativeRevealOverlayIdleChange}
             />
           </div>
           <TeamPlayersCard
             side="blue"
             players={gameState.players.filter(p => p.side === 'blue')}
-            round={round}
+            round={roundForDerivedUi ?? round}
             className="w-[15%]"
           />
         </div>

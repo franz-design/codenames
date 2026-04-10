@@ -131,7 +131,7 @@ export function WordCard({
 
   if (showRevealedBack && effectiveCardType) {
     return (
-      <div className="group relative perspective-midrange cursor-pointer">
+      <div className="group relative perspective-midrange cursor-pointer" data-word-card-anchor={wordIndex}>
         <div
           className={cn(
             'absolute left-[4px] top-[4px] z-0 flex h-20 w-full items-center justify-center rounded-[12px] [transform-style:preserve-3d] transition-colors duration-500 ease-in-out',
@@ -158,7 +158,7 @@ export function WordCard({
   }
 
   return (
-    <div className="group relative perspective-midrange">
+    <div className="group relative perspective-midrange" data-word-card-anchor={wordIndex}>
       <div className="relative h-20 w-full [transform-style:preserve-3d]">
         <div
           className={cn(
