@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto'
 import { EntityManager } from '@mikro-orm/core'
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   forwardRef,
   Inject,
@@ -22,6 +23,7 @@ import {
   GiveClueInput,
   HighlightWordInput,
   JoinGameResponse,
+  PublicGameResponse,
   SelectWordInput,
   SendChatInput,
   SetTimerSettingsInput,
@@ -47,6 +49,9 @@ import { Game } from './games.entity'
 import { GamesGateway } from './games.gateway'
 
 const STALE_UNFINISHED_GAME_MAX_AGE_HOURS = 24
+const MIN_PLAYERS_PER_GAME = 4
+const MAX_PLAYERS_PER_GAME = 16
+const DEFAULT_MAX_PLAYERS_PER_GAME = 8
 
 @Injectable()
 export class GamesService {
@@ -144,19 +149,47 @@ export class GamesService {
     return ongoing
   }
 
+  async listPublicOngoingGames(): Promise<PublicGameResponse[]> {
+    const games = await this.em.find(Game, { isPublic: true }, { orderBy: { createdAt: 'DESC' }, limit: 150 })
+    const ongoing: PublicGameResponse[] = []
+    for (const game of games) {
+      const events = await this.loadGameEvents(game.id)
+      const state = computeGameState(events)
+      if (state.status === 'FINISHED')
+        continue
+      ongoing.push({
+        id: game.id,
+        status: state.status,
+        creatorPseudo: game.creatorPseudo,
+        createdAt: game.createdAt.toISOString(),
+        currentPlayersCount: state.players.length,
+        maxPlayers: game.maxPlayers,
+      })
+    }
+    return ongoing
+  }
+
   private assertPlayerCanMutate(playerId: string): void {
     if (this.isAdminSpectatorPlayer(playerId)) {
       throw new ForbiddenException('Spectator session cannot modify the game')
     }
   }
 
-  async createGame(pseudo: string): Promise<CreateGameResponse> {
+  async createGame(
+    pseudo: string,
+    options?: { isPublic?: boolean, maxPlayers?: number },
+  ): Promise<CreateGameResponse> {
     const creatorToken = randomUUID()
     const playerId = randomUUID()
 
     const game = new Game()
     game.creatorPseudo = pseudo.trim()
     game.creatorToken = creatorToken
+    game.isPublic = options?.isPublic ?? false
+    game.maxPlayers = options?.maxPlayers ?? DEFAULT_MAX_PLAYERS_PER_GAME
+    if (game.maxPlayers < MIN_PLAYERS_PER_GAME || game.maxPlayers > MAX_PLAYERS_PER_GAME) {
+      throw new BadRequestException('maxPlayers must be between 4 and 16')
+    }
     await this.em.persistAndFlush(game)
 
     const gameEvent = new GameEvent()
@@ -177,7 +210,7 @@ export class GamesService {
     const eventsAfterCreate = await this.loadGameEvents(game.id)
     const stateAfterCreate = computeGameState(eventsAfterCreate)
     await this.emitGameState(game.id, stateAfterCreate)
-    const gameState = this.buildGameStateResponseFromComputed(stateAfterCreate, playerId)
+    const gameState = this.buildGameStateResponseFromComputed(stateAfterCreate, eventsAfterCreate, playerId)
     return {
       game: this.mapGameToResponse(game),
       creatorToken,
@@ -201,11 +234,12 @@ export class GamesService {
 
     const events = await this.loadGameEvents(gameId)
     const state = computeGameState(events)
-    return this.buildGameStateResponseFromComputed(state, playerId)
+    return this.buildGameStateResponseFromComputed(state, events, playerId)
   }
 
   private buildGameStateResponseFromComputed(
     state: ReturnType<typeof computeGameState>,
+    _events: GameEventInput[],
     playerId?: string,
   ): GameStateResponse {
     const excludeResults = this.shouldExcludeResultsForPlayer(state, playerId)
@@ -233,19 +267,28 @@ export class GamesService {
     if (!game)
       throw new NotFoundException('Game not found')
 
-    const playerId = randomUUID()
+    const eventsBeforeJoin = await this.loadGameEvents(gameId)
+    const stateBeforeJoin = computeGameState(eventsBeforeJoin)
+    if (stateBeforeJoin.status === 'FINISHED')
+      throw new BadRequestException('GAME_FINISHED')
+    if (stateBeforeJoin.players.length >= game.maxPlayers)
+      throw new ConflictException('GAME_FULL')
 
-    const gameEvent = new GameEvent()
-    gameEvent.game = game
-    gameEvent.eventType = GameEventType.PLAYER_JOINED
-    gameEvent.payload = { playerId, playerName: pseudo.trim() }
-    gameEvent.triggeredBy = playerId
-    await this.em.persistAndFlush(gameEvent)
+    const normalizedPseudo = pseudo.trim()
+
+    const playerId = randomUUID()
+    const joinEvent = new GameEvent()
+    joinEvent.game = game
+    joinEvent.eventType = GameEventType.PLAYER_JOINED
+    joinEvent.payload = { playerId, playerName: normalizedPseudo }
+    joinEvent.triggeredBy = playerId
+    await this.em.persistAndFlush(joinEvent)
+    await this.emitTimelineItem(gameId, joinEvent)
 
     const eventsAfterJoin = await this.loadGameEvents(gameId)
     const stateAfterJoin = computeGameState(eventsAfterJoin)
     await this.emitGameState(gameId, stateAfterJoin)
-    const gameState = this.buildGameStateResponseFromComputed(stateAfterJoin, playerId)
+    const gameState = this.buildGameStateResponseFromComputed(stateAfterJoin, eventsAfterJoin, playerId)
     return { gameState, playerId }
   }
 
@@ -274,7 +317,7 @@ export class GamesService {
     const eventsAfterKick = await this.loadGameEvents(gameId)
     const stateAfterKick = computeGameState(eventsAfterKick)
     await this.emitGameState(gameId, stateAfterKick)
-    return this.buildGameStateResponseFromComputed(stateAfterKick, undefined)
+    return this.buildGameStateResponseFromComputed(stateAfterKick, eventsAfterKick, undefined)
   }
 
   async leaveGame(gameId: string, playerId: string): Promise<GameStateResponse> {
@@ -301,7 +344,7 @@ export class GamesService {
     const eventsAfterLeave = await this.loadGameEvents(gameId)
     const stateAfterLeave = computeGameState(eventsAfterLeave)
     await this.emitGameState(gameId, stateAfterLeave)
-    return this.buildGameStateResponseFromComputed(stateAfterLeave, playerId)
+    return this.buildGameStateResponseFromComputed(stateAfterLeave, eventsAfterLeave, playerId)
   }
 
   async chooseSide(
@@ -340,7 +383,7 @@ export class GamesService {
     const eventsAfterChooseSide = await this.loadGameEvents(gameId)
     const stateAfterChooseSide = computeGameState(eventsAfterChooseSide)
     await this.emitGameState(gameId, stateAfterChooseSide)
-    return this.buildGameStateResponseFromComputed(stateAfterChooseSide, playerId)
+    return this.buildGameStateResponseFromComputed(stateAfterChooseSide, eventsAfterChooseSide, playerId)
   }
 
   async assignPlayerSideByCreator(
@@ -380,7 +423,7 @@ export class GamesService {
     const eventsAfter = await this.loadGameEvents(gameId)
     const stateAfter = computeGameState(eventsAfter)
     await this.emitGameState(gameId, stateAfter)
-    return this.buildGameStateResponseFromComputed(stateAfter, undefined)
+    return this.buildGameStateResponseFromComputed(stateAfter, eventsAfter, undefined)
   }
 
   async shuffleLobbyTeams(
@@ -429,7 +472,7 @@ export class GamesService {
     const eventsAfter = await this.loadGameEvents(gameId)
     const stateAfter = computeGameState(eventsAfter)
     await this.emitGameState(gameId, stateAfter)
-    return this.buildGameStateResponseFromComputed(stateAfter, undefined)
+    return this.buildGameStateResponseFromComputed(stateAfter, eventsAfter, undefined)
   }
 
   async designateSpy(gameId: string, playerId: string): Promise<GameStateResponse> {
@@ -463,7 +506,7 @@ export class GamesService {
     const eventsAfterDesignateSpy = await this.loadGameEvents(gameId)
     const stateAfterDesignateSpy = computeGameState(eventsAfterDesignateSpy)
     await this.emitGameState(gameId, stateAfterDesignateSpy)
-    return this.buildGameStateResponseFromComputed(stateAfterDesignateSpy, playerId)
+    return this.buildGameStateResponseFromComputed(stateAfterDesignateSpy, eventsAfterDesignateSpy, playerId)
   }
 
   async designatePlayerAsSpy(
@@ -498,7 +541,7 @@ export class GamesService {
     const eventsAfterDesignateTarget = await this.loadGameEvents(gameId)
     const stateAfterDesignateTarget = computeGameState(eventsAfterDesignateTarget)
     await this.emitGameState(gameId, stateAfterDesignateTarget)
-    return this.buildGameStateResponseFromComputed(stateAfterDesignateTarget, undefined)
+    return this.buildGameStateResponseFromComputed(stateAfterDesignateTarget, eventsAfterDesignateTarget, undefined)
   }
 
   async setTimerSettings(
@@ -529,7 +572,7 @@ export class GamesService {
     const eventsAfter = await this.loadGameEvents(gameId)
     const stateAfter = computeGameState(eventsAfter)
     await this.emitGameState(gameId, stateAfter)
-    return this.buildGameStateResponseFromComputed(stateAfter, undefined)
+    return this.buildGameStateResponseFromComputed(stateAfter, eventsAfter, undefined)
   }
 
   async startRound(
@@ -606,7 +649,7 @@ export class GamesService {
     const stateAfterStartRound = computeGameState(eventsAfterStartRound)
     await this.emitGameState(gameId, stateAfterStartRound)
     this.syncTurnTimer(gameId)
-    return this.buildGameStateResponseFromComputed(stateAfterStartRound, playerId)
+    return this.buildGameStateResponseFromComputed(stateAfterStartRound, eventsAfterStartRound, playerId)
   }
 
   async giveClue(
@@ -647,7 +690,7 @@ export class GamesService {
     const eventsAfterClue = await this.loadGameEvents(gameId)
     const stateAfterClue = computeGameState(eventsAfterClue)
     await this.emitGameState(gameId, stateAfterClue)
-    return this.buildGameStateResponseFromComputed(stateAfterClue, playerId)
+    return this.buildGameStateResponseFromComputed(stateAfterClue, eventsAfterClue, playerId)
   }
 
   async selectWord(
@@ -722,7 +765,7 @@ export class GamesService {
     await this.emitGameState(gameId, stateFinal)
     if (gameOver.isOver || didPassTurn)
       this.syncTurnTimer(gameId)
-    return this.buildGameStateResponseFromComputed(stateFinal, playerId)
+    return this.buildGameStateResponseFromComputed(stateFinal, eventsFinal, playerId)
   }
 
   async highlightWord(
@@ -772,7 +815,7 @@ export class GamesService {
     const eventsAfterHighlight = await this.loadGameEvents(gameId)
     const stateAfterHighlight = computeGameState(eventsAfterHighlight)
     await this.emitGameState(gameId, stateAfterHighlight)
-    return this.buildGameStateResponseFromComputed(stateAfterHighlight, playerId)
+    return this.buildGameStateResponseFromComputed(stateAfterHighlight, eventsAfterHighlight, playerId)
   }
 
   async unhighlightWord(
@@ -814,7 +857,7 @@ export class GamesService {
     const eventsAfterUnhighlight = await this.loadGameEvents(gameId)
     const stateAfterUnhighlight = computeGameState(eventsAfterUnhighlight)
     await this.emitGameState(gameId, stateAfterUnhighlight)
-    return this.buildGameStateResponseFromComputed(stateAfterUnhighlight, playerId)
+    return this.buildGameStateResponseFromComputed(stateAfterUnhighlight, eventsAfterUnhighlight, playerId)
   }
 
   async passTurn(gameId: string, playerId: string): Promise<GameStateResponse> {
@@ -844,7 +887,7 @@ export class GamesService {
     const stateAfterPass = computeGameState(eventsAfterPass)
     await this.emitGameState(gameId, stateAfterPass)
     this.syncTurnTimer(gameId)
-    return this.buildGameStateResponseFromComputed(stateAfterPass, playerId)
+    return this.buildGameStateResponseFromComputed(stateAfterPass, eventsAfterPass, playerId)
   }
 
   async restartGame(gameId: string, playerId: string): Promise<GameStateResponse> {
@@ -867,7 +910,7 @@ export class GamesService {
     const eventsAfterRestart = await this.loadGameEvents(gameId)
     const stateAfterRestart = computeGameState(eventsAfterRestart)
     await this.emitGameState(gameId, stateAfterRestart)
-    return this.buildGameStateResponseFromComputed(stateAfterRestart, playerId)
+    return this.buildGameStateResponseFromComputed(stateAfterRestart, eventsAfterRestart, playerId)
   }
 
   async sendChatMessage(
@@ -1115,6 +1158,8 @@ export class GamesService {
     return {
       id: game.id,
       creatorPseudo: game.creatorPseudo,
+      isPublic: game.isPublic,
+      maxPlayers: game.maxPlayers,
       createdAt: game.createdAt,
     }
   }

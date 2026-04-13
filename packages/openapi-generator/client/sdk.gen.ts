@@ -12,6 +12,8 @@ import type {
   GamesControllerAdminUnwatchGameResponses,
   GamesControllerCreateGameData,
   GamesControllerCreateGameResponses,
+  GamesControllerListPublicGamesData,
+  GamesControllerListPublicGamesResponses,
   GamesControllerGetGameStateData,
   GamesControllerGetGameStateResponses,
   GamesControllerJoinGameData,
@@ -144,6 +146,21 @@ export const gamesControllerCreateGame = <ThrowOnError extends boolean = false>(
       "Content-Type": "application/json",
       ...options.headers,
     },
+  });
+};
+
+export const gamesControllerListPublicGames = <
+  ThrowOnError extends boolean = false,
+>(
+  options?: Options<GamesControllerListPublicGamesData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).get<
+    GamesControllerListPublicGamesResponses,
+    unknown,
+    ThrowOnError
+  >({
+    url: "/api/games/public",
+    ...options,
   });
 };
 

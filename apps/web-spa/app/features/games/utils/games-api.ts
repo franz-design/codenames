@@ -2,6 +2,7 @@ import type {
   CreateGameResponse,
   GameState,
   JoinGameResponse,
+  PublicGame,
   TimelineResponse,
 } from '../types'
 
@@ -46,7 +47,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
 }
 
 export interface GamesApiClient {
-  createGame: (pseudo: string) => Promise<CreateGameResponse>
+  createGame: (input: { pseudo: string, isPublic?: boolean, maxPlayers?: number }) => Promise<CreateGameResponse>
   getGameState: (gameId: string) => Promise<GameState>
   joinGame: (gameId: string, pseudo: string) => Promise<JoinGameResponse>
   kickPlayer: (gameId: string, playerId: string, creatorToken: string) => Promise<GameState>
@@ -94,11 +95,11 @@ export function createGamesApiClient(playerId: string): GamesApiClient {
     buildHeaders({ ...opts, playerId })
 
   return {
-    async createGame(pseudo: string) {
+    async createGame(input: { pseudo: string, isPublic?: boolean, maxPlayers?: number }) {
       const response = await fetch(`${baseUrl}/api/games`, {
         method: 'POST',
         headers: headers({}),
-        body: JSON.stringify({ pseudo }),
+        body: JSON.stringify(input),
         credentials: 'include',
       })
       return handleResponse<CreateGameResponse>(response)
@@ -354,6 +355,18 @@ export interface AdminOngoingGame {
   status: 'LOBBY' | 'PLAYING' | 'FINISHED'
   creatorPseudo: string
   createdAt: string
+}
+
+export async function fetchPublicOngoingGames(): Promise<PublicGame[]> {
+  const baseUrl = getBaseUrl()
+  const response = await fetch(`${baseUrl}/api/games/public`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+  return handleResponse<PublicGame[]>(response)
 }
 
 function buildAdminHeaders(adminToken: string, playerId?: string): HeadersInit {

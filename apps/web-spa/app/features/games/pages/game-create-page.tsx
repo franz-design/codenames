@@ -22,6 +22,8 @@ import {
 
 const createGameSchema = z.object({
   pseudo: z.string().min(1, 'Le pseudo est requis').max(100, 'Maximum 100 caractères'),
+  isPublic: z.boolean(),
+  maxPlayers: z.coerce.number().int().min(4, 'Minimum 4 joueurs').max(16, 'Maximum 16 joueurs'),
 })
 
 type CreateGameFormData = z.infer<typeof createGameSchema>
@@ -41,7 +43,11 @@ export default function GameCreatePage() {
   const { mutate: createGame, isPending, error } = useMutation({
     mutationFn: async (data: CreateGameFormData) => {
       const api = createGamesApiClient('')
-      const response = await api.createGame(data.pseudo)
+      const response = await api.createGame({
+        pseudo: data.pseudo,
+        isPublic: data.isPublic,
+        maxPlayers: data.maxPlayers,
+      })
       return response
     },
     onSuccess: (response, variables) => {
@@ -59,8 +65,10 @@ export default function GameCreatePage() {
 
   const form = useForm<CreateGameFormData>({
     resolver: zodResolver(createGameSchema),
-    defaultValues: { pseudo: playerName || '' },
+    defaultValues: { pseudo: playerName || '', isPublic: false, maxPlayers: 8 },
   })
+
+  const isPublic = form.watch('isPublic')
 
   const handleSubmit = (data: CreateGameFormData) => {
     createGame(data)
@@ -91,6 +99,54 @@ export default function GameCreatePage() {
                       placeholder="Votre pseudo"
                       autoComplete="username"
                       disabled={isPending}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="isPublic"
+              render={({ field }) => (
+                <FormItem>
+                  <label className="flex items-center justify-between gap-3 rounded-md border p-3">
+                    <div className="flex flex-col">
+                      <FormLabel htmlFor="isPublic">Partie publique</FormLabel>
+                      <span className="text-xs text-muted-foreground">
+                        Visible dans le listing des parties en cours
+                      </span>
+                    </div>
+                    <FormControl>
+                      <input
+                        id="isPublic"
+                        type="checkbox"
+                        checked={field.value}
+                        onChange={event => field.onChange(event.target.checked)}
+                        disabled={isPending}
+                      />
+                    </FormControl>
+                  </label>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="maxPlayers"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel htmlFor="maxPlayers">Nombre maximal de joueurs</FormLabel>
+                  <FormControl>
+                    <Input
+                      id="maxPlayers"
+                      type="number"
+                      min={4}
+                      max={16}
+                      {...field}
+                      value={field.value}
+                      disabled={isPending || !isPublic}
                     />
                   </FormControl>
                   <FormMessage />

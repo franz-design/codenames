@@ -40,6 +40,8 @@ describe('GamesController (e2e)', () => {
       game: {
         id: expect.any(String),
         creatorPseudo: 'Alice',
+        isPublic: false,
+        maxPlayers: 8,
       },
       creatorToken: expect.any(String),
       playerId: expect.any(String),
@@ -218,7 +220,7 @@ describe('GamesController (e2e)', () => {
       const createRes = await supertest(context.app.getHttpServer())
         .post('/games')
         .set('Content-Type', 'application/json')
-        .send({ pseudo: 'MidHost' })
+        .send({ pseudo: 'MidHost', isPublic: true, maxPlayers: 6 })
       midCreatorToken = createRes.body.creatorToken
       midGameId = createRes.body.game.id
       midRedSpyId = createRes.body.playerId
@@ -271,6 +273,8 @@ describe('GamesController (e2e)', () => {
         .post(`/games/${midGameId}/join`)
         .set('Content-Type', 'application/json')
         .send({ pseudo: 'LateJoiner' })
+      expect(joinLate.status).toBe(201)
+      expect(joinLate.body.playerId).toEqual(expect.any(String))
       midLateJoinerId = joinLate.body.playerId
     })
 
@@ -295,5 +299,27 @@ describe('GamesController (e2e)', () => {
       expect(late?.side).toBe('blue')
       expect(Boolean(late?.isSpy)).toBe(false)
     })
+  })
+
+  it('should list only public ongoing games', async () => {
+    const privateRes = await supertest(context.app.getHttpServer())
+      .post('/games')
+      .set('Content-Type', 'application/json')
+      .send({ pseudo: 'PrivateHost' })
+    const publicRes = await supertest(context.app.getHttpServer())
+      .post('/games')
+      .set('Content-Type', 'application/json')
+      .send({ pseudo: 'PublicHost', isPublic: true, maxPlayers: 7 })
+
+    expect(privateRes.status).toBe(201)
+    expect(publicRes.status).toBe(201)
+
+    const listRes = await supertest(context.app.getHttpServer())
+      .get('/games/public')
+
+    expect(listRes.status).toBe(200)
+    const publicIds = listRes.body.map((item: { id: string }) => item.id)
+    expect(publicIds).toContain(publicRes.body.game.id)
+    expect(publicIds).not.toContain(privateRes.body.game.id)
   })
 })

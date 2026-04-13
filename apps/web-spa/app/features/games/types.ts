@@ -50,6 +50,8 @@ export interface GameState {
 export interface Game {
   id: string
   creatorPseudo: string
+  isPublic: boolean
+  maxPlayers: number
   createdAt: string
 }
 
@@ -63,6 +65,15 @@ export interface CreateGameResponse {
 export interface JoinGameResponse {
   gameState: GameState
   playerId: string
+}
+
+export interface PublicGame {
+  id: string
+  creatorPseudo: string
+  status: 'LOBBY' | 'PLAYING'
+  currentPlayersCount: number
+  maxPlayers: number
+  createdAt: string
 }
 
 export interface TimelineItem {

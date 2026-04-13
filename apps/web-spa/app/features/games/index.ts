@@ -39,6 +39,7 @@ export type {
   GameStatePlayer,
   GameTimerSettings,
   JoinGameResponse,
+  PublicGame,
   RevealedWord,
   RoundState,
   Side,
@@ -54,5 +55,6 @@ export {
   adminWatchGame,
   createGamesApiClient,
   fetchAdminOngoingGames,
+  fetchPublicOngoingGames,
 } from './utils/games-api'
 export type { AdminOngoingGame, GamesApiClient } from './utils/games-api'

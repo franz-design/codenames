@@ -32,7 +32,15 @@ export default function GamePlayPage() {
   const { gameId } = useParams<{ gameId: string }>()
   const navigate = useNavigate()
   const { setRight } = useHeaderRight()
-  const { playerName, hasSession, playerId, clearSession, isCreator, isAdminSpectator } = useGameSession()
+  const {
+    playerName,
+    hasSession,
+    playerId,
+    clearSession,
+    isCreator,
+    isAdminSpectator,
+    creatorToken,
+  } = useGameSession()
   const { gameState: wsGameState, isConnected, error: wsError } = useGameWebSocket({
     gameId: gameId ?? null,
     playerId: playerId ?? null,
@@ -253,12 +261,14 @@ export default function GamePlayPage() {
 
   return (
     <GamePlayView
+      gameId={gameId}
       gameState={gameState}
       playerId={playerId ?? ''}
       playerName={playerName}
       isReadOnly={isAdminSpectator}
       isConnected={isConnected}
       isCreator={isCreator}
+      creatorToken={creatorToken}
       onGiveClue={(word, number) => giveClue({ word, number })}
       isCluePending={isCluePending}
       onHighlight={wordIndex => highlightWord(wordIndex)}

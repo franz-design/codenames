@@ -63,7 +63,7 @@ export function GamePendingPlayersDropdown({
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="shrink-0 rounded-full bg-primary-foreground px-4 py-2 text-xs font-medium text-primary backdrop-blur-sm transition-colors hover:bg-primary-foreground/80 cursor-pointer"
+          className="shrink-0 rounded-full bg-primary-foreground px-4 py-2 text-xs font-medium text-primary backdrop-blur-sm transition-colors hover:bg-primary-foreground/80 cursor-pointer wiggle"
         >
           {label}
         </button>

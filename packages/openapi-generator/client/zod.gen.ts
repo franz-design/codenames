@@ -8,6 +8,8 @@ import { z } from "zod";
  */
 export const zCreateGameSchema = z.object({
   pseudo: z.string().min(1).max(100),
+  isPublic: z.optional(z.boolean()),
+  maxPlayers: z.optional(z.int().gte(4).lte(16)),
 });
 
 /**
@@ -214,6 +216,8 @@ export const zGameSchema = z.object({
       /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
     ),
   creatorPseudo: z.string(),
+  isPublic: z.boolean(),
+  maxPlayers: z.int().gte(4).lte(16),
   createdAt: z.string(),
 });
 
@@ -320,6 +324,25 @@ export const zCreateGameResponseSchema = z.object({
     ),
   gameState: zGameStateSchema,
 });
+
+/**
+ * PublicGameSchema
+ * Public game row shown on home listing
+ */
+export const zPublicGameSchema = z.object({
+  id: z
+    .uuid()
+    .regex(
+      /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
+    ),
+  creatorPseudo: z.string(),
+  status: z.enum(["LOBBY", "PLAYING"]),
+  currentPlayersCount: z.int().gte(0).lte(9007199254740991),
+  maxPlayers: z.int().gte(4).lte(16),
+  createdAt: z.string(),
+});
+
+export const zGetPublic = z.array(zPublicGameSchema);
 
 /**
  * JoinGameResponseSchema
@@ -446,6 +469,8 @@ export const zGamesControllerAdminUnwatchGameResponse = zAdminUnwatchOkSchema;
 export const zGamesControllerCreateGameData = z.object({
   body: z.object({
     pseudo: z.string().min(1).max(100),
+    isPublic: z.optional(z.boolean()),
+    maxPlayers: z.optional(z.int().gte(4).lte(16)),
   }),
   path: z.optional(z.never()),
   query: z.optional(z.never()),
@@ -455,6 +480,17 @@ export const zGamesControllerCreateGameData = z.object({
  * Response when creating a game
  */
 export const zGamesControllerCreateGameResponse = zCreateGameResponseSchema;
+
+export const zGamesControllerListPublicGamesData = z.object({
+  body: z.optional(z.never()),
+  path: z.optional(z.never()),
+  query: z.optional(z.never()),
+});
+
+/**
+ * Successful response
+ */
+export const zGamesControllerListPublicGamesResponse = zGetPublic;
 
 export const zGamesControllerGetGameStateData = z.object({
   body: z.optional(z.never()),

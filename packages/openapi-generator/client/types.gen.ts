@@ -6,6 +6,8 @@
  */
 export type CreateGameSchema = {
   pseudo: string;
+  isPublic?: boolean;
+  maxPlayers?: number;
 };
 
 /**
@@ -175,6 +177,8 @@ export type CreateGameResponseSchema = {
 export type GameSchema = {
   id: string;
   creatorPseudo: string;
+  isPublic: boolean;
+  maxPlayers: number;
   createdAt: string;
 };
 
@@ -248,6 +252,21 @@ export type GameStatePlayerSchema = {
   side: ("red" | "blue") | null;
   isSpy?: boolean;
 };
+
+/**
+ * PublicGameSchema
+ * Public game row shown on home listing
+ */
+export type PublicGameSchema = {
+  id: string;
+  creatorPseudo: string;
+  status: "LOBBY" | "PLAYING";
+  currentPlayersCount: number;
+  maxPlayers: number;
+  createdAt: string;
+};
+
+export type GetPublic = Array<PublicGameSchema>;
 
 /**
  * JoinGameResponseSchema
@@ -392,6 +411,8 @@ export type GamesControllerCreateGameData = {
    */
   body: {
     pseudo: string;
+    isPublic?: boolean;
+    maxPlayers?: number;
   };
   path?: never;
   query?: never;
@@ -407,6 +428,23 @@ export type GamesControllerCreateGameResponses = {
 
 export type GamesControllerCreateGameResponse =
   GamesControllerCreateGameResponses[keyof GamesControllerCreateGameResponses];
+
+export type GamesControllerListPublicGamesData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/api/games/public";
+};
+
+export type GamesControllerListPublicGamesResponses = {
+  /**
+   * Successful response
+   */
+  200: GetPublic;
+};
+
+export type GamesControllerListPublicGamesResponse =
+  GamesControllerListPublicGamesResponses[keyof GamesControllerListPublicGamesResponses];
 
 export type GamesControllerGetGameStateData = {
   body?: never;

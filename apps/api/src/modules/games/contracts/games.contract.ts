@@ -15,6 +15,8 @@ export const cardTypeSchema = z.enum(['neutral', 'red', 'blue', 'black']).meta({
 
 export const createGameSchema = z.object({
   pseudo: z.string().min(1).max(100),
+  isPublic: z.boolean().optional(),
+  maxPlayers: z.number().int().min(4).max(16).optional(),
 }).meta({
   title: 'CreateGameSchema',
   description: 'Schema for creating a game',
@@ -129,6 +131,8 @@ export type GameStateResponse = z.infer<typeof gameStateSchema>
 export const gameSchema = z.object({
   id: z.uuid(),
   creatorPseudo: z.string(),
+  isPublic: z.boolean(),
+  maxPlayers: z.number().int().min(4).max(16),
   createdAt: z.date(),
 }).meta({
   title: 'GameSchema',
@@ -158,6 +162,21 @@ export const joinGameResponseSchema = z.object({
 })
 
 export type JoinGameResponse = z.infer<typeof joinGameResponseSchema>
+
+export const publicGameSchema = z.object({
+  id: z.uuid(),
+  creatorPseudo: z.string(),
+  status: z.enum(['LOBBY', 'PLAYING']),
+  currentPlayersCount: z.number().int().min(0),
+  maxPlayers: z.number().int().min(4).max(16),
+  createdAt: z.string(),
+}).meta({
+  title: 'PublicGameSchema',
+  description: 'Public game row shown on home listing',
+})
+
+export const publicGamesResponseSchema = z.array(publicGameSchema)
+export type PublicGameResponse = z.infer<typeof publicGameSchema>
 
 export const chooseSideSchema = z.object({
   side: sideSchema,

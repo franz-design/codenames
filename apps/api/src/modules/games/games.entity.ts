@@ -12,6 +12,12 @@ export class Game {
   @Property()
   creatorToken!: string
 
+  @Property({ default: false })
+  isPublic: boolean = false
+
+  @Property({ default: 8 })
+  maxPlayers: number = 8
+
   @Property({ fieldName: 'createdAt' })
   createdAt: Date = new Date()
 }

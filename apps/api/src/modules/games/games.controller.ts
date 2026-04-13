@@ -44,6 +44,7 @@ import {
   TimelinePagination,
   timelinePaginationSchema,
   timelineResponseSchema,
+  publicGamesResponseSchema,
 } from './contracts/games.contract'
 import { GamesService } from './games.service'
 import { CreatorAuth } from './guards/creator-auth.guard'
@@ -98,7 +99,15 @@ export class GamesController {
 
   @TypedRoute.Post('', createGameResponseSchema)
   async createGame(@TypedBody(createGameSchema) body: CreateGameInput) {
-    return await this.gamesService.createGame(body.pseudo)
+    return await this.gamesService.createGame(body.pseudo, {
+      isPublic: body.isPublic,
+      maxPlayers: body.maxPlayers,
+    })
+  }
+
+  @TypedRoute.Get('public', publicGamesResponseSchema)
+  async listPublicGames() {
+    return await this.gamesService.listPublicOngoingGames()
   }
 
   @TypedRoute.Get(':id/state', gameStateSchema)

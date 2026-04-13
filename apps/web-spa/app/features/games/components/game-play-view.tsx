@@ -8,6 +8,7 @@ import { MessageCircle } from 'lucide-react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { useOperativeRevealPresentation } from '../hooks/use-operative-reveal-presentation'
 import { ClueForm } from './clue-form'
+import { GamePendingPlayersDropdown } from './game-pending-players-dropdown'
 import { GameTimelineSidebar } from './game-timeline-sidebar'
 import { TeamPlayersCard } from './team-players-card'
 import { TurnIndicator } from './turn-indicator'
@@ -24,6 +25,7 @@ const WINNING_PANEL_STYLES: Record<Side, string> = {
 }
 
 export interface GamePlayViewProps {
+  gameId: string
   gameState: GameState
   playerId: string
   playerName: string | null
@@ -31,6 +33,7 @@ export interface GamePlayViewProps {
   isReadOnly?: boolean
   isConnected: boolean
   isCreator: boolean
+  creatorToken?: string | null
   onGiveClue?: (word: string, number: number) => void
   isCluePending?: boolean
   onHighlight?: (wordIndex: number) => void
@@ -71,7 +74,7 @@ function GamePlayTimelineLayout({
 }: GamePlayTimelineLayoutProps) {
   return (
     <>
-      <div className="flex w-full min-h-0">
+      <div className="flex w-full min-h-0 h-full">
         <div className={cn('flex min-h-0 min-w-0 flex-1 flex-col', mainClassName)}>
           {children}
         </div>
@@ -103,10 +106,12 @@ function GamePlayTimelineLayout({
 }
 
 export function GamePlayView({
+  gameId,
   gameState,
   playerId,
   isReadOnly = false,
   isCreator,
+  creatorToken = null,
   onGiveClue,
   isCluePending = false,
   onHighlight,
@@ -275,13 +280,15 @@ export function GamePlayView({
         )}
 
         {!isGameFinishedForGridChrome && roundForDerivedUi != null && (
-          <TurnIndicator
-            round={roundForDerivedUi}
-            timerSettings={gameState.timerSettings}
-            isUserTurn={canGiveClue || canOperativeInteract}
-            isWaitingForClueOnMyTeam={isWaitingForClueOnMyTeam}
-            className={cn(!isTimelineVisible && 'lg:max-w-[calc(100%-3rem)]')}
-          />
+          <div className="flex items-center gap-3">
+            <TurnIndicator
+              round={roundForDerivedUi}
+              timerSettings={gameState.timerSettings}
+              isUserTurn={canGiveClue || canOperativeInteract}
+              isWaitingForClueOnMyTeam={isWaitingForClueOnMyTeam}
+              className={cn('flex-1', !isTimelineVisible && 'lg:max-w-[calc(100%-3rem)]')}
+            />
+          </div>
         )}
 
         <div className="flex w-full items-start gap-6">

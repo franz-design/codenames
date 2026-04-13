@@ -38,15 +38,15 @@ export interface CardRevealAnimationConfig {
 }
 
 export const DEFAULT_CARD_REVEAL_ANIMATION_CONFIG: CardRevealAnimationConfig = {
-  holdAtCenterMs: 1000,
+  holdAtCenterMs: 500,
   maxScale: 2.5,
   maxSizeFractionOfGrid: 0.7,
   bumpScale: 1.17,
   bumpDurationMs: 420,
   bumpExpandEasing: 'cubic-bezier(0.22, 1.45, 0.32, 1.02)',
   bumpSettleEasing: 'cubic-bezier(0.68, -0.48, 0.28, 1.42)',
-  expandDurationMs: 1200,
-  shrinkDurationMs: 400,
+  expandDurationMs: 1000,
+  shrinkDurationMs: 300,
   rippleDurationMs: 400,
   expandEasing: 'cubic-bezier(0.66, 0, 0.155, 1)',
   shrinkEasing: 'cubic-bezier(0.4, 0, 0.2, 1)',
