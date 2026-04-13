@@ -143,30 +143,30 @@ function AppHeader() {
 
   const headerLeft = displayName
     ? (
-        <span className="flex max-w-[min(28rem,calc(100vw-10rem))] items-center gap-2">
-          <span
-            className={cn(
-              'flex min-w-0 max-w-[min(14rem,calc(100vw-12rem))] items-center gap-2 text-sm font-medium text-white rounded-full py-2 pl-3 pr-4',
-              playerStyle,
-            )}
-          >
-            <User2Icon className="size-4 shrink-0 opacity-80" aria-hidden />
-            <span className="truncate" title={displayName}>
-              {displayName}
-            </span>
+      <span className="flex max-w-[min(28rem,calc(100vw-10rem))] items-center gap-2">
+        <span
+          className={cn(
+            'flex min-w-0 max-w-[min(14rem,calc(100vw-12rem))] items-center gap-2 text-sm font-medium text-white rounded-full py-2 pl-3 pr-4',
+            playerStyle,
+          )}
+        >
+          <User2Icon className="size-4 shrink-0 opacity-80" aria-hidden />
+          <span className="truncate" title={displayName}>
+            {displayName}
           </span>
-          {!isAdminSpectator && isCreator && creatorToken && gameId && playerId && gameState
-            ? (
-                <GamePendingPlayersDropdown
-                  gameId={gameId}
-                  playerId={playerId}
-                  creatorToken={creatorToken}
-                  gameState={gameState}
-                />
-              )
-            : null}
         </span>
-      )
+        {!isAdminSpectator && isCreator && creatorToken && gameId && playerId && gameState
+          ? (
+            <GamePendingPlayersDropdown
+              gameId={gameId}
+              playerId={playerId}
+              creatorToken={creatorToken}
+              gameState={gameState}
+            />
+          )
+          : null}
+      </span>
+    )
     : null
 
   return (

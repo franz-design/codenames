@@ -11,7 +11,7 @@ export default function GameHomePage() {
   })
 
   return (
-    <div className="w-full flex flex-col gap-8 items-center justify-center px-12">
+    <div className="w-full flex flex-col gap-8 items-center justify-start px-12 pt-[60px] pb-[100px]">
       <div className="w-full max-w-5xl flex flex-col gap-8 lg:flex-row">
         <Card className="w-full lg:flex-1 lg:basis-0">
           <CardHeader>

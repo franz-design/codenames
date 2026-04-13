@@ -11,7 +11,7 @@ import { Input } from '@codenames/ui/components/primitives/input'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { type SubmitHandler, useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router'
 import { z } from 'zod'
 import {
@@ -19,6 +19,7 @@ import {
   PENDING_REDIRECT_KEY,
   useGameSession,
 } from '../index'
+import { Switch } from '@codenames/ui/components/primitives/switch'
 
 const createGameSchema = z.object({
   pseudo: z.string().min(1, 'Le pseudo est requis').max(100, 'Maximum 100 caractères'),
@@ -27,6 +28,7 @@ const createGameSchema = z.object({
 })
 
 type CreateGameFormData = z.infer<typeof createGameSchema>
+type CreateGameFormInput = z.input<typeof createGameSchema>
 
 export default function GameCreatePage() {
   const navigate = useNavigate()
@@ -63,14 +65,14 @@ export default function GameCreatePage() {
     },
   })
 
-  const form = useForm<CreateGameFormData>({
+  const form = useForm<CreateGameFormInput, unknown, CreateGameFormData>({
     resolver: zodResolver(createGameSchema),
     defaultValues: { pseudo: playerName || '', isPublic: false, maxPlayers: 8 },
   })
 
   const isPublic = form.watch('isPublic')
 
-  const handleSubmit = (data: CreateGameFormData) => {
+  const handleSubmit: SubmitHandler<CreateGameFormData> = data => {
     createGame(data)
   }
 
@@ -84,7 +86,7 @@ export default function GameCreatePage() {
           </p>
         </div>
 
-        <Form {...form}>
+        <Form<CreateGameFormInput> {...form}>
           <form className="flex flex-col gap-6 w-md" onSubmit={form.handleSubmit(handleSubmit)}>
             <FormField
               control={form.control}
@@ -105,54 +107,62 @@ export default function GameCreatePage() {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="isPublic"
-              render={({ field }) => (
-                <FormItem>
-                  <label className="flex items-center justify-between gap-3 rounded-md border p-3">
-                    <div className="flex flex-col">
-                      <FormLabel htmlFor="isPublic">Partie publique</FormLabel>
-                      <span className="text-xs text-muted-foreground">
-                        Visible dans le listing des parties en cours
-                      </span>
-                    </div>
-                    <FormControl>
-                      <input
-                        id="isPublic"
-                        type="checkbox"
-                        checked={field.value}
-                        onChange={event => field.onChange(event.target.checked)}
-                        disabled={isPending}
-                      />
-                    </FormControl>
-                  </label>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="flex flex-col rounded-md border bg-white">
+              <FormField
+                control={form.control}
+                name="isPublic"
+                render={({ field }) => (
+                  <FormItem>
+                    <label className="flex items-center justify-between gap-3 cursor-pointer p-3">
+                      <div className="flex flex-col gap-1">
+                        <FormLabel htmlFor="isPublic">Partie publique</FormLabel>
+                        <span className="text-xs text-muted-foreground">
+                          Visible dans le listing des parties en cours
+                        </span>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          id="isPublic"
+                          checked={Boolean(field.value)}
+                          onCheckedChange={checked => field.onChange(checked ? true : false)}
+                          disabled={isPending}
+                        />
+                      </FormControl>
+                    </label>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="maxPlayers"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel htmlFor="maxPlayers">Nombre maximal de joueurs</FormLabel>
-                  <FormControl>
-                    <Input
-                      id="maxPlayers"
-                      type="number"
-                      min={4}
-                      max={16}
-                      {...field}
-                      value={field.value}
-                      disabled={isPending || !isPublic}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              {isPublic && <FormField
+                control={form.control}
+                name="maxPlayers"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex gap-3 justify-between border-t p-3">
+                      <FormLabel htmlFor="maxPlayers">Nombre maximal de joueurs</FormLabel>
+                      <FormControl>
+                        <Input
+                          id="maxPlayers"
+                          type="number"
+                          min={4}
+                          max={16}
+                          {...field}
+                          value={typeof field.value === 'number' ? field.value : ''}
+                          onChange={event => {
+                            const rawValue: string = event.target.value
+                            field.onChange(rawValue === '' ? undefined : Number(rawValue))
+                          }}
+                          disabled={isPending || !isPublic}
+                          className="w-18"
+                        />
+                      </FormControl>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />}
+            </div>
 
             {error && (
               <p className="text-sm font-medium text-destructive">
