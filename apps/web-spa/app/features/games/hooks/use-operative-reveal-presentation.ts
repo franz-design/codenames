@@ -79,7 +79,13 @@ export function getWordIndexFromWordSelectedTimelineItem(item: TimelineItem): nu
   if (item.type !== 'event' || item.eventType !== 'WORD_SELECTED')
     return null
   const idx = item.payload.wordIndex
-  return typeof idx === 'number' ? idx : null
+  if (typeof idx === 'number')
+    return Number.isInteger(idx) ? idx : null
+  if (typeof idx === 'string') {
+    const parsed = Number.parseInt(idx, 10)
+    return Number.isInteger(parsed) ? parsed : null
+  }
+  return null
 }
 
 export interface FilterTimelineOperativeLagOptions {
@@ -136,8 +142,12 @@ export function filterTimelineItemsForOperativeRevealLag(
   options?: FilterTimelineOperativeLagOptions,
 ): TimelineItem[] {
   const committedSet = revealedWordIndexSet(committedFields.revealedWords)
+  const pendingRevealWordIndices = getPendingRevealWordIndices(serverRound, committedFields)
+  const hasPendingReveal = pendingRevealWordIndices.size > 0
   let result = items.filter((item) => {
     const wi = getWordIndexFromWordSelectedTimelineItem(item)
+    if (item.type === 'event' && item.eventType === 'WORD_SELECTED' && wi === null)
+      return !hasPendingReveal
     if (wi === null)
       return true
     return committedSet.has(wi)
@@ -145,9 +155,8 @@ export function filterTimelineItemsForOperativeRevealLag(
   if (options?.hideGameFinished)
     result = result.filter(i => i.eventType !== 'GAME_FINISHED')
   if (options?.hideTurnPassed) {
-    const pending = getPendingRevealWordIndices(serverRound, committedFields)
-    if (pending.size > 0) {
-      const wordSelectedThresholdMs = getLatestWordSelectedTimeMsForWordIndices(items, pending)
+    if (pendingRevealWordIndices.size > 0) {
+      const wordSelectedThresholdMs = getLatestWordSelectedTimeMsForWordIndices(items, pendingRevealWordIndices)
       if (wordSelectedThresholdMs != null) {
         result = result.filter((i) => {
           if (i.eventType !== 'TURN_PASSED')
@@ -205,6 +214,7 @@ export function useOperativeRevealPresentation({
   )
 
   const roundIdRef = useRef<string | null>(null)
+  const hasObservedBusySinceLagRef = useRef(false)
 
   useLayoutEffect(() => {
     if (!round)
@@ -212,17 +222,33 @@ export function useOperativeRevealPresentation({
 
     if (roundIdRef.current !== round.id) {
       roundIdRef.current = round.id
+      hasObservedBusySinceLagRef.current = false
       setCommittedFields(extractOperativePresentationFields(round))
       return
     }
 
     if (!isOperative) {
+      hasObservedBusySinceLagRef.current = false
       setCommittedFields(extractOperativePresentationFields(round))
       return
     }
 
-    if (revealOverlayIdleRef.current)
+    const hasLag = hasUncommittedOperativeRevealLag(round, committedFields)
+    if (!hasLag) {
+      hasObservedBusySinceLagRef.current = false
       setCommittedFields(extractOperativePresentationFields(round))
+      return
+    }
+
+    if (!revealOverlayIdleRef.current) {
+      hasObservedBusySinceLagRef.current = true
+      return
+    }
+
+    if (hasObservedBusySinceLagRef.current) {
+      hasObservedBusySinceLagRef.current = false
+      setCommittedFields(extractOperativePresentationFields(round))
+    }
   }, [round, isOperative, isRevealOverlayIdle, revealOverlayIdleRef])
 
   const hasOperativeRevealPresentationLag = useMemo(() => {

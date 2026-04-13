@@ -261,14 +261,12 @@ export default function GamePlayPage() {
 
   return (
     <GamePlayView
-      gameId={gameId}
       gameState={gameState}
       playerId={playerId ?? ''}
       playerName={playerName}
       isReadOnly={isAdminSpectator}
       isConnected={isConnected}
       isCreator={isCreator}
-      creatorToken={creatorToken}
       onGiveClue={(word, number) => giveClue({ word, number })}
       isCluePending={isCluePending}
       onHighlight={wordIndex => highlightWord(wordIndex)}

@@ -1,14 +1,13 @@
-import type { ReactNode } from 'react'
-import type { GameState, Side, TimelineItem } from '../types'
-import type { GameTimelineSidebarProps } from './game-timeline-sidebar'
 import { Button } from '@codenames/ui/components/primitives/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@codenames/ui/components/primitives/card'
 import { cn } from '@codenames/ui/lib/utils'
 import { MessageCircle } from 'lucide-react'
-import { useCallback, useMemo, useRef, useState } from 'react'
+import type { ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useOperativeRevealPresentation } from '../hooks/use-operative-reveal-presentation'
+import type { GameState, Side, TimelineItem } from '../types'
 import { ClueForm } from './clue-form'
-import { GamePendingPlayersDropdown } from './game-pending-players-dropdown'
+import type { GameTimelineSidebarProps } from './game-timeline-sidebar'
 import { GameTimelineSidebar } from './game-timeline-sidebar'
 import { TeamPlayersCard } from './team-players-card'
 import { TurnIndicator } from './turn-indicator'
@@ -25,7 +24,6 @@ const WINNING_PANEL_STYLES: Record<Side, string> = {
 }
 
 export interface GamePlayViewProps {
-  gameId: string
   gameState: GameState
   playerId: string
   playerName: string | null
@@ -33,7 +31,6 @@ export interface GamePlayViewProps {
   isReadOnly?: boolean
   isConnected: boolean
   isCreator: boolean
-  creatorToken?: string | null
   onGiveClue?: (word: string, number: number) => void
   isCluePending?: boolean
   onHighlight?: (wordIndex: number) => void
@@ -106,12 +103,10 @@ function GamePlayTimelineLayout({
 }
 
 export function GamePlayView({
-  gameId,
   gameState,
   playerId,
   isReadOnly = false,
   isCreator,
-  creatorToken = null,
   onGiveClue,
   isCluePending = false,
   onHighlight,
@@ -129,6 +124,8 @@ export function GamePlayView({
   const [isTimelineVisible, setIsTimelineVisible] = useState(true)
   const revealOverlayIdleRef = useRef(true)
   const [operativeRevealOverlayIdle, setOperativeRevealOverlayIdle] = useState(true)
+  const [isPassButtonRevealHoldActive, setIsPassButtonRevealHoldActive] = useState(false)
+  const wasOperativeInteractableRef = useRef(false)
   const handleOperativeRevealOverlayIdleChange = useCallback((isIdle: boolean) => {
     revealOverlayIdleRef.current = isIdle
     setOperativeRevealOverlayIdle(isIdle)
@@ -210,6 +207,44 @@ export function GamePlayView({
       && viewMode === 'operative'
       && currentPlayer?.side === round.currentTurn
       && !round.currentClue
+
+  const canShowSequencedPassButton
+    = !isReadOnly
+      && !isFinished
+      && viewMode === 'operative'
+      && currentPlayer?.side === (roundForDerivedUi ?? round).currentTurn
+      && Boolean((roundForDerivedUi ?? round).currentClue)
+      && (roundForDerivedUi ?? round).guessesRemaining > 0
+
+  const canShowPassButton
+    = canShowSequencedPassButton || isPassButtonRevealHoldActive
+
+  useEffect(() => {
+    if (canOperativeInteract) {
+      wasOperativeInteractableRef.current = true
+      return
+    }
+
+    const hadInteractiveStateBefore = wasOperativeInteractableRef.current
+    const shouldStartRevealHold
+      = hadInteractiveStateBefore
+        && !isReadOnly
+        && !isFinished
+        && viewMode === 'operative'
+
+    if (shouldStartRevealHold && !isPassButtonRevealHoldActive)
+      setIsPassButtonRevealHoldActive(true)
+  }, [canOperativeInteract, isFinished, isPassButtonRevealHoldActive, isReadOnly, viewMode])
+
+  useEffect(() => {
+    if (!isPassButtonRevealHoldActive)
+      return
+    if (!operativeRevealOverlayIdle || hasOperativeRevealPresentationLag)
+      return
+
+    wasOperativeInteractableRef.current = false
+    setIsPassButtonRevealHoldActive(false)
+  }, [hasOperativeRevealPresentationLag, isPassButtonRevealHoldActive, operativeRevealOverlayIdle])
 
   if (isAwaitingTeamAssignment) {
     return (
@@ -320,10 +355,10 @@ export function GamePlayView({
           />
         </div>
 
-        {canOperativeInteract && onPass && (
+        {canShowPassButton && onPass && (
           <Button
             onClick={onPass}
-            disabled={isOperativeActionPending}
+            disabled={isOperativeActionPending || !canOperativeInteract}
             className="w-xs justify-center mt-4 mx-auto"
           >
             Fini de deviner
