@@ -86,6 +86,7 @@ export function WordCard({
   const hasHighlights = highlights.length > 0
 
   const showRevealedBack = isRevealed && !isGameFinished
+  const isCardClickable = isInteractive && !isRevealed && !isActionPending
 
   const handlePinClick = (e: MouseEvent) => {
     e.stopPropagation()
@@ -131,7 +132,7 @@ export function WordCard({
 
   if (showRevealedBack && effectiveCardType) {
     return (
-      <div className="group relative perspective-midrange cursor-pointer" data-word-card-anchor={wordIndex}>
+      <div className="group relative perspective-midrange cursor-default" data-word-card-anchor={wordIndex}>
         <div
           className={cn(
             'absolute left-[4px] top-[4px] z-0 flex h-20 w-full items-center justify-center rounded-[12px] [transform-style:preserve-3d] transition-colors duration-500 ease-in-out',
@@ -168,11 +169,11 @@ export function WordCard({
           aria-hidden
         />
         <div
-          role={isInteractive && !isRevealed ? 'button' : undefined}
-          tabIndex={isInteractive && !isRevealed ? 0 : undefined}
+          role={isCardClickable ? 'button' : undefined}
+          tabIndex={isCardClickable ? 0 : undefined}
           onClick={handleCardClick}
           onKeyDown={(e: KeyboardEvent) => {
-            if (isInteractive && !isRevealed && (e.key === 'Enter' || e.key === ' ')) {
+            if (isCardClickable && (e.key === 'Enter' || e.key === ' ')) {
               e.preventDefault()
               handleCardClick()
             }
@@ -180,10 +181,9 @@ export function WordCard({
           className={cn(
             baseStyles,
             getMainFaceStyles(),
-            isInteractive
-            && !isRevealed
-            && 'cursor-pointer hover:bg-white',
-            showRevealedBack && 'cursor-default',
+            isCardClickable
+              ? 'cursor-pointer hover:bg-white'
+              : 'cursor-default',
             className,
           )}
           data-word-index={wordIndex}

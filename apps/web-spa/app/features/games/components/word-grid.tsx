@@ -80,7 +80,9 @@ export function WordGrid({
   const [queueVersion, setQueueVersion] = useState(0)
   const [animatingRevealIndices, setAnimatingRevealIndices] = useState(() => new Set<number>())
   const [activeOverlay, setActiveOverlay] = useState<ActiveRevealOverlayState | null>(null)
+  const [isSelectionLockActive, setIsSelectionLockActive] = useState(false)
   const activeWordIndexRef = useRef<number | null>(null)
+  const hasObservedBusySinceLockRef = useRef(false)
 
   const enqueueReveals = useCallback((items: NewlyRevealedItem[]) => {
     setAnimatingRevealIndices((prev) => {
@@ -180,6 +182,39 @@ export function WordGrid({
     return revealedMap.get(index) ?? null
   }
 
+  const isRevealAnimationInProgress = animatingRevealIndices.size > 0
+  const isGridInteractionLocked = isActionPending || isRevealAnimationInProgress || isSelectionLockActive
+
+  useLayoutEffect(() => {
+    if (!isSelectionLockActive)
+      return
+
+    const isBusyNow
+      = isActionPending
+        || isRevealAnimationInProgress
+        || activeOverlay != null
+        || revealQueueRef.current.length > 0
+
+    if (isBusyNow) {
+      hasObservedBusySinceLockRef.current = true
+      return
+    }
+
+    if (hasObservedBusySinceLockRef.current) {
+      hasObservedBusySinceLockRef.current = false
+      setIsSelectionLockActive(false)
+    }
+  }, [activeOverlay, isActionPending, isRevealAnimationInProgress, isSelectionLockActive, queueVersion])
+
+  const handleSelectWithLock = useCallback((wordIndex: number) => {
+    if (isGridInteractionLocked)
+      return
+
+    hasObservedBusySinceLockRef.current = false
+    setIsSelectionLockActive(true)
+    onSelect?.(wordIndex)
+  }, [isGridInteractionLocked, onSelect])
+
   return (
     <>
       {activeOverlay != null && (
@@ -231,8 +266,8 @@ export function WordGrid({
                 hasMyHighlight={hasMyHighlight}
                 onHighlight={onHighlight}
                 onUnhighlight={onUnhighlight}
-                onSelect={onSelect}
-                isActionPending={isActionPending}
+                onSelect={handleSelectWithLock}
+                isActionPending={isGridInteractionLocked}
               />
             </div>
           )
