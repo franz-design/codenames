@@ -20,5 +20,6 @@
     "isolatedModules": true,
     "skipLibCheck": true
   },
+  "include": ["cli/**/*.ts", "eslint.config.ts"],
   "exclude": ["node_modules"]
 }

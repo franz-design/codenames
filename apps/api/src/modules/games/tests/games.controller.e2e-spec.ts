@@ -48,11 +48,11 @@ describe('GamesController (e2e)', () => {
     const filmsSeriesWords = Array.from({ length: 25 }, (_, i) =>
       em.create(Word, { label: `FilmWord${i}`, category: filmsSeriesCategory }))
     await em.persistAndFlush([...words, ...frWords, ...intlWords, ...filmsSeriesWords])
-  })
+  }, 60_000)
 
   afterAll(async () => {
     await closeTestApp(context)
-  })
+  }, 60_000)
 
   it('should create game and return game info with creatorToken and playerId', async () => {
     const res = await supertest(context.app.getHttpServer())

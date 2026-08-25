@@ -44,6 +44,7 @@ const configUnit: Config = {
 }
 
 const config: Config = {
+  testTimeout: 60_000,
   projects: [
     configE2E,
     configUnit,

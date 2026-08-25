@@ -21,7 +21,8 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "preserveWatchOutput": true
+    "preserveWatchOutput": true,
+    "types": ["node", "jest"]
   },
   // For ts-node to resolve the paths correctly (like from root src/...)
   "ts-node": {

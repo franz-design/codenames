@@ -18,6 +18,9 @@ importers:
       '@eslint-react/eslint-plugin':
         specifier: 1.52.6
         version: 1.52.6(eslint@9.34.0(jiti@2.6.1))(ts-api-utils@2.5.0(typescript@5.9.2))(typescript@5.9.2)
+      '@types/jest':
+        specifier: 30.0.0
+        version: 30.0.0
       enquirer:
         specifier: 2.4.1
         version: 2.4.1
