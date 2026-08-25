@@ -8,6 +8,7 @@
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "resolveJsonModule": true,
+    "types": ["node", "jest"],
     "strict": true,
     "strictBindCallApply": false,
     "strictNullChecks": true,
@@ -21,8 +22,7 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "preserveWatchOutput": true,
-    "types": ["node", "jest"]
+    "preserveWatchOutput": true
   },
   // For ts-node to resolve the paths correctly (like from root src/...)
   "ts-node": {
