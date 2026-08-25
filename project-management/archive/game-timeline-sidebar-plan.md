@@ -1,6 +1,8 @@
+> **Archived (historical).** Implementation checklist from the original build-out, not the current spec. See [`docs/README.md`](../../docs/README.md).
+
 # Plan d'action : Sidebar historique + chat in-game
 
-**Documents de référence :** [game-backend-plan.md](./game-backend-plan.md), [game-frontend-plan.md](./game-frontend-plan.md), [common.mdc](../.cursor/rules/common.mdc), [front.mdc](../.cursor/rules/front.mdc)
+**Documents de référence :** [game-backend-plan.md](./game-backend-plan.md), [game-frontend-plan.md](./game-frontend-plan.md), [common.mdc](../../.cursor/rules/common.mdc), [front.mdc](../../.cursor/rules/front.mdc)
 
 ---
 

@@ -1,7 +1,7 @@
 /**
  * Pure game logic for Codenames.
  * State is computed from events (event-sourcing).
- * See docs/game-backend-plan.md and docs/rules.md for reference.
+ * See docs/architecture.md, docs/games.md, and docs/rules.md.
  */
 
 import type {

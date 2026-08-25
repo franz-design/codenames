@@ -1,6 +1,6 @@
 /**
  * Event types for the Codenames game (event-sourcing).
- * See docs/game-backend-plan.md and docs/rules.md for reference.
+ * See docs/architecture.md, docs/games.md, and docs/rules.md.
  */
 
 export enum GameEventType {

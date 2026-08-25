@@ -1,10 +1,12 @@
+> **Archived (historical).** Implementation checklist from the original build-out, not the current spec. See [`docs/README.md`](../../docs/README.md).
+
 # Plan d'action – Frontend Codenames
 
 Ce document décrit le plan de mise en place de la partie frontend du jeu Codenames, aligné sur le [backend plan](./game-backend-plan.md).
 
-**Règles du jeu** : Consulter [rules.md](./rules.md) pour les règles officielles. L'UI doit refléter ces règles (grille 5×5, rôles Espion/Agent, tours, indices, victoire/défaite).
+**Règles du jeu** : Consulter [rules.md](../../docs/rules.md) pour les règles officielles. L'UI doit refléter ces règles (grille 5×5, rôles Espion/Agent, tours, indices, victoire/défaite).
 
-**Identification** : Consulter [player-identification.md](./player-identification.md) pour le flux d'identification (pseudo, playerId, creatorToken, header X-Player-Id).
+**Identification** : Consulter [player-identification.md](../../docs/player-identification.md) pour le flux d'identification (pseudo, playerId, creatorToken, header X-Player-Id).
 
 ---
 
@@ -165,6 +167,6 @@ Stocke et expose : `playerId`, `creatorToken`, `gameId`, `playerName`.
 ## Références
 
 - [game-backend-plan.md](./game-backend-plan.md) — Plan backend (endpoints, events, GameState)
-- [player-identification.md](./player-identification.md) — Flux d'identification
-- [rules.md](./rules.md) — Règles du jeu Codenames
-- [frontend-guidelines.md](./frontend-guidelines.md) — Conventions frontend
+- [player-identification.md](../../docs/player-identification.md) — Flux d'identification
+- [rules.md](../../docs/rules.md) — Règles du jeu Codenames
+- [frontend-guidelines.md](../../docs/frontend-guidelines.md) — Conventions frontend

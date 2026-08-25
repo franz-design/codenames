@@ -1,238 +1,144 @@
-<p align="center">
-  <img src="./assets/logo-preview.webp" alt="Lonestone Logo" width="200">
-</p>
+# Codenames
 
-# Boilerplate project
+Online Codenames: two teams, one 5×5 word grid, spymasters give one-word clues, operatives guess. This monorepo holds the NestJS API and the React SPA.
 
-This repository represents the typical project structure at Lonestone, consisting of an API and one to several frontends.
+[![CI](https://github.com/franz-design/codenames/actions/workflows/ci.yml/badge.svg)](https://github.com/franz-design/codenames/actions/workflows/ci.yml)
 
-To start a new project using this boilerplate, simply create a project on Github and select the boilerplate from the template list.
+## Table of contents
 
-For more details, see the [documentation](https://lonestone.github.io/lonestone-boilerplate/).
+- [Overview](#overview)
+- [Tech stack](#tech-stack)
+- [Project structure](#project-structure)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Useful commands](#useful-commands)
+- [Documentation](#documentation)
+- [Continuous integration](#continuous-integration)
+- [Deployment](#deployment)
 
-[![CI ✨](https://github.com/lonestone/lonestone-boilerplate/actions/workflows/ci.yml/badge.svg)](https://github.com/lonestone/lonestone-boilerplate/actions/workflows/ci.yml)
+## Overview
 
-## 📋 Table of Contents
+Players join with a **pseudo** only (no accounts). Game state is **event-sourced**: each action is persisted, then the API recomputes state and pushes it over WebSocket. Word packs and optional custom words feed the grid.
 
-- [Overview](#-overview)
-- [Tech Stack](#️-tech-stack)
-- [Project Structure](#-project-structure)
-- [Prerequisites](#-prerequisites)
-- [Installation](#-installation)
-- [Docker Services](#-docker-services)
-- [Useful Commands](#️-useful-commands)
-- [Development](#-development)
-- [Continuous Integration (CI)](#-continuous-integration-ci)
-- [Documentation](#-documentation)
-- [Deployment](#-deployment)
+See [docs/README.md](docs/README.md) for rules, architecture, and coding guidelines.
 
-## 🔍 Overview
+## Tech stack
 
-This project uses a "monorepo" architecture. The advantages are numerous, but primarily:
+- **API:** NestJS, MikroORM, PostgreSQL, Zod, Socket.IO
+- **SPA:** React 19, React Router 7, TanStack Query, TailwindCSS, Socket.IO client
+- **Shared:** `@codenames/ui` (Radix / shadcn-style primitives), `@codenames/openapi-generator` (generated types and SDK)
 
-- Ability to develop full-stack features without context switching, making a single PR for a complete feature;
-- Easier deployment: no need to synchronize multiple separate deployments;
-- Strong end-to-end typing, easier refactoring;
-- Simplified and unified tooling (linter, build, etc.)
+## Project structure
 
-## 🛠️ Tech Stack
-
-- NestJS (API)
-- React (Web SPA, Web SSR)
-- TypeScript
-- TailwindCSS
-- MikroORM
-- Zod
-- Better Auth
-
-## 📁 Project Structure
-
-See the [Architecture](docs/backend-guidelines.md) and [Frontend Guidelines](docs/frontend-guidelines.md) for more details.
-
-## 📋 Prerequisites
-
-- [Node.js](https://nodejs.org/) (version 24.10.0)
-- [PNPM](https://pnpm.io/) (version 10.5.2)
-- [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/)
-
-## 🚀 Installation
-
-1. Once your project is created with this template, clone the repository
-
-```bash
-git clone https://github.com/lonestone/yourproject.git
-cd yourproject
+```
+apps/api          NestJS REST + WebSocket API
+apps/web-spa      React SPA
+packages/ui       Shared UI primitives
+packages/openapi-generator   OpenAPI client generated from the API
+docs/             Living product and engineering docs
+project-management/   Tasks, changelog, archived plans
 ```
 
-2. Ensure you have the correct node and pnpm versions (see root `package.json` file's `engines` property).
+## Prerequisites
 
-You can use [fnm](https://github.com/Schniz/fnm) for managing your node version
+- [Node.js](https://nodejs.org/) 24.10.0 (see `.nvmrc` and root `package.json` `engines`)
+- [pnpm](https://pnpm.io/) 10.5.2
+- [Docker](https://www.docker.com/) and Docker Compose (PostgreSQL)
+
+## Installation
+
+1. Clone the repository and install dependencies:
 
 ```bash
-fnm use 24.10.0
-npm i -g pnpm@10.5.2
-```
-
-3. Install dependencies:
-
-```bash
+git clone git@github.com:franz-design/codenames.git
+cd codenames
 pnpm install
 ```
 
-4. Run the setup script
-
-The project includes an automated setup script that will:
-- Detect available applications (API, Web SPA, Web SSR, OpenAPI Generator)
-- Prompt you for database configuration (user, password, name, host, port)
-- Prompt you for application ports
-- Configure SMTP settings (MailDev)
-- Copy and configure all `.env` files automatically
-- Optionally start Docker services (database, MailDev)
-- Optionally run database migrations
-
-```bash
-pnpm rock
-```
-
-The script will guide you through the configuration process interactively. It will:
-- Ask for your project name
-- Update package.json files for detected applications with the project name
-- Check for existing `.env` files and only prompt for missing variables
-- Automatically update all `.env` files with your configuration
-- Set up proper API URLs and trusted origins across all applications
-
-5. Start applications in development mode:
-
-```bash
-pnpm dev
-```
-
-### Manual Setup (Alternative)
-
-If you prefer to configure everything manually:
-
-1. Copy environment files:
+2. Copy environment files:
 
 ```bash
 cp .env.example .env
 cp apps/api/.env.example apps/api/.env
 cp apps/web-spa/.env.example apps/web-spa/.env
-cp apps/web-ssr/.env.example apps/web-ssr/.env
 cp packages/openapi-generator/.env.example packages/openapi-generator/.env
 ```
 
-⚠️ In most of those `.env` files, the API url and port are used. Remember to update all the files to match your API url and port.
+Align `API_PORT`, `VITE_API_URL`, `VITE_WS_URL`, and `CORS_ORIGINS` so the SPA can reach the API (defaults in the examples: API `3004`, SPA origin around `5174`).
 
-2. Start Docker services:
+3. Start PostgreSQL:
 
 ```bash
 pnpm docker:up
 ```
 
-3. Run migrations or set up your schema by following the instructions in the [API README](apps/api/README.md).
+4. Apply migrations and seed word lists (drops and recreates the schema):
 
-## 🐳 Docker Services
+```bash
+pnpm --filter=@codenames/api db:migrate:seed
+```
 
-The project uses Docker Compose to provide the following services:
+Later, after pulling new migrations only:
 
-- PostgreSQL - Database server
-- MailDev - SMTP server for development (not to be used in production!)
-- MinIO - S3 compatible storage solution (not to be used in production!)
+```bash
+pnpm --filter=@codenames/api db:migrate:up
+```
 
-## ⌨️ Useful Commands
+5. Start the API and SPA:
+
+```bash
+pnpm dev
+```
+
+- API: `http://localhost:3004` (OpenAPI UI in development: `http://localhost:3004/api/docs`)
+- SPA: Vite / React Router dev server (see `VITE_APP_ORIGIN` in `apps/web-spa/.env`)
+
+## Useful commands
 
 ### Docker
 
-- **Start Docker services**: `pnpm docker:up`
-- **Stop Docker services**: `pnpm docker:down`
-- **View Docker logs**: `pnpm docker:logs`
+- `pnpm docker:up` — start PostgreSQL
+- `pnpm docker:down` — stop
+- `pnpm docker:logs` — follow logs
 
 ### Development
 
-- **Start development**: `pnpm dev`
-- **Build applications**: `pnpm build`
-- **Lint applications**: `pnpm lint`
-- **Generate OpenAPI clients**: `pnpm generate`
+- `pnpm dev` — API, SPA, and OpenAPI generator watch (parallel)
+- `pnpm build` — build all workspaces
+- `pnpm lint` — ESLint
+- `pnpm typecheck` — TypeScript across workspaces
+- `pnpm generate` — regenerate the OpenAPI client (API must be running)
+- `pnpm test` — tests across workspaces
 
-### Database (API)
-
-- **Create migration**: `pnpm db:migrate:create`
-- **Run migrations**: `pnpm db:migrate:up`
-- **Rollback last migration**: `pnpm db:migrate:down`
-- **Initialize data**: `pnpm db:seed`
-
-### Tests
-
-- **Run tests**: `pnpm test`
-
-## 💻 Development
-
-### Applications
-
-- The API is built with NestJS and provides a REST API. See the [API README](apps/api/README.md) for more information.
-- The web-spa is built with React and provides a single-page application. See the [Web SPA README](apps/web-spa/README.md) for more information.
-- The web-ssr is built with React and provides a server-side rendered application. See the [Web SSR README](apps/web-ssr/README.md) for more information.
-
-You can start each application in development mode with the following commands:
+### Database (API package)
 
 ```bash
-# Start API in development mode from root folder
-pnpm --filter=api dev
+pnpm --filter=@codenames/api db:migrate:create
+pnpm --filter=@codenames/api db:migrate:up
+pnpm --filter=@codenames/api db:migrate:down
+pnpm --filter=@codenames/api db:fresh
+pnpm --filter=@codenames/api db:fresh:seed
 ```
 
-```bash
-# Start API from its own folder
-cd apps/api && pnpm dev
-```
+## Documentation
 
-### Shared Packages
+| Doc | Purpose |
+|-----|---------|
+| [docs/README.md](docs/README.md) | Index |
+| [docs/rules.md](docs/rules.md) | Table rules as implemented |
+| [docs/architecture.md](docs/architecture.md) | Event store, REST, WebSocket |
+| [docs/games.md](docs/games.md) | Lobby, play, timers, admin |
+| [docs/words.md](docs/words.md) | Packs and custom word pools |
+| [docs/player-identification.md](docs/player-identification.md) | Pseudo, `playerId`, `creatorToken` |
+| [docs/backend-guidelines.md](docs/backend-guidelines.md) | NestJS conventions |
+| [docs/frontend-guidelines.md](docs/frontend-guidelines.md) | SPA conventions |
+| [apps/api/README.md](apps/api/README.md) | API setup |
+| [apps/web-spa/README.md](apps/web-spa/README.md) | SPA setup |
 
-- UI -> Reusable UI components built with shadcn/ui.
-- OpenAPI Generator -> contains the generator plus the generated types, validators and sdk for frontend-backend communication. Imported by the frontend apps.
+## Continuous integration
 
-## 🔄 Continuous Integration (CI)
+GitHub Actions (`.github/workflows/ci.yml`) runs on pushes and pull requests to `main`: install, lint, build, typecheck, and tests against PostgreSQL 16.
 
-The project uses GitHub Actions for continuous integration. Workflows are defined in the `.github/workflows/` folder.
+## Deployment
 
-### CI Workflow
-
-The CI workflow (`ci.yml`) runs on every push to the `main` and `master` branches, as well as on pull requests to these branches.
-
-It includes the following jobs:
-
-- **Lint**: Checks code with ESLint
-- **Type Check**: Checks TypeScript types for all packages and applications
-- **Build**: Builds all packages and applications
-
-For more information, see the [GitHub Workflows README](.github/README.md).
-
-## 📚 Documentation
-
-Project documentation is available in the `docs/` folder and in app `README`s. It contains information about architecture, coding conventions, and development guides.
-
-This documentation is also used by our custom cursor rules.
-
-- [Frontend Guidelines](docs/frontend-guidelines.md)
-- [Backend Guidelines](docs/backend-guidelines.md)
-- [API Readme](apps/api/README.md)
-
-## 🚀 Deployment
-
-It's your choice to decide how you want to deploy the applications, your main options being:
-
-- Use a PaaS cloud service like Render or Dokploy which will build and host your services
-- Build the applications, via Docker, and publish their image on a registry to be used by Render or other PaaS
-- Use docker-compose (not recommended).
-
-### Building with Docker
-
-#### Prerequisites
-
-- Docker installed on your machine
-- Node.js and pnpm for local development
-
-See the dedicated README files for more details on how to build and run Docker images.
-
-### Deployment with Docker Compose
-
-An example Docker Compose configuration is available in the `docker-compose.yml` file at the project root.
+Typical options: a PaaS that builds from this monorepo, or Docker images from `apps/api/Dockerfile` and `apps/web-spa/Dockerfile`. Production needs PostgreSQL, matching `CORS_ORIGINS` / `VITE_API_URL`, and (optional) `ADMIN_SPECTATOR_TOKEN` if you enable the admin spectator routes.

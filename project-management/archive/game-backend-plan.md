@@ -1,10 +1,12 @@
+> **Archived (historical).** Implementation checklist from the original build-out, not the current spec. See [`docs/README.md`](../../docs/README.md).
+
 # Plan d'action – Backend Codenames
 
 Ce document décrit le plan de mise en place de la partie backend du jeu Codenames, avec une todo list pour le suivi.
 
 **Architecture** : Event-sourcing. Les événements sont la source de vérité. L'état de la partie est calculé en rejouant les événements. Indexation par `gameId` et `roundId` pour des requêtes efficaces.
 
-**Règles du jeu** : Consulter [rules.md](./rules.md) pour les règles officielles de Codenames. Garder ces règles à l'esprit lors du développement de la logique (game-core, validation des actions, calcul d'état).
+**Règles du jeu** : Consulter [rules.md](../../docs/rules.md) pour les règles officielles de Codenames. Garder ces règles à l'esprit lors du développement de la logique (game-core, validation des actions, calcul d'état).
 
 ---
 
@@ -29,7 +31,7 @@ Ce document décrit le plan de mise en place de la partie backend du jeu Codenam
 - [x] **3.1** Installer et configurer @nestjs/websockets et @nestjs/platform-socket.io
 - [x] **3.2** Créer GamesGateway avec rooms par partie
 - [x] **3.3** Émettre `game:state` après chaque event (état recalculé)
-- [x] **3.4** Connexion WebSocket sans authentification (identification via pseudo + playerId, voir [player-identification.md](./player-identification.md))
+- [x] **3.4** Connexion WebSocket sans authentification (identification via pseudo + playerId, voir [player-identification.md](../../docs/player-identification.md))
 
 ### Phase 4 : Feature highlight et intégration
 
@@ -111,7 +113,7 @@ Ce document décrit le plan de mise en place de la partie backend du jeu Codenam
 
 **Emplacement** : `apps/api/src/modules/games/game-core.logic.ts`
 
-> **Référence** : S'appuyer sur [rules.md](./rules.md) pour implémenter la logique (types de cartes, fin de tour, nombre de devinettes = indice + 1, victoire/défaite, etc.).
+> **Référence** : S'appuyer sur [rules.md](../../docs/rules.md) pour implémenter la logique (types de cartes, fin de tour, nombre de devinettes = indice + 1, victoire/défaite, etc.).
 
 **Responsabilités :**
 
@@ -141,7 +143,7 @@ interface GameState {
 
 ### 2.1 Entités Game et Round (données immuables)
 
-**Game** : `id`, `creatorPseudo`, `creatorToken`, `createdAt`. Pas de status/winningSide – tout vient des events. Lien vers [player-identification.md](./player-identification.md) pour le flux complet.
+**Game** : `id`, `creatorPseudo`, `creatorToken`, `createdAt`. Pas de status/winningSide – tout vient des events. Lien vers [player-identification.md](../../docs/player-identification.md) pour le flux complet.
 
 **Round** : `id`, `gameId`, `order`, `words[]`, `results[]`, `createdAt`. Données de grille uniquement. Le round est créé à `ROUND_STARTED` ; tout le reste (tour, indice, révélations) vient des events.
 
@@ -157,7 +159,7 @@ interface GameState {
 
 Chaque action crée un event, le persiste, recalcule l'état, et le Gateway émet `game:state`.
 
-**Identification** : Les actions en jeu (leave, chooseSide, giveClue, etc.) requièrent le header `X-Player-Id` (UUID du joueur). Voir [player-identification.md](./player-identification.md).
+**Identification** : Les actions en jeu (leave, chooseSide, giveClue, etc.) requièrent le header `X-Player-Id` (UUID du joueur). Voir [player-identification.md](../../docs/player-identification.md).
 
 | Méthode | Route | Action | Event créé |
 |---------|-------|--------|------------|
@@ -194,7 +196,7 @@ Chaque action crée un event, le persiste, recalcule l'état, et le Gateway éme
 - Ajouter `@nestjs/websockets` et `@nestjs/platform-socket.io`.
 - Créer un `GamesGateway` dans le module Games.
 - Rooms : une room par game (`game:${gameId}`).
-- Connexion : aucune authentification. Toute connexion est acceptée. L'identification des joueurs se fait via le header `X-Player-Id` sur les requêtes REST (voir [player-identification.md](./player-identification.md)).
+- Connexion : aucune authentification. Toute connexion est acceptée. L'identification des joueurs se fait via le header `X-Player-Id` sur les requêtes REST (voir [player-identification.md](../../docs/player-identification.md)).
 
 ### 3.2 Événement unique émis : `game:state`
 
@@ -307,13 +309,13 @@ highlights: Record<number, { playerId: string, playerName: string }[]>
 
 ### Règles du jeu Codenames
 
-- **[rules.md](./rules.md)** — Règles officielles à respecter pour la logique du jeu (grille, types de cartes, tour, indices, victoire/défaite).
+- **[rules.md](../../docs/rules.md)** — Règles officielles à respecter pour la logique du jeu (grille, types de cartes, tour, indices, victoire/défaite).
 
 ### Identification des joueurs
 
-- **[player-identification.md](./player-identification.md)** — Flux d'identification sans inscription (pseudo, playerId, creatorToken, header X-Player-Id).
+- **[player-identification.md](../../docs/player-identification.md)** — Flux d'identification sans inscription (pseudo, playerId, creatorToken, header X-Player-Id).
 
 ### Conventions de développement
 
-- [common.mdc](../.cursor/rules/common.mdc)
-- [backend-guidelines.md](./backend-guidelines.md)
+- [common.mdc](../../.cursor/rules/common.mdc)
+- [backend-guidelines.md](../../docs/backend-guidelines.md)

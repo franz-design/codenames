@@ -1,110 +1,60 @@
-# Identification des joueurs
+# Player identification
 
-Ce document décrit le fonctionnement de l'identification des joueurs dans l'application Codenames. Il sera enrichi au fil du développement des fonctionnalités.
+There is **no sign-up and no player accounts**. A player joins with a **pseudo**. The server issues a `playerId` (UUID) that the client must send on later mutations.
 
----
+## Create
 
-## Vue d'ensemble
+`POST /api/games`
 
-L'application ne requiert **aucune inscription ni authentification**. Les joueurs rejoignent une partie en renseignant uniquement un **pseudo**. Chaque joueur reçoit un identifiant unique (`playerId`) qu'il doit conserver côté client pour les actions en jeu.
-
----
-
-## Flux d'identification
-
-### Création d'une partie
-
-**Endpoint** : `POST /api/games`
-
-**Body** : `{ "pseudo": "Alice" }`
-
-**Réponse** :
 ```json
-{
-  "game": { "id": "...", "creatorPseudo": "Alice", "createdAt": "..." },
-  "creatorToken": "uuid-du-créateur",
-  "playerId": "uuid-du-joueur",
-  "gameState": { "status": "LOBBY", "players": [...], ... }
-}
+{ "pseudo": "Alice", "isPublic": false, "maxPlayers": 8 }
 ```
 
-Le client doit **stocker** :
-- `playerId` : pour s'identifier sur les actions en jeu (header `X-Player-Id`)
-- `creatorToken` : pour pouvoir éjecter des joueurs (réservé au créateur)
+Response includes:
 
-### Rejoindre une partie
+- `game` — id, `creatorPseudo`, `isPublic`, `maxPlayers`, `createdAt`
+- `creatorToken` — host secret (UUID)
+- `playerId` — this client’s player id
+- `gameState` — computed lobby state
 
-**Endpoint** : `POST /api/games/:id/join`
+Store `playerId` and `creatorToken` on the creator’s device (SPA: session storage). Never put `creatorToken` in the URL.
 
-**Body** : `{ "pseudo": "Bob" }`
+## Join
 
-**Réponse** :
+`POST /api/games/:id/join`
+
 ```json
-{
-  "gameState": { "status": "LOBBY", "players": [...], ... },
-  "playerId": "uuid-du-nouveau-joueur"
-}
+{ "pseudo": "Bob" }
 ```
 
-Le client doit **stocker** `playerId` pour les actions en jeu.
+Response: `gameState` and `playerId`. No `creatorToken`.
 
----
+## `X-Player-Id`
 
-## Identification des requêtes
+Mutations that act as a player (leave, side, self-spy, start, clue, select, highlight, pass, restart, chat, admin unwatch) require:
 
-### Header X-Player-Id
-
-Pour les actions qui nécessitent d'identifier le joueur (leave, chooseSide, giveClue, selectWord, highlightWord, etc.), le client envoie le header :
-
-```
-X-Player-Id: <uuid-du-playerId>
-```
-
-**Exemple** :
 ```http
-PATCH /api/games/abc123/players/me/side
-X-Player-Id: 550e8400-e29b-41d4-a716-446655440000
-Content-Type: application/json
-
-{ "side": "red" }
+X-Player-Id: <uuid>
 ```
 
-Si le header est absent ou invalide (pas un UUID), la requête renvoie `401 Unauthorized`.
+Missing or non-UUID values yield **401**. Admin spectator ids cannot mutate (403).
 
----
+`GET /api/games/:id/state` accepts an optional `X-Player-Id` so the snapshot can include spymaster-only `results`.
 
-## Rôle du créateur
+## Host (`creatorToken`)
 
-Le créateur de la partie dispose d'un **creatorToken** secret. Il peut :
-
-- **Éjecter un joueur** : `DELETE /api/games/:id/players/:playerId` avec body `{ "creatorToken": "..." }`
-
-Seul le créateur (celui qui possède le `creatorToken` valide) peut effectuer cette action.
-
----
+JSON body field on host-only routes (guard `CreatorAuth`). Examples: kick, designate another player as spymaster, shuffle lobby teams, timer settings, assign a waiting player to a side mid-round. Wrong token → **403**.
 
 ## WebSocket
 
-**Namespace** : `/games`
+Namespace `/games`. No header auth. Client emits `game:join` with `gameId` and may send `playerId` so the first `game:state` is filtered like REST (spy colors). Identification for **actions** remains REST + `X-Player-Id`.
 
-**Connexion** : aucune authentification requise. Toute connexion est acceptée.
+## Client storage
 
-**Événement `game:join`** : le client envoie le `gameId` pour rejoindre la room et recevoir les mises à jour d'état (`game:state`). Aucun `playerId` n'est transmis à la connexion WebSocket ; l'identification se fait uniquement via les requêtes REST.
+| Value | When | Use |
+|-------|------|-----|
+| `playerId` | create or join | `X-Player-Id` |
+| `creatorToken` | create only | Host request bodies |
+| `gameId` | create or URL | REST paths, `game:join` |
 
----
-
-## Stockage côté client
-
-| Donnée        | Quand l'obtenir      | Usage                                      |
-|---------------|----------------------|--------------------------------------------|
-| `playerId`    | createGame ou joinGame | Header `X-Player-Id` sur toutes les actions |
-| `creatorToken`| createGame uniquement | Body des requêtes kick                      |
-| `gameId`      | createGame ou URL    | Rejoindre la room WebSocket, requêtes REST  |
-
-**Recommandation** : stocker ces valeurs en `sessionStorage` ou `localStorage` pour persister pendant la session de jeu.
-
----
-
-## Sections à venir
-
-- *(À compléter au fil du développement)*
+SPA session keys are owned by the games feature hooks (session storage). Custom word lists use **localStorage** (see [words.md](./words.md)).

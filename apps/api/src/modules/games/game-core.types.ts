@@ -1,6 +1,6 @@
 /**
  * Types for the Codenames game core logic.
- * See docs/game-backend-plan.md and docs/rules.md for reference.
+ * See docs/architecture.md, docs/games.md, and docs/rules.md.
  */
 
 import type { CardType, GameEventType, Side } from './game-event.types'

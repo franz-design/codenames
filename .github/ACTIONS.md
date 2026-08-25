@@ -1,51 +1,25 @@
-# GitHub Workflows
+# GitHub Actions
 
-Ce dossier contient les workflows GitHub Actions pour le projet Lonestone.
+Workflows for the Codenames monorepo.
 
-## Workflows disponibles
+## CI
 
-### CI (Continuous Integration)
+`.github/workflows/ci.yml` runs on push and pull request to `main`.
 
-Le workflow CI (`workflows/ci.yml`) est exécuté à chaque push sur les branches `main` et `master`, ainsi que sur les pull requests vers ces branches.
+Jobs:
 
-Il comprend les jobs suivants:
+1. **Setup** — Node **24.10.0**, pnpm **10.5.2**, `pnpm install`, workspace cache
+2. **Lint** — `pnpm lint`
+3. **Build** — `pnpm -r build`
+4. **Type check** — `pnpm -r run typecheck` (needs the build output)
+5. **Test** — `pnpm test` with a PostgreSQL 16 service
 
-#### Lint
+Reusable Node/pnpm setup: `.github/actions/setup-node-pnpm`.
 
-- Vérifie le code avec ESLint pour s'assurer qu'il respecte les conventions de codage.
-- Commande: `pnpm lint`
+## Adding a workflow
 
-#### Type Check
+Add a YAML file under `.github/workflows/`, define triggers and jobs, and push.
 
-- Vérifie les types TypeScript pour tous les packages et applications.
-- Génère d'abord les clients OpenAPI avec `pnpm generate`.
-- Exécute ensuite la vérification des types pour chaque package et application.
+## Links
 
-#### Build
-
-- Construit tous les packages et applications.
-- Génère d'abord les clients OpenAPI avec `pnpm generate`.
-- Exécute ensuite `pnpm build` pour construire tous les packages et applications.
-- Archive les artefacts de build pour une utilisation ultérieure.
-
-## Configuration
-
-Le workflow utilise:
-- Node.js 18
-- pnpm 8
-- Cache pour les dépendances pnpm
-- Actions officielles pour le checkout, setup Node.js, setup pnpm, etc.
-
-## Ajout d'un nouveau workflow
-
-Pour ajouter un nouveau workflow:
-
-1. Créez un nouveau fichier `.yml` dans le dossier `workflows/`.
-2. Définissez les événements qui déclenchent le workflow (push, pull_request, etc.).
-3. Définissez les jobs et les étapes du workflow.
-4. Commitez et pushez le fichier.
-
-## Ressources
-
-- [Documentation GitHub Actions](https://docs.github.com/en/actions)
-- [Marketplace GitHub Actions](https://github.com/marketplace?type=actions)
+- [GitHub Actions docs](https://docs.github.com/en/actions)

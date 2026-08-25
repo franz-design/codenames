@@ -1,4 +1,4 @@
-# API Guidelines
+# API guidelines
 
 ## Stack
 
@@ -6,149 +6,73 @@
 - TypeScript
 - MikroORM
 - Zod
-- Swagger/OpenAPI
-- Better Auth
+- OpenAPI (development Scalar UI at `/api/docs`)
+- Socket.IO for game rooms
 
-## Architecture
+Player identity is **not** a session cookie. Use `X-Player-Id` and, for host actions, `creatorToken`. See [player-identification.md](./player-identification.md).
 
-### Module Structure
-
-Each feature should be organized as a NestJS module with the following structure:
+## Module structure
 
 ```
 modules/feature-name/
-├── feature-name.module.ts     # Module definition
-├── feature-name.controller.ts # HTTP endpoints
-├── feature-name.service.ts    # Business logic
-├── feature-name.entity.ts     # If there is a single entity, a single entity file is fine
-├── feature-name.contract.ts   # If there is a single entity, a single contract is fine
-└── contracts/                 # DTOs and validation schemas
-    └── feature-name.contract.ts # If multiple contracts are needed, create a subfolder to store them together
-└── entities/                 # Database entities
-    └── feature-name.entity.ts    # If multiple entities are needed, create a subfolder to store them together
+├── feature-name.module.ts
+├── feature-name.controller.ts
+├── feature-name.service.ts
+├── feature-name.entity.ts          # single entity
+├── contracts/
+│   └── feature-name.contract.ts
+├── entities/                       # several entities
+└── tests/
+    └── feature-name.controller.e2e-spec.ts
 ```
 
-### Naming Conventions
+Games also keep pure logic in `game-core.logic.ts` (no Nest), event types in `game-event.types.ts`, and a gateway beside the service.
 
-- **Files**: Use kebab-case for filenames (e.g., `user-profile.service.ts`)
-- **Classes**: Use PascalCase for class names (e.g., `UserProfileService`)
-- **Methods**: Use camelCase for method names (e.g., `getUserProfile`)
-- **Variables**: Use camelCase for variable names (e.g., `userProfile`)
-- **Constants**: Use UPPER_SNAKE_CASE for constants (e.g., `MAX_USERS`)
-- **Interfaces/Types**: Use PascalCase prefixed with 'I' for interfaces (e.g., `IUserProfile`)
-- **Enums**: Use PascalCase for enum names (e.g., `UserRole`)
+### Naming
 
-## API Design
+- **Files:** kebab-case (`games.service.ts`)
+- **Classes:** PascalCase
+- **Methods / variables:** camelCase
+- **Constants:** UPPER_SNAKE_CASE
+- **Interfaces:** PascalCase, no `I` prefix (this repo does not use `IUser` style)
 
-To create a new module, you can use the following command:
+## New modules
+
+Optional generator from the repo root:
 
 ```bash
-pnpm generate:module --name=module-name
+pnpm schematics:module --name=module-name
 ```
 
-It's generated with the following files:
+Without the generator, copy **games** or **words**: entity → Zod contract with `.meta()` → service → `TypedController` / `TypedRoute` → module import in `AppModule`.
 
-- `__name__.controller.ts`
-- `__name__.service.ts`
-- `__name__.entity.ts`
-- `__name__.module.ts`
-- `contracts/__name__.contract.ts`
-- `tests/__name__.controller.spec.ts`
-
-If you want to create a new module from scratch without the generator, you should follow the following steps (posts module is provided as an example because it's present in the boilerplate, adapt as needed)
-
-1. Create an entity, using posts.entity.ts (or another existing entity file if not found) as reference;
-2. Create a contract, using posts.contract.ts (or another existing contract file if not found) as reference.
-   a. The contract file should contain the schema for all CRUD actions (GET/POST/PUT/DELETE);
-   b. If related contracts are needed (relations), create the related contract files first;
-   c. When creating a contract, always start from the GET contract (nameOfEntitySchema) and then create the create and update contracts by extending the initial schema (you can use zod pick);
-3. Create a service, using posts.service.ts (or another existing service file if not found) as reference;
-4. Create a controller, using posts.controller.ts (or another existing controller file if not found) as reference;
-5. Create a module, using posts.module.ts (or another existing module file if not found) as reference;
+Contracts: start from the read schema, then `pick` / extend for writes. Export `z.infer<typeof schema>` types.
 
 ### Controllers
 
-- Use decorators from NestJS for route definition
-- Group related endpoints under the same controller
-- Use versioning when making breaking changes
-- Use proper HTTP methods:
-  - `GET` for retrieving data
-  - `POST` for creating resources
-  - `PUT` for full updates
-  - `PATCH` for partial updates
-  - `DELETE` for removing resources
+- `@lonestone/nzoth/server`: `TypedController`, `TypedRoute`, `TypedBody`, `TypedParam`
+- HTTP verbs as usual (`GET` read, `POST` create/command, `PATCH` partial, `DELETE` remove)
+- Games commands return the computed `gameState` so HTTP clients match WebSocket payloads
 
-### Request Validation
+### Validation
 
-- Use Zod schemas for request validation
-- Define schemas in the contracts directory
-- Use `TypedBody`, `TypedParam`, and other typed decorators from `@lonestone/nzoth/server`
-- Export types from schemas using `z.infer<typeof schema>`
-- Use `.meta()` to add OpenAPI documentation metadata to schemas
+- Zod in `contracts/`
+- `.meta({ title, description })` for OpenAPI
+- `PlayerId` / `OptionalPlayerId` from `common/decorators/player-id.decorator.ts`
+- Host routes: `CreatorAuth('...')` plus `creatorToken` on the body schema
 
-#### Schema Definition Best Practices
+### Errors
 
-**Why use `.meta()`?**
-- `.meta()` adds OpenAPI/Swagger documentation metadata to your Zod schemas
-- This metadata is automatically used by `@lonestone/nzoth/server` to generate API documentation
-- It provides better developer experience with auto-generated OpenAPI specs
-- The metadata includes title, description, examples, and other OpenAPI-specific information
-
-**Schema Structure:**
-- Start with basic validation rules (type, length, format, etc.)
-- Add `.meta()` for documentation purposes
-- Export the inferred type for TypeScript usage
-- Use descriptive names that indicate the purpose (e.g., `createUserSchema`, `updateUserSchema`)
-
-### Response Formatting
-
-- Use consistent response formats
-- Return typed responses using Zod schemas
-- Document responses with OpenAPI annotations
-
-### Error Handling
-
-- Use NestJS exceptions for error handling
-- Return appropriate HTTP status codes
-- Provide meaningful error messages
-- Use exception filters for global error handling
+Nest exceptions (`NotFoundException`, `ForbiddenException`, `BadRequestException`, `UnauthorizedException`). Keep messages useful for the SPA.
 
 ## Database
 
-### Entities
-
-- Use MikroORM decorators for entity definition
-- Follow single responsibility principle
-- Use UUIDs for primary keys
-- Include audit fields (createdAt, updatedAt)
-- Define proper indexes for performance
-- Use appropriate relationships (OneToMany, ManyToOne, etc.)
-
-### Queries
-
-- Use the EntityManager for database operations
-- Use transactions for operations that modify multiple entities. MikroORM wraps each operation in a transaction by default, if they come from a controller.
-- Ensure you have a MikroORM Context. Mikro provides one for each request by default, but if you call a method from a CRON you'll need to create one or use the EnsureRequestContext decorator.
-- Optimize queries for performance
-- Use pagination for large result sets
-
-## Authentication & Authorization
-
-- Use Better Auth for authentication
-- Use guards for protecting routes
-- Use decorators for role-based access control
-- Validate user permissions in services
-
-## Documentation
-
-- Use Swagger/OpenAPI for API documentation
-- Document all endpoints, parameters, and responses
-- Use tags to group related endpoints
-- Provide examples for request and response bodies
+- UUID primary keys
+- MikroORM `EntityManager`; request context exists for HTTP. Cron / gateway work must use `RequestContext` or `@EnsureRequestContext()`
+- Indexes on access paths (`gameId` + `createdAt` on events)
 
 ## Testing
 
-- Write unit tests for services
-- Write integration tests for controllers
-- Use Jest for testing
-- Mock external dependencies
+- Unit tests next to pure logic (`*.spec.ts`)
+- HTTP e2e under `modules/*/tests/*.e2e-spec.ts`
+- Jest; see [apps/api/src/test/README.md](../apps/api/src/test/README.md)

@@ -59,6 +59,8 @@ repos get scanned and the list built with assistance. -->
 
 - `README.md`
 - `<Changelog>` (see Section A) — most recent entries
+- `docs/CONTEXT.md`
+- `docs/architecture.md`
 - `docs/rules.md`
 - `docs/player-identification.md`
 
