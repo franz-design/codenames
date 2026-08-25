@@ -102,6 +102,7 @@ const zRoundWordCategorySlug = z.enum([
   'music-artists-fr',
   'music-artists-intl',
   'music-artists-mixed',
+  'films-series',
 ]);
 
 /**

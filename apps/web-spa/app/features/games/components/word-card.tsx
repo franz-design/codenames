@@ -152,7 +152,7 @@ export function WordCard({
           data-word-index={wordIndex}
           aria-label={word}
         >
-          <span className="line-clamp-2 break-words px-2">{word}</span>
+          <span className="line-clamp-3 leading-tight break-words px-2">{word}</span>
         </div>
       </div>
     )
@@ -196,7 +196,7 @@ export function WordCard({
                   faceUpStyles,
                 )}
               >
-                <span className="line-clamp-2 break-words px-2">{word}</span>
+                <span className="line-clamp-3 leading-tight break-words px-2">{word}</span>
               </div>
               <span className="invisible" aria-hidden>
                 {word}
@@ -222,7 +222,7 @@ export function WordCard({
                   />
                 </button>
               )}
-              <span className="line-clamp-2 break-words">{word}</span>
+              <span className="line-clamp-3 leading-tight break-words">{word}</span>
               {hasHighlights && <CardHighlights highlights={highlights} isSpy={viewMode === 'spy'} />}
             </>
           )}

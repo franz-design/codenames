@@ -73,7 +73,8 @@ export type RoundWordCategorySlug =
   | 'base'
   | 'music-artists-fr'
   | 'music-artists-intl'
-  | 'music-artists-mixed';
+  | 'music-artists-mixed'
+  | 'films-series';
 
 /**
  * StartRoundSchema

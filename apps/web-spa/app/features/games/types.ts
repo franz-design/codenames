@@ -5,6 +5,7 @@ export const GAME_WORD_PACK_SLUG = {
   MUSIC_ARTISTS_FR: 'music-artists-fr',
   MUSIC_ARTISTS_INTL: 'music-artists-intl',
   MUSIC_ARTISTS_MIXED: 'music-artists-mixed',
+  FILMS_SERIES: 'films-series',
 } as const
 
 export type GameWordPackSlug = (typeof GAME_WORD_PACK_SLUG)[keyof typeof GAME_WORD_PACK_SLUG]
@@ -19,6 +20,7 @@ export const GAME_WORD_PACK_OPTIONS: GameWordPackOption[] = [
   { slug: GAME_WORD_PACK_SLUG.MUSIC_ARTISTS_FR, label: 'Artistes musicaux (FR)' },
   { slug: GAME_WORD_PACK_SLUG.MUSIC_ARTISTS_INTL, label: 'Artistes musicaux (internationaux)' },
   { slug: GAME_WORD_PACK_SLUG.MUSIC_ARTISTS_MIXED, label: 'Artistes FR + internationaux (mélange)' },
+  { slug: GAME_WORD_PACK_SLUG.FILMS_SERIES, label: 'Films et séries' },
 ]
 
 export type CardType = 'neutral' | 'red' | 'blue' | 'black'

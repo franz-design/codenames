@@ -6,6 +6,7 @@ export const WORD_CATEGORY_SLUG = {
   MUSIC_ARTISTS_INTL: 'music-artists-intl',
   /** Virtual pack: random words from FR + international artist lists (not a DB row). */
   MUSIC_ARTISTS_MIXED: 'music-artists-mixed',
+  FILMS_SERIES: 'films-series',
 } as const
 
 export type WordCategorySlug = (typeof WORD_CATEGORY_SLUG)[keyof typeof WORD_CATEGORY_SLUG]
@@ -16,6 +17,7 @@ export const ROUND_WORD_CATEGORY_SLUGS = [
   WORD_CATEGORY_SLUG.MUSIC_ARTISTS_FR,
   WORD_CATEGORY_SLUG.MUSIC_ARTISTS_INTL,
   WORD_CATEGORY_SLUG.MUSIC_ARTISTS_MIXED,
+  WORD_CATEGORY_SLUG.FILMS_SERIES,
 ] as const
 
 export type RoundWordCategorySlug = (typeof ROUND_WORD_CATEGORY_SLUGS)[number]

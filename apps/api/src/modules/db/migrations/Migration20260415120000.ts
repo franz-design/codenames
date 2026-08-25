@@ -18,6 +18,9 @@ export class Migration20260415120000 extends Migration {
     this.addSql(
       `insert into "word_category" ("id", "slug", "name") values (gen_random_uuid(), 'music-artists-intl', 'Artistes musicaux internationaux');`,
     )
+    this.addSql(
+      `insert into "word_category" ("id", "slug", "name") values (gen_random_uuid(), 'films-series', 'Films et séries');`,
+    )
 
     this.addSql(`alter table "word" add column "category_id" uuid null;`)
     this.addSql(

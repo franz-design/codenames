@@ -33,7 +33,11 @@ describe('GamesController (e2e)', () => {
       slug: WORD_CATEGORY_SLUG.MUSIC_ARTISTS_INTL,
       name: 'Artistes intl',
     })
-    await em.persistAndFlush([baseCategory, frCategory, intlCategory])
+    const filmsSeriesCategory = em.create(WordCategory, {
+      slug: WORD_CATEGORY_SLUG.FILMS_SERIES,
+      name: 'Films et séries',
+    })
+    await em.persistAndFlush([baseCategory, frCategory, intlCategory, filmsSeriesCategory])
 
     const words = Array.from({ length: 25 }, (_, i) =>
       em.create(Word, { label: `Word${i}`, category: baseCategory }))
@@ -41,7 +45,9 @@ describe('GamesController (e2e)', () => {
       em.create(Word, { label: `FrArtist${i}`, category: frCategory }))
     const intlWords = Array.from({ length: 30 }, (_, i) =>
       em.create(Word, { label: `IntlArtist${i}`, category: intlCategory }))
-    await em.persistAndFlush([...words, ...frWords, ...intlWords])
+    const filmsSeriesWords = Array.from({ length: 25 }, (_, i) =>
+      em.create(Word, { label: `FilmWord${i}`, category: filmsSeriesCategory }))
+    await em.persistAndFlush([...words, ...frWords, ...intlWords, ...filmsSeriesWords])
   })
 
   afterAll(async () => {
@@ -385,6 +391,49 @@ describe('GamesController (e2e)', () => {
       const fromIntl = labels.filter((w: string) => w.startsWith('IntlArtist'))
       expect(fromFr.length).toBeGreaterThan(0)
       expect(fromIntl.length).toBeGreaterThan(0)
+    })
+
+    it('should start round with films and series word pack', async () => {
+      const createRes = await supertest(context.app.getHttpServer())
+        .post('/games')
+        .set('Content-Type', 'application/json')
+        .send({ pseudo: 'FilmsHost' })
+      const gameId = createRes.body.game.id
+      const playerId = createRes.body.playerId
+
+      const join = await supertest(context.app.getHttpServer())
+        .post(`/games/${gameId}/join`)
+        .set('Content-Type', 'application/json')
+        .send({ pseudo: 'FilmsP2' })
+      const p2 = join.body.playerId
+
+      await supertest(context.app.getHttpServer())
+        .patch(`/games/${gameId}/players/me/side`)
+        .set('X-Player-Id', playerId)
+        .set('Content-Type', 'application/json')
+        .send({ side: 'red' })
+      await supertest(context.app.getHttpServer())
+        .patch(`/games/${gameId}/players/me/side`)
+        .set('X-Player-Id', p2)
+        .set('Content-Type', 'application/json')
+        .send({ side: 'blue' })
+      await supertest(context.app.getHttpServer())
+        .patch(`/games/${gameId}/players/me/spy`)
+        .set('X-Player-Id', playerId)
+      await supertest(context.app.getHttpServer())
+        .patch(`/games/${gameId}/players/me/spy`)
+        .set('X-Player-Id', p2)
+
+      const startRes = await supertest(context.app.getHttpServer())
+        .post(`/games/${gameId}/rounds/start`)
+        .set('X-Player-Id', playerId)
+        .set('Content-Type', 'application/json')
+        .send({ wordCategorySlug: WORD_CATEGORY_SLUG.FILMS_SERIES })
+
+      expect(startRes.status).toBe(201)
+      expect(startRes.body.currentRound?.words).toHaveLength(25)
+      const labels: string[] = startRes.body.currentRound.words
+      expect(labels.every((word: string) => word.startsWith('FilmWord'))).toBe(true)
     })
 
     it('should reject invalid wordCategorySlug', async () => {
