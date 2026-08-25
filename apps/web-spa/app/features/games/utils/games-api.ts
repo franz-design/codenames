@@ -1,6 +1,7 @@
 import type {
   CreateGameResponse,
   GameState,
+  GameWordPackSlug,
   JoinGameResponse,
   PublicGame,
   TimelineResponse,
@@ -72,6 +73,7 @@ export interface GamesApiClient {
     gameId: string,
     body?: {
       wordCount?: number
+      wordCategorySlug?: GameWordPackSlug
       timerSettings?: {
         creatorToken: string
         isEnabled: boolean
@@ -233,6 +235,7 @@ export function createGamesApiClient(playerId: string): GamesApiClient {
 
     async startRound(gameId: string, body?: {
       wordCount?: number
+      wordCategorySlug?: GameWordPackSlug
       timerSettings?: {
         creatorToken: string
         isEnabled: boolean
@@ -242,6 +245,8 @@ export function createGamesApiClient(playerId: string): GamesApiClient {
       const payload: Record<string, unknown> = {}
       if (body?.wordCount !== undefined)
         payload.wordCount = body.wordCount
+      if (body?.wordCategorySlug !== undefined)
+        payload.wordCategorySlug = body.wordCategorySlug
       if (body?.timerSettings !== undefined)
         payload.timerSettings = body.timerSettings
 

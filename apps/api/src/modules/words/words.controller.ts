@@ -15,8 +15,9 @@ export class WordsController {
   @TypedRoute.Get('random', wordsSchema)
   async getRandomWords(
     @Query('count') count: string,
+    @Query('categorySlug') categorySlug?: string,
   ) {
-    const query = getRandomWordsQuerySchema.parse({ count })
+    const query = getRandomWordsQuerySchema.parse({ count, categorySlug })
     return await this.wordsService.getRandomWords(query)
   }
 }

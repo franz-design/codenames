@@ -1,5 +1,6 @@
 import { createPaginationQuerySchema } from '@lonestone/nzoth/server'
 import { z } from 'zod'
+import { ROUND_WORD_CATEGORY_SLUGS } from '../../words/word-category.entity'
 
 export const sideSchema = z.enum(['red', 'blue']).meta({
   title: 'SideSchema',
@@ -242,6 +243,7 @@ export const startRoundTimerSettingsSchema = z.object({
 
 export const startRoundSchema = z.object({
   wordCount: z.number().int().positive().min(1).max(400).optional(),
+  wordCategorySlug: z.enum(ROUND_WORD_CATEGORY_SLUGS).optional(),
   timerSettings: startRoundTimerSettingsSchema.optional(),
 }).meta({
   title: 'StartRoundSchema',

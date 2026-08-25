@@ -1,4 +1,10 @@
-import type { GameState, GameTimerSettings, Side } from '../types'
+import {
+  GAME_WORD_PACK_SLUG,
+  type GameState,
+  type GameTimerSettings,
+  type GameWordPackSlug,
+  type Side,
+} from '../types'
 import { Button } from '@codenames/ui/components/primitives/button'
 import {
   Card,
@@ -11,7 +17,7 @@ import { toast } from '@codenames/ui/components/primitives/sonner'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@codenames/ui/components/primitives/tooltip'
 import { Shuffle, Users2 } from '@codenames/ui/icons'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import {
   createGamesApiClient,
   useGameSession,
@@ -67,12 +73,15 @@ export function GameLobbyView({ gameId, gameState, readOnly = false }: GameLobby
     durationSeconds: serverTimer.durationSeconds,
   })
 
+  const [wordPack, setWordPack] = useState<GameWordPackSlug>(GAME_WORD_PACK_SLUG.BASE)
+
   const { mutate: startRound, isPending: isStartingRound } = useMutation({
     mutationFn: () => {
       if (!creatorToken)
         throw new Error('Creator token required')
       const timer = timerForStartRef.current
       return api.startRound(gameId, {
+        wordCategorySlug: wordPack,
         timerSettings: {
           creatorToken,
           isEnabled: timer.isEnabled,
@@ -224,6 +233,8 @@ export function GameLobbyView({ gameId, gameState, readOnly = false }: GameLobby
                       onTimerChange={(settings) => {
                         timerForStartRef.current = settings
                       }}
+                      wordPack={wordPack}
+                      onWordPackChange={setWordPack}
                     />
 
                     <div className="flex flex-col gap-2">

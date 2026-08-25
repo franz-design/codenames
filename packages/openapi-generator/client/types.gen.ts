@@ -69,12 +69,19 @@ export type SetTimerSettingsSchema = {
   durationSeconds: number;
 };
 
+export type RoundWordCategorySlug =
+  | 'base'
+  | 'music-artists-fr'
+  | 'music-artists-intl'
+  | 'music-artists-mixed';
+
 /**
  * StartRoundSchema
  * Schema for starting a round
  */
 export type StartRoundSchema = {
   wordCount?: number;
+  wordCategorySlug?: RoundWordCategorySlug;
   timerSettings?: {
     creatorToken: string;
     isEnabled: boolean;
@@ -128,6 +135,23 @@ export type WordsSchema = Array<WordSchema>;
 export type WordSchema = {
   id: string;
   label: string;
+  /**
+   * WordCategorySnippetSchema
+   * Word list category attached to a word
+   */
+  category: {
+    slug: string;
+    name: string;
+  };
+};
+
+/**
+ * WordCategorySnippetSchema
+ * Word list category attached to a word
+ */
+export type WordCategorySnippetSchema = {
+  slug: string;
+  name: string;
 };
 
 /**
@@ -699,6 +723,7 @@ export type GamesControllerStartRoundData = {
    */
   body: {
     wordCount?: number;
+    wordCategorySlug?: RoundWordCategorySlug;
     timerSettings?: {
       creatorToken: string;
       isEnabled: boolean;
@@ -909,6 +934,7 @@ export type WordsControllerGetRandomWordsData = {
   path?: never;
   query: {
     count: string;
+    categorySlug: string;
   };
   url: "/api/words/random";
 };

@@ -1,5 +1,26 @@
 export type Side = 'red' | 'blue'
 
+export const GAME_WORD_PACK_SLUG = {
+  BASE: 'base',
+  MUSIC_ARTISTS_FR: 'music-artists-fr',
+  MUSIC_ARTISTS_INTL: 'music-artists-intl',
+  MUSIC_ARTISTS_MIXED: 'music-artists-mixed',
+} as const
+
+export type GameWordPackSlug = (typeof GAME_WORD_PACK_SLUG)[keyof typeof GAME_WORD_PACK_SLUG]
+
+export interface GameWordPackOption {
+  slug: GameWordPackSlug
+  label: string
+}
+
+export const GAME_WORD_PACK_OPTIONS: GameWordPackOption[] = [
+  { slug: GAME_WORD_PACK_SLUG.BASE, label: 'Mots de base' },
+  { slug: GAME_WORD_PACK_SLUG.MUSIC_ARTISTS_FR, label: 'Artistes musicaux (FR)' },
+  { slug: GAME_WORD_PACK_SLUG.MUSIC_ARTISTS_INTL, label: 'Artistes musicaux (internationaux)' },
+  { slug: GAME_WORD_PACK_SLUG.MUSIC_ARTISTS_MIXED, label: 'Artistes FR + internationaux (mélange)' },
+]
+
 export type CardType = 'neutral' | 'red' | 'blue' | 'black'
 
 export const CLUE_NUMBER_INFINITY = 999

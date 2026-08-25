@@ -614,7 +614,10 @@ export class GamesService {
     }
 
     const wordCount = data?.wordCount ?? 25
-    const wordsResult = await this.wordsService.getRandomWords({ count: wordCount })
+    const wordsResult = await this.wordsService.getRandomWords({
+      count: wordCount,
+      categorySlug: data?.wordCategorySlug,
+    })
     const words = wordsResult.map(w => w.label)
     const order = state.currentRound ? state.currentRound.order + 1 : 1
     const results = generateGridResults(order)

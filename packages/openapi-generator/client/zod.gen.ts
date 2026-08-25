@@ -97,12 +97,20 @@ export const zSetTimerSettingsSchema = z.object({
   durationSeconds: z.int().gte(60).lte(3600),
 });
 
+const zRoundWordCategorySlug = z.enum([
+  'base',
+  'music-artists-fr',
+  'music-artists-intl',
+  'music-artists-mixed',
+]);
+
 /**
  * StartRoundSchema
  * Schema for starting a round
  */
 export const zStartRoundSchema = z.object({
   wordCount: z.optional(z.int().gte(1).lte(400)),
+  wordCategorySlug: z.optional(zRoundWordCategorySlug),
   timerSettings: z.optional(
     z.object({
       creatorToken: z
@@ -160,6 +168,10 @@ export const zWordSchema = z.object({
       /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/,
     ),
   label: z.string(),
+  category: z.object({
+    slug: z.string(),
+    name: z.string(),
+  }),
 });
 
 /**
@@ -167,6 +179,15 @@ export const zWordSchema = z.object({
  * Schema for a list of words
  */
 export const zWordsSchema = z.array(zWordSchema);
+
+/**
+ * WordCategorySnippetSchema
+ * Word list category attached to a word
+ */
+export const zWordCategorySnippetSchema = z.object({
+  slug: z.string(),
+  name: z.string(),
+});
 
 /**
  * AdminOngoingGameSchema
@@ -718,6 +739,7 @@ export const zGamesControllerSetTimerSettingsResponse = zGameStateSchema;
 export const zGamesControllerStartRoundData = z.object({
   body: z.object({
     wordCount: z.optional(z.int().gte(1).lte(400)),
+    wordCategorySlug: z.optional(zRoundWordCategorySlug),
     timerSettings: z.optional(
       z.object({
         creatorToken: z
@@ -895,6 +917,7 @@ export const zWordsControllerGetRandomWordsData = z.object({
   path: z.optional(z.never()),
   query: z.object({
     count: z.string(),
+    categorySlug: z.string(),
   }),
 });
 

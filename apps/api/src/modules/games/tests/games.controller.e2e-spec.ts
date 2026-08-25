@@ -3,6 +3,7 @@ import {
   closeTestApp,
   initializeTestApp,
 } from '../../../test/test.utils'
+import { WORD_CATEGORY_SLUG, WordCategory } from '../../words/word-category.entity'
 import { Word } from '../../words/words.entity'
 import { GamesModule } from '../games.module'
 
@@ -20,9 +21,27 @@ describe('GamesController (e2e)', () => {
     const { orm } = context
     const em = orm.em.fork()
 
+    const baseCategory = em.create(WordCategory, {
+      slug: WORD_CATEGORY_SLUG.BASE,
+      name: 'Mots de base',
+    })
+    const frCategory = em.create(WordCategory, {
+      slug: WORD_CATEGORY_SLUG.MUSIC_ARTISTS_FR,
+      name: 'Artistes FR',
+    })
+    const intlCategory = em.create(WordCategory, {
+      slug: WORD_CATEGORY_SLUG.MUSIC_ARTISTS_INTL,
+      name: 'Artistes intl',
+    })
+    await em.persistAndFlush([baseCategory, frCategory, intlCategory])
+
     const words = Array.from({ length: 25 }, (_, i) =>
-      em.create(Word, { label: `Word${i}` }))
-    await em.persistAndFlush(words)
+      em.create(Word, { label: `Word${i}`, category: baseCategory }))
+    const frWords = Array.from({ length: 30 }, (_, i) =>
+      em.create(Word, { label: `FrArtist${i}`, category: frCategory }))
+    const intlWords = Array.from({ length: 30 }, (_, i) =>
+      em.create(Word, { label: `IntlArtist${i}`, category: intlCategory }))
+    await em.persistAndFlush([...words, ...frWords, ...intlWords])
   })
 
   afterAll(async () => {
@@ -298,6 +317,114 @@ describe('GamesController (e2e)', () => {
       const late = res.body.players.find((p: { id: string }) => p.id === midLateJoinerId)
       expect(late?.side).toBe('blue')
       expect(Boolean(late?.isSpy)).toBe(false)
+    })
+  })
+
+  describe('Word pack when starting a round', () => {
+    let packGameId: string
+    let packCreatorPlayerId: string
+    let packBlueSpyId: string
+    beforeAll(async () => {
+      const createRes = await supertest(context.app.getHttpServer())
+        .post('/games')
+        .set('Content-Type', 'application/json')
+        .send({ pseudo: 'PackHost' })
+      packGameId = createRes.body.game.id
+      packCreatorPlayerId = createRes.body.playerId
+
+      const joinBlue = await supertest(context.app.getHttpServer())
+        .post(`/games/${packGameId}/join`)
+        .set('Content-Type', 'application/json')
+        .send({ pseudo: 'PackBlueSpy' })
+      packBlueSpyId = joinBlue.body.playerId
+
+      const joinRedG = await supertest(context.app.getHttpServer())
+        .post(`/games/${packGameId}/join`)
+        .set('Content-Type', 'application/json')
+        .send({ pseudo: 'PackRedG' })
+      const redGuesserId = joinRedG.body.playerId
+
+      await supertest(context.app.getHttpServer())
+        .patch(`/games/${packGameId}/players/me/side`)
+        .set('X-Player-Id', packCreatorPlayerId)
+        .set('Content-Type', 'application/json')
+        .send({ side: 'red' })
+
+      await supertest(context.app.getHttpServer())
+        .patch(`/games/${packGameId}/players/me/side`)
+        .set('X-Player-Id', packBlueSpyId)
+        .set('Content-Type', 'application/json')
+        .send({ side: 'blue' })
+
+      await supertest(context.app.getHttpServer())
+        .patch(`/games/${packGameId}/players/me/side`)
+        .set('X-Player-Id', redGuesserId)
+        .set('Content-Type', 'application/json')
+        .send({ side: 'red' })
+
+      await supertest(context.app.getHttpServer())
+        .patch(`/games/${packGameId}/players/me/spy`)
+        .set('X-Player-Id', packCreatorPlayerId)
+
+      await supertest(context.app.getHttpServer())
+        .patch(`/games/${packGameId}/players/me/spy`)
+        .set('X-Player-Id', packBlueSpyId)
+    })
+
+    it('should start round with mixed artist word pack', async () => {
+      const startRes = await supertest(context.app.getHttpServer())
+        .post(`/games/${packGameId}/rounds/start`)
+        .set('X-Player-Id', packCreatorPlayerId)
+        .set('Content-Type', 'application/json')
+        .send({ wordCategorySlug: WORD_CATEGORY_SLUG.MUSIC_ARTISTS_MIXED })
+
+      expect(startRes.status).toBe(201)
+      expect(startRes.body.currentRound?.words).toHaveLength(25)
+      const labels: string[] = startRes.body.currentRound.words
+      const fromFr = labels.filter((w: string) => w.startsWith('FrArtist'))
+      const fromIntl = labels.filter((w: string) => w.startsWith('IntlArtist'))
+      expect(fromFr.length).toBeGreaterThan(0)
+      expect(fromIntl.length).toBeGreaterThan(0)
+    })
+
+    it('should reject invalid wordCategorySlug', async () => {
+      const createRes = await supertest(context.app.getHttpServer())
+        .post('/games')
+        .set('Content-Type', 'application/json')
+        .send({ pseudo: 'BadSlugHost' })
+      const gameId = createRes.body.game.id
+      const playerId = createRes.body.playerId
+
+      const join = await supertest(context.app.getHttpServer())
+        .post(`/games/${gameId}/join`)
+        .set('Content-Type', 'application/json')
+        .send({ pseudo: 'BadSlugP2' })
+      const p2 = join.body.playerId
+
+      await supertest(context.app.getHttpServer())
+        .patch(`/games/${gameId}/players/me/side`)
+        .set('X-Player-Id', playerId)
+        .set('Content-Type', 'application/json')
+        .send({ side: 'red' })
+      await supertest(context.app.getHttpServer())
+        .patch(`/games/${gameId}/players/me/side`)
+        .set('X-Player-Id', p2)
+        .set('Content-Type', 'application/json')
+        .send({ side: 'blue' })
+      await supertest(context.app.getHttpServer())
+        .patch(`/games/${gameId}/players/me/spy`)
+        .set('X-Player-Id', playerId)
+      await supertest(context.app.getHttpServer())
+        .patch(`/games/${gameId}/players/me/spy`)
+        .set('X-Player-Id', p2)
+
+      const startRes = await supertest(context.app.getHttpServer())
+        .post(`/games/${gameId}/rounds/start`)
+        .set('X-Player-Id', playerId)
+        .set('Content-Type', 'application/json')
+        .send({ wordCategorySlug: 'not-a-real-pack' })
+
+      expect(startRes.status).toBeGreaterThanOrEqual(400)
     })
   })
 
