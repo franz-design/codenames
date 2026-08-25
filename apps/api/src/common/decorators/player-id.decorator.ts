@@ -1,9 +1,9 @@
+import type { Request } from 'express'
 import {
   createParamDecorator,
   ExecutionContext,
   UnauthorizedException,
 } from '@nestjs/common'
-import type { Request } from 'express'
 import { z } from 'zod'
 
 const PLAYER_ID_HEADER = 'x-player-id'

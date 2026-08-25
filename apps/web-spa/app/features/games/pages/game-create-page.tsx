@@ -1,3 +1,4 @@
+import type { SubmitHandler } from 'react-hook-form'
 import { Button } from '@codenames/ui/components/primitives/button'
 import {
   Form,
@@ -8,10 +9,11 @@ import {
   FormMessage,
 } from '@codenames/ui/components/primitives/form'
 import { Input } from '@codenames/ui/components/primitives/input'
+import { Switch } from '@codenames/ui/components/primitives/switch'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { useEffect } from 'react'
-import { type SubmitHandler, useForm } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router'
 import { z } from 'zod'
 import {
@@ -19,7 +21,6 @@ import {
   PENDING_REDIRECT_KEY,
   useGameSession,
 } from '../index'
-import { Switch } from '@codenames/ui/components/primitives/switch'
 
 const createGameSchema = z.object({
   pseudo: z.string().min(1, 'Le pseudo est requis').max(100, 'Maximum 100 caractères'),
@@ -72,7 +73,7 @@ export default function GameCreatePage() {
 
   const isPublic = form.watch('isPublic')
 
-  const handleSubmit: SubmitHandler<CreateGameFormData> = data => {
+  const handleSubmit: SubmitHandler<CreateGameFormData> = (data) => {
     createGame(data)
   }
 
@@ -124,7 +125,7 @@ export default function GameCreatePage() {
                         <Switch
                           id="isPublic"
                           checked={Boolean(field.value)}
-                          onCheckedChange={checked => field.onChange(checked ? true : false)}
+                          onCheckedChange={checked => field.onChange(!!checked)}
                           disabled={isPending}
                         />
                       </FormControl>
@@ -134,34 +135,36 @@ export default function GameCreatePage() {
                 )}
               />
 
-              {isPublic && <FormField
-                control={form.control}
-                name="maxPlayers"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex gap-3 justify-between border-t p-3">
-                      <FormLabel htmlFor="maxPlayers">Nombre maximal de joueurs</FormLabel>
-                      <FormControl>
-                        <Input
-                          id="maxPlayers"
-                          type="number"
-                          min={4}
-                          max={16}
-                          {...field}
-                          value={typeof field.value === 'number' ? field.value : ''}
-                          onChange={event => {
-                            const rawValue: string = event.target.value
-                            field.onChange(rawValue === '' ? undefined : Number(rawValue))
-                          }}
-                          disabled={isPending || !isPublic}
-                          className="w-18"
-                        />
-                      </FormControl>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />}
+              {isPublic && (
+                <FormField
+                  control={form.control}
+                  name="maxPlayers"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex gap-3 justify-between border-t p-3">
+                        <FormLabel htmlFor="maxPlayers">Nombre maximal de joueurs</FormLabel>
+                        <FormControl>
+                          <Input
+                            id="maxPlayers"
+                            type="number"
+                            min={4}
+                            max={16}
+                            {...field}
+                            value={typeof field.value === 'number' ? field.value : ''}
+                            onChange={(event) => {
+                              const rawValue: string = event.target.value
+                              field.onChange(rawValue === '' ? undefined : Number(rawValue))
+                            }}
+                            disabled={isPending || !isPublic}
+                            className="w-18"
+                          />
+                        </FormControl>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
 
             {error && (

@@ -1,13 +1,13 @@
+import type { ReactNode } from 'react'
+import type { GameState, Side, TimelineItem } from '../types'
+import type { GameTimelineSidebarProps } from './game-timeline-sidebar'
 import { Button } from '@codenames/ui/components/primitives/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@codenames/ui/components/primitives/card'
 import { cn } from '@codenames/ui/lib/utils'
 import { MessageCircle } from 'lucide-react'
-import type { ReactNode } from 'react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { useOperativeRevealPresentation } from '../hooks/use-operative-reveal-presentation'
-import type { GameState, Side, TimelineItem } from '../types'
 import { ClueForm } from './clue-form'
-import type { GameTimelineSidebarProps } from './game-timeline-sidebar'
 import { GameTimelineSidebar } from './game-timeline-sidebar'
 import { TeamPlayersCard } from './team-players-card'
 import { TurnIndicator } from './turn-indicator'
@@ -170,6 +170,36 @@ export function GamePlayView({
       && currentPlayer != null
       && !currentPlayer.side
 
+  const isFinished = gameState.status === 'FINISHED'
+
+  const canOperativeInteract
+    = round != null
+      && !isReadOnly
+      && !isFinished
+      && viewMode === 'operative'
+      && currentPlayer?.side === round.currentTurn
+      && Boolean(round.currentClue)
+      && round.guessesRemaining > 0
+
+  if (canOperativeInteract) {
+    wasOperativeInteractableRef.current = true
+  }
+  else {
+    const shouldStartRevealHold
+      = wasOperativeInteractableRef.current
+        && !isReadOnly
+        && !isFinished
+        && viewMode === 'operative'
+
+    if (shouldStartRevealHold && !isPassButtonRevealHoldActive)
+      setIsPassButtonRevealHoldActive(true)
+  }
+
+  if (isPassButtonRevealHoldActive && operativeRevealOverlayIdle && !hasOperativeRevealPresentationLag) {
+    wasOperativeInteractableRef.current = false
+    setIsPassButtonRevealHoldActive(false)
+  }
+
   if (!round) {
     return (
       <div className="flex flex-grow w-full min-h-full flex-col items-center justify-center p-4">
@@ -177,8 +207,6 @@ export function GamePlayView({
       </div>
     )
   }
-
-  const isFinished = gameState.status === 'FINISHED'
 
   /** Opérative : chrome « partie terminée » seulement quand la présentation a rattrapé le serveur (après reveal). */
   const isGameFinishedForGridChrome
@@ -192,14 +220,6 @@ export function GamePlayView({
       && currentPlayer?.side === round.currentTurn
       && !round.currentClue
       && Boolean(onGiveClue)
-
-  const canOperativeInteract
-    = !isReadOnly
-      && !isFinished
-      && viewMode === 'operative'
-      && currentPlayer?.side === round.currentTurn
-      && Boolean(round.currentClue)
-      && round.guessesRemaining > 0
 
   const isWaitingForClueOnMyTeam
     = !isReadOnly
@@ -218,33 +238,6 @@ export function GamePlayView({
 
   const canShowPassButton
     = canShowSequencedPassButton || isPassButtonRevealHoldActive
-
-  useEffect(() => {
-    if (canOperativeInteract) {
-      wasOperativeInteractableRef.current = true
-      return
-    }
-
-    const hadInteractiveStateBefore = wasOperativeInteractableRef.current
-    const shouldStartRevealHold
-      = hadInteractiveStateBefore
-        && !isReadOnly
-        && !isFinished
-        && viewMode === 'operative'
-
-    if (shouldStartRevealHold && !isPassButtonRevealHoldActive)
-      setIsPassButtonRevealHoldActive(true)
-  }, [canOperativeInteract, isFinished, isPassButtonRevealHoldActive, isReadOnly, viewMode])
-
-  useEffect(() => {
-    if (!isPassButtonRevealHoldActive)
-      return
-    if (!operativeRevealOverlayIdle || hasOperativeRevealPresentationLag)
-      return
-
-    wasOperativeInteractableRef.current = false
-    setIsPassButtonRevealHoldActive(false)
-  }, [hasOperativeRevealPresentationLag, isPassButtonRevealHoldActive, operativeRevealOverlayIdle])
 
   if (isAwaitingTeamAssignment) {
     return (

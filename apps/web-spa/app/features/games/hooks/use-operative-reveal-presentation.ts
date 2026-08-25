@@ -215,6 +215,8 @@ export function useOperativeRevealPresentation({
 
   const roundIdRef = useRef<string | null>(null)
   const hasObservedBusySinceLagRef = useRef(false)
+  const committedFieldsRef = useRef(committedFields)
+  committedFieldsRef.current = committedFields
 
   useLayoutEffect(() => {
     if (!round)
@@ -233,7 +235,7 @@ export function useOperativeRevealPresentation({
       return
     }
 
-    const hasLag = hasUncommittedOperativeRevealLag(round, committedFields)
+    const hasLag = hasUncommittedOperativeRevealLag(round, committedFieldsRef.current)
     if (!hasLag) {
       hasObservedBusySinceLagRef.current = false
       setCommittedFields(extractOperativePresentationFields(round))

@@ -105,18 +105,18 @@ export interface ChatMessagePayload {
   content: string
 }
 
-export type GameEventPayload =
-  | GameCreatedPayload
-  | PlayerJoinedPayload
-  | PlayerLeftPayload
-  | PlayerChoseSidePayload
-  | PlayerDesignatedSpyPayload
-  | GameFinishedPayload
-  | GameRestartedPayload
-  | RoundStartedPayload
-  | ClueGivenPayload
-  | WordSelectedPayload
-  | WordHighlightedPayload
-  | WordUnhighlightedPayload
-  | TurnPassedPayload
-  | ChatMessagePayload
+export type GameEventPayload
+  = | GameCreatedPayload
+    | PlayerJoinedPayload
+    | PlayerLeftPayload
+    | PlayerChoseSidePayload
+    | PlayerDesignatedSpyPayload
+    | GameFinishedPayload
+    | GameRestartedPayload
+    | RoundStartedPayload
+    | ClueGivenPayload
+    | WordSelectedPayload
+    | WordHighlightedPayload
+    | WordUnhighlightedPayload
+    | TurnPassedPayload
+    | ChatMessagePayload

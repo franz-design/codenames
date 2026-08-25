@@ -55,14 +55,21 @@ export default function GameHomePage() {
           {!isLoading && !isError && (publicGames?.length ?? 0) === 0 && (
             <p className="text-sm text-muted-foreground">Aucune partie publique en cours.</p>
           )}
-          {(publicGames ?? []).map(game => {
+          {(publicGames ?? []).map((game) => {
             const isFull = game.currentPlayersCount >= game.maxPlayers
             return (
               <div key={game.id} className="flex items-center justify-between gap-3 rounded-md border p-3">
                 <div className="flex flex-col">
                   <p className="font-medium">{game.creatorPseudo}</p>
                   <p className="text-xs text-muted-foreground">
-                    {game.status === 'LOBBY' ? 'Lobby' : 'En cours'} - {game.currentPlayersCount}/{game.maxPlayers} joueurs
+                    {game.status === 'LOBBY' ? 'Lobby' : 'En cours'}
+                    {' '}
+                    -
+                    {game.currentPlayersCount}
+                    /
+                    {game.maxPlayers}
+                    {' '}
+                    joueurs
                   </p>
                 </div>
                 <Button asChild disabled={isFull}>

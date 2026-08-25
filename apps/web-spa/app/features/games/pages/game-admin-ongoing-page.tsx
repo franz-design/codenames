@@ -5,8 +5,8 @@ import { Navigate, useNavigate } from 'react-router'
 import {
   adminWatchGame,
   fetchAdminOngoingGames,
-  readAdminTokenFromLocalStorage,
   isAdminSpectatorClientConfigured,
+  readAdminTokenFromLocalStorage,
   useGameSession,
 } from '../index'
 

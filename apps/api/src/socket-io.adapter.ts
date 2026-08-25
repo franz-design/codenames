@@ -1,6 +1,6 @@
+import type { ServerOptions } from 'socket.io'
 import { INestApplicationContext } from '@nestjs/common'
 import { IoAdapter } from '@nestjs/platform-socket.io'
-import type { ServerOptions } from 'socket.io'
 import { config } from './config/env.config'
 
 export class SocketIoAdapter extends IoAdapter {
@@ -10,7 +10,7 @@ export class SocketIoAdapter extends IoAdapter {
 
   createIOServer(port: number, options?: ServerOptions): ReturnType<IoAdapter['createIOServer']> {
     const hasWildcard = config.cors.origins.includes('*')
-    const corsOptions: { origin: string[]; credentials?: boolean } = {
+    const corsOptions: { origin: string[], credentials?: boolean } = {
       origin: config.cors.origins,
     }
     if (!hasWildcard)

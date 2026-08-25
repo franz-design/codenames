@@ -58,15 +58,13 @@ export function useGameTimeline({
   const queryClient = useQueryClient()
   const [wsItems, setWsItems] = useState<TimelineItem[]>([])
   const seenIdsRef = useRef<Set<string>>(new Set())
-  const prevRoundIdRef = useRef<string | null>(null)
+  const [timelineRoundId, setTimelineRoundId] = useState(currentRoundId)
 
-  useEffect(() => {
-    if (prevRoundIdRef.current !== currentRoundId) {
-      prevRoundIdRef.current = currentRoundId
-      setWsItems([])
-      seenIdsRef.current.clear()
-    }
-  }, [currentRoundId])
+  if (timelineRoundId !== currentRoundId) {
+    setTimelineRoundId(currentRoundId)
+    setWsItems([])
+    seenIdsRef.current.clear()
+  }
 
   const { data: timelineData } = useQuery({
     queryKey: ['gameTimeline', gameId, currentRoundId],

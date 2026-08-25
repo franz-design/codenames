@@ -39,7 +39,6 @@ export default function GamePlayPage() {
     clearSession,
     isCreator,
     isAdminSpectator,
-    creatorToken,
   } = useGameSession()
   const { gameState: wsGameState, isConnected, error: wsError } = useGameWebSocket({
     gameId: gameId ?? null,

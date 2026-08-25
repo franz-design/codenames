@@ -33,6 +33,7 @@ import {
   joinGameSchema,
   KickPlayerInput,
   kickPlayerSchema,
+  publicGamesResponseSchema,
   selectWordSchema,
   sendChatSchema,
   SetTimerSettingsInput,
@@ -44,7 +45,6 @@ import {
   TimelinePagination,
   timelinePaginationSchema,
   timelineResponseSchema,
-  publicGamesResponseSchema,
 } from './contracts/games.contract'
 import { GamesService } from './games.service'
 import { CreatorAuth } from './guards/creator-auth.guard'

@@ -248,7 +248,7 @@ export function WordGrid({
 
           return (
             <div
-              key={`${index}-${word}`}
+              key={word}
               className={cn(
                 'min-w-0',
                 isSourceSlotHiddenForActiveOverlay && 'invisible pointer-events-none',
