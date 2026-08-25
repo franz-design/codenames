@@ -1,0 +1,8 @@
+pnpm lint:fix
+
+if ! git diff --quiet; then
+  echo "husky (pre-push): lint:fix modified files. Commit them, then push again." >&2
+  exit 1
+fi
+
+pnpm test
