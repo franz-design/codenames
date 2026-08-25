@@ -23,6 +23,27 @@ export const GAME_WORD_PACK_OPTIONS: GameWordPackOption[] = [
   { slug: GAME_WORD_PACK_SLUG.FILMS_SERIES, label: 'Films et séries' },
 ]
 
+export const SELECTABLE_GAME_WORD_PACK_SLUGS = [
+  GAME_WORD_PACK_SLUG.BASE,
+  GAME_WORD_PACK_SLUG.MUSIC_ARTISTS_FR,
+  GAME_WORD_PACK_SLUG.MUSIC_ARTISTS_INTL,
+  GAME_WORD_PACK_SLUG.FILMS_SERIES,
+] as const
+
+export type SelectableGameWordPackSlug = (typeof SELECTABLE_GAME_WORD_PACK_SLUGS)[number]
+
+export const SELECTABLE_GAME_WORD_PACK_OPTIONS = GAME_WORD_PACK_OPTIONS.filter(
+  (option): option is GameWordPackOption & { slug: SelectableGameWordPackSlug } =>
+    option.slug !== GAME_WORD_PACK_SLUG.MUSIC_ARTISTS_MIXED,
+)
+
+export const CUSTOM_WORD_MAX_LENGTH = 40
+
+export interface AppliedCustomWordPool {
+  slugs: SelectableGameWordPackSlug[]
+  customWords: string[]
+}
+
 export type CardType = 'neutral' | 'red' | 'blue' | 'black'
 
 export const CLUE_NUMBER_INFINITY = 999

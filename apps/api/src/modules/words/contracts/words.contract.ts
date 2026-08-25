@@ -1,3 +1,4 @@
+import type { RoundWordCategorySlug } from '../word-category.entity'
 import { z } from 'zod'
 import { ROUND_WORD_CATEGORY_SLUGS } from '../word-category.entity'
 
@@ -36,3 +37,8 @@ export const getRandomWordsQuerySchema = z.object({
 })
 
 export type GetRandomWordsQuery = z.infer<typeof getRandomWordsQuerySchema>
+
+export interface GetRandomWordsInput extends GetRandomWordsQuery {
+  categorySlugs?: RoundWordCategorySlug[]
+  customWords?: string[]
+}

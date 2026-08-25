@@ -112,6 +112,8 @@ const zRoundWordCategorySlug = z.enum([
 export const zStartRoundSchema = z.object({
   wordCount: z.optional(z.int().gte(1).lte(400)),
   wordCategorySlug: z.optional(zRoundWordCategorySlug),
+  wordCategorySlugs: z.optional(z.array(zRoundWordCategorySlug)),
+  customWords: z.optional(z.array(z.string().trim().min(1).max(40)).max(400)),
   timerSettings: z.optional(
     z.object({
       creatorToken: z
@@ -741,6 +743,8 @@ export const zGamesControllerStartRoundData = z.object({
   body: z.object({
     wordCount: z.optional(z.int().gte(1).lte(400)),
     wordCategorySlug: z.optional(zRoundWordCategorySlug),
+    wordCategorySlugs: z.optional(z.array(zRoundWordCategorySlug)),
+    customWords: z.optional(z.array(z.string().trim().min(1).max(40)).max(400)),
     timerSettings: z.optional(
       z.object({
         creatorToken: z

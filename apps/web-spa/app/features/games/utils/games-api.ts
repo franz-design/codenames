@@ -74,6 +74,8 @@ export interface GamesApiClient {
     body?: {
       wordCount?: number
       wordCategorySlug?: GameWordPackSlug
+      wordCategorySlugs?: GameWordPackSlug[]
+      customWords?: string[]
       timerSettings?: {
         creatorToken: string
         isEnabled: boolean
@@ -236,6 +238,8 @@ export function createGamesApiClient(playerId: string): GamesApiClient {
     async startRound(gameId: string, body?: {
       wordCount?: number
       wordCategorySlug?: GameWordPackSlug
+      wordCategorySlugs?: GameWordPackSlug[]
+      customWords?: string[]
       timerSettings?: {
         creatorToken: string
         isEnabled: boolean
@@ -247,6 +251,10 @@ export function createGamesApiClient(playerId: string): GamesApiClient {
         payload.wordCount = body.wordCount
       if (body?.wordCategorySlug !== undefined)
         payload.wordCategorySlug = body.wordCategorySlug
+      if (body?.wordCategorySlugs !== undefined)
+        payload.wordCategorySlugs = body.wordCategorySlugs
+      if (body?.customWords !== undefined)
+        payload.customWords = body.customWords
       if (body?.timerSettings !== undefined)
         payload.timerSettings = body.timerSettings
 

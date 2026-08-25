@@ -617,6 +617,8 @@ export class GamesService {
     const wordsResult = await this.wordsService.getRandomWords({
       count: wordCount,
       categorySlug: data?.wordCategorySlug,
+      categorySlugs: data?.wordCategorySlugs,
+      customWords: data?.customWords,
     })
     const words = wordsResult.map(w => w.label)
     const order = state.currentRound ? state.currentRound.order + 1 : 1

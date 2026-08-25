@@ -1,10 +1,4 @@
-import {
-  GAME_WORD_PACK_SLUG,
-  type GameState,
-  type GameTimerSettings,
-  type GameWordPackSlug,
-  type Side,
-} from '../types'
+import type { AppliedCustomWordPool, GameState, GameTimerSettings, GameWordPackSlug, Side } from '../types'
 import { Button } from '@codenames/ui/components/primitives/button'
 import {
   Card,
@@ -22,6 +16,7 @@ import {
   createGamesApiClient,
   useGameSession,
 } from '../index'
+import { GAME_WORD_PACK_SLUG } from '../types'
 import { canStartGame } from '../utils/can-start-game'
 import { LobbyPlayersList } from './lobby-players-list'
 import { LobbySettings } from './lobby-settings'
@@ -74,19 +69,30 @@ export function GameLobbyView({ gameId, gameState, readOnly = false }: GameLobby
   })
 
   const [wordPack, setWordPack] = useState<GameWordPackSlug>(GAME_WORD_PACK_SLUG.BASE)
+  const [customPool, setCustomPool] = useState<AppliedCustomWordPool | null>(null)
 
   const { mutate: startRound, isPending: isStartingRound } = useMutation({
     mutationFn: () => {
       if (!creatorToken)
         throw new Error('Creator token required')
       const timer = timerForStartRef.current
+      const timerSettings = {
+        creatorToken,
+        isEnabled: timer.isEnabled,
+        durationSeconds: timer.durationSeconds,
+      }
+
+      if (customPool) {
+        return api.startRound(gameId, {
+          wordCategorySlugs: customPool.slugs,
+          customWords: customPool.customWords,
+          timerSettings,
+        })
+      }
+
       return api.startRound(gameId, {
         wordCategorySlug: wordPack,
-        timerSettings: {
-          creatorToken,
-          isEnabled: timer.isEnabled,
-          durationSeconds: timer.durationSeconds,
-        },
+        timerSettings,
       })
     },
     onSuccess: () => {
@@ -234,7 +240,12 @@ export function GameLobbyView({ gameId, gameState, readOnly = false }: GameLobby
                         timerForStartRef.current = settings
                       }}
                       wordPack={wordPack}
-                      onWordPackChange={setWordPack}
+                      customPool={customPool}
+                      onWordPackChange={(nextPack) => {
+                        setWordPack(nextPack)
+                        setCustomPool(null)
+                      }}
+                      onApplyCustomPool={setCustomPool}
                     />
 
                     <div className="flex flex-col gap-2">

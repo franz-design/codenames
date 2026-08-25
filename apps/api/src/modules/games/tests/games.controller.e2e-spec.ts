@@ -477,6 +477,113 @@ describe('GamesController (e2e)', () => {
     })
   })
 
+  describe('Custom word pool when starting a round', () => {
+    async function createReadyGame(prefix: string): Promise<{ gameId: string, playerId: string }> {
+      const createRes = await supertest(context.app.getHttpServer())
+        .post('/games')
+        .set('Content-Type', 'application/json')
+        .send({ pseudo: `${prefix}Host` })
+      const gameId = createRes.body.game.id as string
+      const playerId = createRes.body.playerId as string
+
+      const join = await supertest(context.app.getHttpServer())
+        .post(`/games/${gameId}/join`)
+        .set('Content-Type', 'application/json')
+        .send({ pseudo: `${prefix}P2` })
+      const p2 = join.body.playerId as string
+
+      await supertest(context.app.getHttpServer())
+        .patch(`/games/${gameId}/players/me/side`)
+        .set('X-Player-Id', playerId)
+        .set('Content-Type', 'application/json')
+        .send({ side: 'red' })
+      await supertest(context.app.getHttpServer())
+        .patch(`/games/${gameId}/players/me/side`)
+        .set('X-Player-Id', p2)
+        .set('Content-Type', 'application/json')
+        .send({ side: 'blue' })
+      await supertest(context.app.getHttpServer())
+        .patch(`/games/${gameId}/players/me/spy`)
+        .set('X-Player-Id', playerId)
+      await supertest(context.app.getHttpServer())
+        .patch(`/games/${gameId}/players/me/spy`)
+        .set('X-Player-Id', p2)
+
+      return { gameId, playerId }
+    }
+
+    it('should mix custom-only words with the base list', async () => {
+      const { gameId, playerId } = await createReadyGame('CustomOnly')
+      const customWords = Array.from({ length: 25 }, (_, i) => `CustomWord${i}`)
+
+      const startRes = await supertest(context.app.getHttpServer())
+        .post(`/games/${gameId}/rounds/start`)
+        .set('X-Player-Id', playerId)
+        .set('Content-Type', 'application/json')
+        .send({ customWords })
+
+      expect(startRes.status).toBe(201)
+      const labels: string[] = startRes.body.currentRound.words
+      expect(labels).toHaveLength(25)
+      expect(labels.filter((word: string) => word.startsWith('CustomWord'))).toHaveLength(10)
+      expect(labels.filter((word: string) => /^Word\d+$/.test(word))).toHaveLength(15)
+    })
+
+    it('should mix several selected lists', async () => {
+      const { gameId, playerId } = await createReadyGame('MultiList')
+
+      const startRes = await supertest(context.app.getHttpServer())
+        .post(`/games/${gameId}/rounds/start`)
+        .set('X-Player-Id', playerId)
+        .set('Content-Type', 'application/json')
+        .send({
+          wordCategorySlugs: [WORD_CATEGORY_SLUG.FILMS_SERIES, WORD_CATEGORY_SLUG.MUSIC_ARTISTS_FR],
+        })
+
+      expect(startRes.status).toBe(201)
+      const labels: string[] = startRes.body.currentRound.words
+      expect(labels).toHaveLength(25)
+      expect(labels.some((word: string) => word.startsWith('FilmWord'))).toBe(true)
+      expect(labels.some((word: string) => word.startsWith('FrArtist'))).toBe(true)
+    })
+
+    it('should mix selected lists with custom words', async () => {
+      const { gameId, playerId } = await createReadyGame('ListPlusCustom')
+      const customWords = Array.from({ length: 25 }, (_, i) => `HouseWord${i}`)
+
+      const startRes = await supertest(context.app.getHttpServer())
+        .post(`/games/${gameId}/rounds/start`)
+        .set('X-Player-Id', playerId)
+        .set('Content-Type', 'application/json')
+        .send({
+          wordCategorySlugs: [WORD_CATEGORY_SLUG.FILMS_SERIES],
+          customWords,
+        })
+
+      expect(startRes.status).toBe(201)
+      const labels: string[] = startRes.body.currentRound.words
+      expect(labels).toHaveLength(25)
+      expect(labels.filter((word: string) => word.startsWith('HouseWord'))).toHaveLength(10)
+      expect(labels.filter((word: string) => word.startsWith('FilmWord'))).toHaveLength(15)
+    })
+
+    it('should reject a pool smaller than the requested word count', async () => {
+      const { gameId, playerId } = await createReadyGame('TooSmall')
+
+      const startRes = await supertest(context.app.getHttpServer())
+        .post(`/games/${gameId}/rounds/start`)
+        .set('X-Player-Id', playerId)
+        .set('Content-Type', 'application/json')
+        .send({
+          wordCount: 400,
+          wordCategorySlugs: [WORD_CATEGORY_SLUG.FILMS_SERIES],
+          customWords: ['OnlyOne'],
+        })
+
+      expect(startRes.status).toBeGreaterThanOrEqual(400)
+    })
+  })
+
   it('should list only public ongoing games', async () => {
     const privateRes = await supertest(context.app.getHttpServer())
       .post('/games')

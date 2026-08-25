@@ -83,6 +83,8 @@ export type RoundWordCategorySlug =
 export type StartRoundSchema = {
   wordCount?: number;
   wordCategorySlug?: RoundWordCategorySlug;
+  wordCategorySlugs?: Array<RoundWordCategorySlug>;
+  customWords?: Array<string>;
   timerSettings?: {
     creatorToken: string;
     isEnabled: boolean;
@@ -725,6 +727,8 @@ export type GamesControllerStartRoundData = {
   body: {
     wordCount?: number;
     wordCategorySlug?: RoundWordCategorySlug;
+    wordCategorySlugs?: Array<RoundWordCategorySlug>;
+    customWords?: Array<string>;
     timerSettings?: {
       creatorToken: string;
       isEnabled: boolean;
