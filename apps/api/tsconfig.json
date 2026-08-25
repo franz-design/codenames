@@ -5,6 +5,8 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "baseUrl": "./",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "resolveJsonModule": true,
     "strict": true,
     "strictBindCallApply": false,
@@ -16,18 +18,19 @@
     "removeComments": true,
     "sourceMap": true,
     "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    // Changes to allow importing the shared ESM packages (which are also built for CJS, but TS needs to find the right version)
-    // eslint-disable-next-line jsonc/sort-keys
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
-    "esModuleInterop": true,
     "preserveWatchOutput": true
   },
   // For ts-node to resolve the paths correctly (like from root src/...)
   "ts-node": {
-    "require": ["tsconfig-paths/register"]
+    "require": [
+      "tsconfig-paths/register"
+    ]
   },
-  "exclude": ["**/schematics/**", "**/dist/**"]
+  "exclude": [
+    "**/schematics/**",
+    "**/dist/**"
+  ]
 }
