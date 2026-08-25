@@ -24,6 +24,7 @@ const commonConfig: Config = {
 const configE2E: Config = {
   ...commonConfig,
   testRegex: '.*\\.e2e-spec\\.ts$',
+  testTimeout: 60_000,
   setupFilesAfterEnv: [
     '<rootDir>/test/test.setup.ts',
     '<rootDir>/test/test.e2e-setup.ts',

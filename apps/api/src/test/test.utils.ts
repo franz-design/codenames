@@ -16,7 +16,7 @@ import * as express from 'express'
 import supertest from 'supertest'
 import { createTestMikroOrmOptions } from '../config/mikro-orm.config'
 
-let postgresContainer: StartedPostgreSqlContainer
+let postgresContainer: StartedPostgreSqlContainer | undefined
 
 export interface TestAppContext {
   app: INestApplication
@@ -120,8 +120,12 @@ export function initRequestWithPlayerId(app: INestApplication, playerId: string)
  * Closes the app and ORM
  * @param context The test app context
  */
-export async function closeTestApp(context: TestAppContext): Promise<void> {
-  await context.app.close()
-  await context.orm.close(true)
-  await postgresContainer.stop()
+export async function closeTestApp(context: TestAppContext | undefined): Promise<void> {
+  if (context) {
+    await context.app.close()
+    await context.orm.close(true)
+  }
+  if (postgresContainer) {
+    await postgresContainer.stop()
+  }
 }

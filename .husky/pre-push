@@ -1,3 +1,5 @@
+echo "husky (pre-push): running lint:fix then tests..."
+
 pnpm lint:fix
 
 if ! git diff --quiet; then

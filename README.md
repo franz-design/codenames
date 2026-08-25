@@ -110,7 +110,7 @@ pnpm dev
 - `pnpm generate` — regenerate the OpenAPI client (API must be running)
 - `pnpm test` — tests across workspaces
 
-`pnpm install` installs a Husky **pre-push** hook. On `git push` it runs `pnpm lint:fix`, then `pnpm test`. If ESLint rewrites files, the push is aborted so you can commit the fixes first. API tests need Docker running (Testcontainers). To skip the hook: `git push --no-verify`.
+`pnpm install` installs a Husky **pre-push** hook. On `git push` from a terminal it prints a banner, then runs `pnpm lint:fix` and `pnpm test`. Cursor Source Control does not show that output in the terminal (check the Git output channel), and some GUIs skip hooks. If ESLint rewrites files, the push is aborted so you can commit the fixes first. API tests need Docker running (Testcontainers). To skip the hook: `git push --no-verify`.
 
 ### Database (API package)
 
