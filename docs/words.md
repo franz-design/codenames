@@ -34,7 +34,7 @@ Default `count` for a round is **25**. Card **colors** are generated for a stand
 
 - Max **400** strings, each max **40** characters (API).
 - Sent as `customWords` on start; **not** stored on the game row.
-- The SPA keeps a local list (`localStorage` key `codenames.custom-word-list`) and a lobby dialog to edit it.
+- The SPA keeps a local list (`localStorage` key `codenames.custom-word-list`) and a lobby dialog to edit it. The dialog accepts a comma- and/or newline-separated list (Ajouter splits, trims, silently drops empty / over-40 / duplicate / overflow past 400 labels).
 
 Bias when mixing custom + pack labels (`customWordQuota`):
 

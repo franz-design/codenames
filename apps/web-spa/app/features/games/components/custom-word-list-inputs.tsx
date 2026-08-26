@@ -1,11 +1,9 @@
-import type { KeyboardEvent } from 'react'
 import { Button, buttonVariants } from '@codenames/ui/components/primitives/button'
-import { Input } from '@codenames/ui/components/primitives/input'
-import { XIcon } from '@codenames/ui/icons'
+import { Textarea } from '@codenames/ui/components/primitives/textarea'
+import { TrashIcon, XIcon } from '@codenames/ui/icons'
 import { cn } from '@codenames/ui/lib/utils'
 import { useRef, useState } from 'react'
-import { CUSTOM_WORD_MAX_LENGTH } from '../types'
-import { addCustomWord, removeCustomWord } from '../utils/custom-word-list-rows'
+import { addCustomWordsFromDraft, removeCustomWord } from '../utils/custom-word-list-rows'
 
 interface CustomWordListInputsProps {
   words: string[]
@@ -13,7 +11,7 @@ interface CustomWordListInputsProps {
 }
 
 export function CustomWordListInputs({ words, onWordsChange }: CustomWordListInputsProps) {
-  const inputRef = useRef<HTMLInputElement | null>(null)
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
   const [draft, setDraft] = useState('')
 
   const trimmedDraft = draft.trim()
@@ -23,33 +21,27 @@ export function CustomWordListInputs({ words, onWordsChange }: CustomWordListInp
     if (!canAdd)
       return
 
-    onWordsChange(addCustomWord(words, draft))
+    onWordsChange(addCustomWordsFromDraft(words, draft))
     setDraft('')
-    inputRef.current?.focus()
+    textareaRef.current?.focus()
   }
 
-  const handleDraftKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
-    if (event.key !== 'Enter')
-      return
-
-    event.preventDefault()
-    handleAdd()
+  const handleClearAll = (): void => {
+    onWordsChange([])
   }
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-2">
-        <Input
-          ref={inputRef}
+      <div className="flex items-start gap-2">
+        <Textarea
+          ref={textareaRef}
           value={draft}
-          maxLength={CUSTOM_WORD_MAX_LENGTH}
-          placeholder="Ajouter un mot"
+          placeholder="Un mot par ligne, ou séparés par des virgules"
           aria-label="Nouveau mot custom"
-          className="py-2 h-auto"
+          className="min-h-20 py-2 max-w-100"
           onChange={(event) => {
             setDraft(event.target.value)
           }}
-          onKeyDown={handleDraftKeyDown}
         />
         <Button
           type="button"
@@ -61,25 +53,40 @@ export function CustomWordListInputs({ words, onWordsChange }: CustomWordListInp
       </div>
 
       {words.length > 0 && (
-        <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto py-1 pl-1">
-          {words.map((word, index) => (
-            <div
-              key={word}
-              className={cn(buttonVariants({ variant: 'default' }), 'pr-1')}
+        <div className="flex flex-col gap-2">
+          <div className="flex">
+            <Button
+              type="button"
+              variant="outline"
+              className="border-destructive-foreground text-destructive-foreground hover:text-destructive-foreground"
+              size="sm"
+              aria-label="Tout supprimer les mots custom"
+              onClick={handleClearAll}
             >
-              <span>{word}</span>
-              <button
-                type="button"
-                aria-label={`Supprimer ${word}`}
-                className="inline-flex size-5 items-center justify-center rounded-sm hover:bg-black/10 cursor-pointer"
-                onClick={() => {
-                  onWordsChange(removeCustomWord(words, index))
-                }}
+              <TrashIcon className="size-3" strokeWidth={3} />
+              Vider la liste
+            </Button>
+          </div>
+          <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto py-1 pl-1">
+            {words.map((word, index) => (
+              <div
+                key={word}
+                className={cn(buttonVariants({ variant: 'default' }), 'pr-1')}
               >
-                <XIcon className="size-3" strokeWidth={3} />
-              </button>
-            </div>
-          ))}
+                <span>{word}</span>
+                <button
+                  type="button"
+                  aria-label={`Supprimer ${word}`}
+                  className="inline-flex size-5 items-center justify-center rounded-sm hover:bg-black/10 cursor-pointer"
+                  onClick={() => {
+                    onWordsChange(removeCustomWord(words, index))
+                  }}
+                >
+                  <XIcon className="size-3" strokeWidth={3} />
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

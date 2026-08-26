@@ -38,6 +38,7 @@ export const SELECTABLE_GAME_WORD_PACK_OPTIONS = GAME_WORD_PACK_OPTIONS.filter(
 )
 
 export const CUSTOM_WORD_MAX_LENGTH = 40
+export const CUSTOM_WORDS_MAX_COUNT = 400
 
 export interface AppliedCustomWordPool {
   slugs: SelectableGameWordPackSlug[]

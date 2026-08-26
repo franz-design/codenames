@@ -1,3 +1,5 @@
+import { CUSTOM_WORD_MAX_LENGTH, CUSTOM_WORDS_MAX_COUNT } from '../types'
+
 export function normalizeCustomWords(words: string[]): string[] {
   const seen = new Set<string>()
   const normalized: string[] = []
@@ -18,8 +20,20 @@ export function normalizeCustomWords(words: string[]): string[] {
   return normalized
 }
 
+function parseCustomWordDraft(draft: string): string[] {
+  return draft.split(/[\n,]/).filter((token: string) => {
+    const trimmed: string = token.trim()
+    return trimmed.length > 0 && trimmed.length <= CUSTOM_WORD_MAX_LENGTH
+  })
+}
+
+export function addCustomWordsFromDraft(existingWords: string[], draft: string): string[] {
+  const parsedTokens: string[] = parseCustomWordDraft(draft)
+  return normalizeCustomWords([...existingWords, ...parsedTokens]).slice(0, CUSTOM_WORDS_MAX_COUNT)
+}
+
 export function addCustomWord(words: string[], draft: string): string[] {
-  return normalizeCustomWords([...words, draft])
+  return addCustomWordsFromDraft(words, draft)
 }
 
 export function removeCustomWord(words: string[], index: number): string[] {
