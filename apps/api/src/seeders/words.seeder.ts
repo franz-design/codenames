@@ -2,6 +2,7 @@ import { EntityManager } from '@mikro-orm/core'
 import { Seeder } from '@mikro-orm/seeder'
 import { WORD_CATEGORY_SLUG, WordCategory } from '../modules/words/word-category.entity'
 import { Word } from '../modules/words/words.entity'
+import { getMissingWordLabels } from './words-seed.logic'
 
 const BASE_WORDS = [
   'Afrique',
@@ -1135,16 +1136,21 @@ async function ensureWordCategory(
   return category
 }
 
-async function seedWordsForCategoryIfEmpty(
+async function seedMissingWordsForCategory(
   em: EntityManager,
   category: WordCategory,
   labels: readonly string[],
 ): Promise<void> {
-  const count = await em.count(Word, { category })
-  if (count > 0)
+  const existingWords: Word[] = await em.find(Word, { category }, { fields: ['label'] })
+  const missingLabels: string[] = getMissingWordLabels({
+    existingLabels: existingWords.map(word => word.label),
+    desiredLabels: labels,
+  })
+
+  if (missingLabels.length === 0)
     return
 
-  const words = labels.map((label) => {
+  const words: Word[] = missingLabels.map((label) => {
     const word = new Word()
     word.label = label
     word.category = category
@@ -1177,9 +1183,9 @@ export class WordsSeeder extends Seeder {
       'Films et séries',
     )
 
-    await seedWordsForCategoryIfEmpty(em, baseCategory, BASE_WORDS)
-    await seedWordsForCategoryIfEmpty(em, frCategory, MUSIC_ARTISTS_FR_WORDS)
-    await seedWordsForCategoryIfEmpty(em, intlCategory, MUSIC_ARTISTS_INTL_WORDS)
-    await seedWordsForCategoryIfEmpty(em, filmsSeriesCategory, FILMS_SERIES_WORDS)
+    await seedMissingWordsForCategory(em, baseCategory, BASE_WORDS)
+    await seedMissingWordsForCategory(em, frCategory, MUSIC_ARTISTS_FR_WORDS)
+    await seedMissingWordsForCategory(em, intlCategory, MUSIC_ARTISTS_INTL_WORDS)
+    await seedMissingWordsForCategory(em, filmsSeriesCategory, FILMS_SERIES_WORDS)
   }
 }

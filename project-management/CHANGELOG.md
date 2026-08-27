@@ -2,6 +2,10 @@
 
 Project history, newest first.
 
+## 2026-08-27
+
+- API production start seeds missing word packs after migrations (`prestart` → `db:seed`). The seeder inserts absent labels only and never deletes existing words.
+
 ## 2026-08-26
 
 - Lobby Liste custom: hosts can paste comma- and newline-separated labels in a textarea; invalid and overflow labels are dropped silently. `@codenames/web-spa` now runs Vitest for that seam.

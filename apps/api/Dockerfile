@@ -40,5 +40,5 @@ EXPOSE 3004
 ENV MIKRO_ORM_CLI_USE_TS_NODE=false
 ENV MIKRO_ORM_CLI_CONFIG=dist/config/mikro-orm.config.js
 
-# Start the application
+# Start the application (`prestart` runs the word-list seeder)
 CMD ["sh", "-c", "pnpm db:migrate:up && pnpm run start"]

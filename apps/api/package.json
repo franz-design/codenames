@@ -6,11 +6,13 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
+    "prestart": "npx mikro-orm seeder:run",
     "start": "node dist/src/main.js",
     "dev": "nest start --watch",
     "db:migration:init": "npx mikro-orm migration:create --initial",
     "db:migrate:create": "npx mikro-orm migration:create",
     "db:migrate:up": "npx mikro-orm migration:up",
+    "db:seed": "npx mikro-orm seeder:run",
     "db:migrate:down": "npx mikro-orm migration:down",
     "db:migrate:fresh": "npx mikro-orm migration:fresh",
     "db:migrate:seed": "npx mikro-orm migration:fresh --seed",

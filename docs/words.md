@@ -17,6 +17,8 @@ Persisted slugs (`word_category` + `word` rows):
 
 Lobby UI can send `wordCategorySlug` or `wordCategorySlugs` on `POST /api/games/:id/rounds/start`. Multiple slugs are unioned, then expanded.
 
+Packs live in `apps/api/src/seeders/words.seeder.ts`. Production start runs that seeder after migrations: it creates missing categories and inserts labels that are not already stored. Labels removed from the seeder stay in the database. Deploy is enough; there is no manual `seeder:run` step.
+
 ## Draw
 
 `WordsService.getRandomWords` (also `GET /api/words/random?count=&categorySlug=`):

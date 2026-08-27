@@ -11,7 +11,7 @@ This module handles the connection and interactions with the PostgreSQL database
 
 - Database connection configuration
 - Migration management
-- Seed management
+- Seed management (word packs: insert missing labels on API start; never deletes)
 - Entity and relationship management
 - Transaction support
 - Development mode logging

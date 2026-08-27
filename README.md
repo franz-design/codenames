@@ -117,6 +117,7 @@ pnpm dev
 ```bash
 pnpm --filter=@codenames/api db:migrate:create
 pnpm --filter=@codenames/api db:migrate:up
+pnpm --filter=@codenames/api db:seed
 pnpm --filter=@codenames/api db:migrate:down
 pnpm --filter=@codenames/api db:fresh
 pnpm --filter=@codenames/api db:fresh:seed
@@ -143,4 +144,6 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on pushes and pull requests to 
 
 ## Deployment
 
-Typical options: a PaaS that builds from this monorepo, or Docker images from `apps/api/Dockerfile` and `apps/web-spa/Dockerfile`. Production needs PostgreSQL, matching `CORS_ORIGINS` / `VITE_API_URL`, and (optional) `ADMIN_SPECTATOR_TOKEN` if you enable the admin spectator routes.
+Typical options: a PaaS that builds from this monorepo (e.g. Dokploy / Railpack), or Docker images from `apps/api/Dockerfile` and `apps/web-spa/Dockerfile`. Production needs PostgreSQL, matching `CORS_ORIGINS` / `VITE_API_URL`, and (optional) `ADMIN_SPECTATOR_TOKEN` if you enable the admin spectator routes.
+
+API start runs pending migrations (`db:migrate:up`) then the word-list seeder (`db:seed`, via `prestart`) before listening. The seeder inserts missing categories and labels only; it does not delete words already in the database. Adding a pack is: edit `apps/api/src/seeders/words.seeder.ts` and deploy.

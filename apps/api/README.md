@@ -39,6 +39,7 @@ From `apps/api` or `pnpm --filter=@codenames/api …`:
 pnpm dev
 pnpm test
 pnpm db:migrate:up
+pnpm db:seed
 pnpm db:migrate:create
 pnpm db:fresh:seed
 ```
@@ -58,4 +59,4 @@ docker run -p 3004:3004 \
   codenames-api
 ```
 
-Run migrations before or as part of the container start (`pnpm db:migrate:up` then `node dist/src/main.js`).
+Run migrations before or as part of the container start (`pnpm db:migrate:up` then `pnpm start`). `pnpm start` runs `db:seed` via `prestart` (inserts missing word packs/labels, never deletes), then `node dist/src/main.js`.
