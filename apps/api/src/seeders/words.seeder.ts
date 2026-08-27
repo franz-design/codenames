@@ -1,8 +1,8 @@
-import { EntityManager } from '@mikro-orm/core'
+import { EntityManager, Loaded } from '@mikro-orm/core'
 import { Seeder } from '@mikro-orm/seeder'
 import { WORD_CATEGORY_SLUG, WordCategory } from '../modules/words/word-category.entity'
+import { getMissingWordLabels } from '../modules/words/words-seed.logic'
 import { Word } from '../modules/words/words.entity'
-import { getMissingWordLabels } from './words-seed.logic'
 
 const BASE_WORDS = [
   'Afrique',
@@ -1141,7 +1141,11 @@ async function seedMissingWordsForCategory(
   category: WordCategory,
   labels: readonly string[],
 ): Promise<void> {
-  const existingWords: Word[] = await em.find(Word, { category }, { fields: ['label'] })
+  const existingWords: Loaded<Word, never, 'label'>[] = await em.find(
+    Word,
+    { category },
+    { fields: ['label'] },
+  )
   const missingLabels: string[] = getMissingWordLabels({
     existingLabels: existingWords.map(word => word.label),
     desiredLabels: labels,
